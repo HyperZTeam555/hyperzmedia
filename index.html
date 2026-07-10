@@ -1,0 +1,2844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HyperZMedia Player</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#000;--surface:#0a0a0a;--hover:#1a1a1a;--primary:#00d4ff;--text:#f5f5f7;--sub:#86868b;--border:rgba(255,255,255,0.05);--sidebar-w:340px}
+  *{margin:0;padding:0;box-sizing:border-box}
+  *,*::before,*::after{transition:background 0.3s ease,color 0.3s ease,border-color 0.3s ease,opacity 0.3s ease,box-shadow 0.3s ease,transform 0.3s ease}
+  body{font-family:'Rajdhani',sans-serif;background:linear-gradient(135deg,#000 0%,#0a0a0a 100%);color:var(--text);min-height:100vh;display:flex;flex-direction:column;position:relative;overflow-x:hidden}
+  body::before{content:'';position:fixed;inset:0;background:radial-gradient(circle at 20% 80%,rgba(0,212,255,0.15) 0%,transparent 40%),radial-gradient(circle at 80% 20%,rgba(123,47,255,0.1) 0%,transparent 40%);pointer-events:none;z-index:-1}
+  header{padding:16px 24px;display:flex;align-items:center;gap:12px;position:sticky;top:0;background:linear-gradient(180deg,rgba(0,0,0,.95),rgba(0,0,0,.85));z-index:20;border-bottom:1px solid var(--border);backdrop-filter:blur(10px)}
+  .logo{font-size:22px;font-weight:900;color:var(--primary);letter-spacing:2px;font-family:'Orbitron',monospace;text-transform:uppercase}
+  /* Custom Dropdown */
+  .dropdown-container{position:relative;display:inline-block}
+  .dropdown-toggle{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:12px;padding:8px 14px;font-size:12px;cursor:pointer;outline:none;color:var(--text);font-family:'Rajdhani',sans-serif;font-weight:600;display:flex;align-items:center;gap:6px;transition:all 0.2s ease}
+  .dropdown-toggle:hover{border-color:var(--primary);background:rgba(0,212,255,0.05);color:var(--primary)}
+  .dropdown-toggle.active{border-color:var(--primary);background:rgba(0,212,255,0.1)}
+  .dropdown-toggle::after{content:'▼';font-size:8px;transition:transform 0.3s ease}
+  .dropdown-toggle.active::after{transform:rotateZ(180deg)}
+  .dropdown-menu{position:absolute;top:calc(100% + 8px);left:0;background:rgba(10,10,10,0.95);border:1px solid var(--border);border-radius:12px;padding:4px 0;min-width:160px;z-index:100;display:none;backdrop-filter:blur(20px);box-shadow:0 10px 40px rgba(0,0,0,0.6);animation:dropdownSlide 0.3s ease}
+  .dropdown-menu.show{display:block}
+  .dropdown-item{padding:10px 14px;font-size:12px;cursor:pointer;color:var(--text);font-family:'Rajdhani',sans-serif;transition:all 0.2s ease;white-space:nowrap}
+  .dropdown-item:hover{background:rgba(0,212,255,0.15);color:var(--primary);padding-left:18px}
+  .dropdown-item.active{background:rgba(0,212,255,0.2);color:var(--primary);border-left:3px solid var(--primary);padding-left:11px}
+  @keyframes dropdownSlide{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+  .search-wrap{flex:1;max-width:500px;position:relative}
+  .search-wrap input{width:100%;padding:10px 16px;border-radius:12px;border:1px solid var(--border);background:rgba(255,255,255,0.03);color:var(--text);font-size:12px;outline:none;font-family:'Rajdhani',sans-serif;transition:all 0.2s ease}
+  .search-wrap input:focus{background:rgba(255,255,255,0.05);border-color:var(--primary);box-shadow:0 0 0 3px rgba(0,212,255,0.15)}
+  .search-wrap input::placeholder{color:var(--sub)}
+  .nav-btn{background:none;border:1px solid var(--border);border-radius:12px;padding:8px 14px;color:var(--sub);font-size:11px;cursor:pointer;transition:all 0.2s ease;display:none;font-family:'Rajdhani',sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:0.5px}
+  .nav-btn.visible{display:block}
+  .nav-btn:hover{border-color:var(--primary);color:var(--primary);background:rgba(0,212,255,0.05)}
+  .nav-btn.upload-active{border-color:var(--primary);color:var(--primary);background:rgba(0,212,255,0.1)}
+  .inline-btn{background:none;border:1px solid var(--border);border-radius:12px;padding:8px 14px;color:var(--sub);font-size:11px;cursor:pointer;transition:all 0.2s ease;font-family:'Rajdhani',sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:0.5px}
+  .inline-btn:hover{border-color:var(--primary);color:var(--primary);background:rgba(0,212,255,0.05)}
+  .upload-toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:rgba(0,212,255,0.1);border:1px solid var(--primary);border-radius:12px;padding:10px 16px;font-size:11px;color:var(--primary);z-index:100;opacity:0;transition:opacity .3s;pointer-events:none;font-family:'Rajdhani',sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;backdrop-filter:blur(10px)}
+  .upload-toast.show{opacity:1}
+  main{flex:1;padding:20px 24px 140px;transition:margin-right .3s}
+  main.shifted{margin-right:var(--sidebar-w)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:16px}
+  .card{background:var(--surface);border-radius:8px;padding:14px;cursor:pointer;transition:background .2s;position:relative}
+  .card:hover{background:var(--hover)}
+  .card-icon{width:54px;height:54px;background:linear-gradient(135deg,#222,#1a1a1a);border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;box-shadow:0 4px 12px rgba(0,0,0,.4);overflow:hidden}
+  .card-icon img{width:100%;height:100%;object-fit:cover}
+  .card-icon svg{width:26px;height:26px;fill:var(--primary)}
+  .card-title{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .card-sub{font-size:11px;color:var(--sub);margin-top:4px}
+  .card-add{position:absolute;top:6px;right:6px;background:rgba(0,0,0,.6);border:none;border-radius:50%;width:26px;height:26px;cursor:pointer;display:none;align-items:center;justify-content:center}
+  .card:hover .card-add{display:flex}
+  .card-add:hover{background:var(--primary)}
+  .card-add svg{width:14px;height:14px;fill:#fff}
+  .card-save{position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,.75);border:1px solid var(--border);border-radius:12px;padding:3px 8px;font-size:10px;color:var(--sub);cursor:pointer;display:none;align-items:center;gap:4px;transition:all .2s;white-space:nowrap}
+  .card:hover .card-save{display:flex}
+  .card-save:hover{background:var(--primary);color:#000;border-color:var(--primary)}
+  .sidebar{position:fixed;top:0;right:calc(var(--sidebar-w)*-1);width:var(--sidebar-w);height:100%;background:rgba(0,0,0,0.9);border-left:1px solid var(--border);z-index:40;transition:right .3s;display:flex;flex-direction:column;backdrop-filter:blur(20px)}
+  .sidebar.open{right:0}
+  .sb-header{padding:16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+  .sb-close{background:none;border:none;color:var(--sub);cursor:pointer;display:flex}
+  .sb-title{font-size:16px;font-weight:700;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sb-list{flex:1;overflow-y:auto;padding:8px}
+  .sb-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;cursor:pointer;transition:background .15s}
+  .sb-item:hover{background:var(--hover)}
+  .sb-item.active{background:var(--hover);border-left:3px solid var(--primary)}
+  .sb-num{font-size:12px;color:var(--sub);width:20px;text-align:center}
+  .sb-info{flex:1;min-width:0}
+  .sb-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sb-ext{font-size:10px;color:var(--sub)}
+  .sb-del{background:none;border:none;color:var(--sub);cursor:pointer;padding:4px;opacity:0;transition:opacity .2s}
+  .sb-item:hover .sb-del{opacity:1}
+  .sb-footer{padding:12px;border-top:1px solid var(--border);position:relative}
+  .sb-add-btn{width:100%;padding:10px;background:var(--primary);border:none;border-radius:12px;color:#000;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;font-family:'Rajdhani',sans-serif;text-transform:uppercase;letter-spacing:0.5px;transition:all 0.2s ease}
+  .sb-add-btn:hover{background:rgba(0,212,255,0.8);transform:translateY(-2px)}
+  .sb-dropdown{position:absolute;bottom:calc(100% + 6px);left:8px;right:8px;max-height:220px;overflow-y:auto;background:rgba(10,10,10,0.95);border:1px solid var(--border);border-radius:12px;display:none;box-shadow:0 -10px 40px rgba(0,0,0,0.6);backdrop-filter:blur(20px);animation:dropdownSlide 0.3s ease}
+  .sb-dropdown.show{display:block}
+  .sb-dd-item{padding:10px 14px;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all 0.2s ease}
+  .sb-dd-item:hover{background:rgba(0,212,255,0.15);color:var(--primary);padding-left:18px}
+  .sb-dd-item.disabled{color:var(--sub);cursor:default;pointer-events:none}
+  .player{position:fixed;bottom:0;left:0;right:0;background:rgba(10,10,18,0.55);border-top:1px solid rgba(255,255,255,0.08);display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:16px;z-index:40;backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);box-shadow:0 -8px 40px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.05);padding:12px 20px;height:auto}
+  .player.shifted{right:0}
+  .p-info{min-width:0;flex:0 0 30%;max-width:300px;padding:0;display:flex;flex-direction:column;justify-content:center}
+  .p-title{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .p-ctx{font-size:11px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .player-center{flex:1;display:flex;flex-direction:column;gap:8px;max-width:722px;margin:0 auto;justify-content:center;min-width:0}
+  .controls{display:flex;align-items:center;gap:16px;justify-content:center;padding:0;flex-shrink:0}
+  .btn{background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--sub);padding:2px;transition:color .2s,transform .2s}
+  .btn svg{width:18px;height:18px;fill:currentColor}
+  .btn:hover{color:var(--text)}
+  .btn.active{color:var(--primary)}
+  .btn-play{width:34px;height:34px;border-radius:50%;background:#fff;padding:0;box-shadow:0 2px 8px rgba(255,255,255,0.2)}
+  .btn-play svg{fill:#000;width:14px;height:14px}
+  .btn-play:hover{transform:scale(1.08);background:#fff;box-shadow:0 4px 16px rgba(255,255,255,0.3)}
+  .prog-wrap{display:flex;align-items:center;gap:10px;padding:0;width:100%}
+  .prog-wrap span{font-size:11px;color:var(--sub);min-width:40px;text-align:center;font-variant-numeric:tabular-nums}
+  .prog-bar{flex:1;height:6px;background:rgba(255,255,255,0.12);border-radius:3px;cursor:pointer;position:relative;transition:height .15s,background .15s}
+  .prog-bar:hover,.prog-bar.dragging{height:8px;background:rgba(255,255,255,0.18)}
+  .prog-bar:hover .prog-handle,.prog-bar.dragging .prog-handle{opacity:1;transform:translate(50%,-50%) scale(1)}
+  .prog-fill{height:100%;background:var(--primary);border-radius:3px;width:0;transition:width .1s linear;position:relative}
+  .prog-bar:hover .prog-fill,.prog-bar.dragging .prog-fill{background:#fff}
+  .prog-bar:hover .prog-fill::after,.prog-bar.dragging .prog-fill::after{background:var(--primary)}
+  .prog-handle{position:absolute;right:0;top:50%;transform:translate(50%,-50%) scale(0);width:12px;height:12px;border-radius:50%;background:var(--primary);opacity:0;transition:opacity .15s,transform .15s;pointer-events:none;box-shadow:0 0 0 2px rgba(0,0,0,0.3)}
+  .vol-wrap{display:flex;align-items:center;gap:8px;min-width:100px;flex:0 0 30%;max-width:300px;padding:0;justify-content:flex-end}
+  .vol-wrap svg{width:16px;height:16px;fill:var(--sub)}
+  .vol-slider-wrap{position:relative;flex:1;display:flex;align-items:center;max-width:110px}
+  .vol-snap-line{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:2px;height:8px;background:var(--primary);opacity:0.5;border-radius:1px;pointer-events:none}
+  .vol-wrap input[type=range]{width:100%;accent-color:var(--primary);height:4px;cursor:pointer}
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center;z-index:50;backdrop-filter:blur(10px)}
+  #videoFullModal{background:transparent!important;backdrop-filter:none!important;align-items:flex-start!important;justify-content:flex-start!important;padding:0!important}
+  #videoFullModal:not(.open){display:none !important;visibility:hidden !important;pointer-events:none !important}
+  .modal.open{display:flex}
+  .modal-box{background:rgba(10,10,10,0.9);border:1px solid var(--border);border-radius:16px;padding:20px;max-width:380px;width:100%;backdrop-filter:blur(20px)}
+  .modal-title{font-size:16px;font-weight:700;margin-bottom:14px;color:var(--primary);font-family:'Orbitron',monospace;letter-spacing:1px}
+  .modal-input{width:100%;padding:10px 12px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;outline:none;margin-bottom:10px;font-family:'Rajdhani',sans-serif;transition:all 0.2s ease}
+  .modal-input:focus{background:rgba(255,255,255,0.08);border-color:var(--primary)}
+  .modal-btns{display:flex;gap:10px;justify-content:flex-end}
+  .m-btn{padding:8px 16px;border-radius:12px;border:none;font-size:12px;font-weight:600;cursor:pointer;font-family:'Rajdhani',sans-serif;text-transform:uppercase;letter-spacing:0.5px;transition:all 0.2s ease}
+  .m-btn.p{background:var(--primary);color:#000}
+  .m-btn.p:hover{background:rgba(0,212,255,0.8);transform:translateY(-2px)}
+  .m-btn.g{background:transparent;color:var(--sub);border:1px solid var(--border)}
+  .m-btn.g:hover{border-color:var(--primary);color:var(--primary)}
+  .pl-list{max-height:200px;overflow-y:auto;margin-bottom:12px}
+  .pl-row{padding:10px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:space-between}
+  .pl-row:hover{background:var(--hover)}
+  .pl-row .del{background:none;border:none;color:var(--sub);cursor:pointer;opacity:0;transition:opacity .2s}
+  .pl-row:hover .del{opacity:1}
+  .empty{text-align:center;padding:50px 20px;color:var(--sub);font-size:14px}
+  .loading{text-align:center;padding:40px;color:var(--sub);font-size:14px;grid-column:1/-1}
+  .dropdown{position:fixed;background:rgba(10,10,10,0.95);border:1px solid var(--border);border-radius:12px;padding:4px;z-index:60;display:none;box-shadow:0 10px 40px rgba(0,0,0,0.6);backdrop-filter:blur(20px);animation:dropdownSlide 0.3s ease}
+  .dropdown.show{display:block}
+  .dd-item{padding:10px 14px;font-size:12px;cursor:pointer;display:flex;gap:8px;transition:all 0.2s ease}
+  .dd-item:hover{background:rgba(0,212,255,0.15);color:var(--primary);padding-left:18px}
+  .dd-item.disabled{color:var(--sub);pointer-events:none}
+  .card-badge{display:inline-block;font-size:9px;font-weight:700;padding:2px 5px;border-radius:4px;margin-top:4px;letter-spacing:.5px}
+  .badge-live{background:#e22;color:#fff}
+  .badge-kbps{background:#333;color:var(--sub)}
+  .live-dot{width:8px;height:8px;border-radius:50%;background:#e22;display:inline-block;margin-right:5px;animation:pulse 1.2s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+  .prog-wrap.hidden{visibility:hidden}
+  @media(max-width:600px){header{padding:12px;gap:8px;flex-wrap:wrap}.search-wrap{order:3;min-width:100%}main{padding:12px 12px 150px;grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}.player{flex-wrap:wrap;gap:6px;padding:8px 12px}.p-info{flex:0 0 100%;max-width:100%}.player-center{flex:0 0 100%;max-width:100%;order:2}.vol-wrap{display:none}.player.shifted{right:0}main.shifted{margin-right:0}.sidebar{width:100%;right:-100%}.sidebar.open{right:0}}
+  .video-modal-box{background:#1a1a1a;border:1px solid var(--border);border-radius:12px;display:flex;flex-direction:column;overflow:hidden}
+  .video-modal-header{padding:12px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);flex-shrink:0}
+  .video-modal-title{font-size:14px;font-weight:700;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .video-modal-sub{font-size:11px;color:var(--sub);white-space:nowrap}
+  .video-modal-close{background:none;border:none;color:var(--sub);cursor:pointer;font-size:18px;line-height:1;padding:2px 6px}
+  .video-modal-close:hover{color:var(--text)}
+  .video-iframe-wrap{position:relative;width:100%;flex-shrink:0;background:#000}
+  .video-iframe-wrap iframe{display:block;width:100%;height:100%;background:#000;border:none}
+  .video-badge{display:inline-block;font-size:9px;font-weight:700;padding:2px 5px;border-radius:4px;margin-top:4px;letter-spacing:.5px;background:#1a3a5c;color:#6ab4ff}
+  .badge-archive-v{background:#2a1a3a;color:#c084fc}
+  .badge-peertube{background:#1a3a1a;color:#4ade80}
+  .badge-ted{background:#3a1a1a;color:#f87171}
+  .badge-vimeo{background:#1a2a3a;color:#60a5fa}
+  .badge-wikimedia-a{background:#2a2a1a;color:#fbbf24}
+  .ng-box{background:#1a1a1a;border:1px solid var(--border);border-radius:12px;width:min(480px,94vw);padding:20px;display:flex;flex-direction:column;gap:10px}
+  .ng-header{display:flex;align-items:center;justify-content:space-between}
+  .ng-title{font-size:15px;font-weight:700}
+  .ng-hint{font-size:12px;color:var(--sub);line-height:1.6;margin:0}
+  .ng-hint code{background:var(--card);padding:1px 4px;border-radius:3px;font-size:11px}
+  .ng-row{display:flex;gap:8px;align-items:center}
+  .badge-wikimedia{background:#2a2a1a;color:#fbbf24}
+  .badge-nasa{background:#1a1a3a;color:#a78bfa}
+  .badge-mixcloud{background:#1a1a2e;color:#67e8f9}
+  .badge-youtube{background:#3a1a1a;color:#ff6b6b}
+  .channel-strip{grid-column:1/-1;display:flex;gap:12px;overflow-x:auto;padding:0 0 8px}
+  .channel-card{min-width:260px;background:linear-gradient(135deg,#0f1518,#181818);border:1px solid var(--border);border-radius:8px;padding:12px;display:flex;gap:12px;align-items:center;cursor:pointer;transition:background .2s,border-color .2s}
+  .channel-card:hover{background:#0e1a1f;border-color:var(--primary)}
+  .channel-avatar{width:56px;height:56px;border-radius:50%;background:#222;object-fit:cover;flex-shrink:0}
+  .channel-info{min-width:0;flex:1}
+  .channel-name{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .channel-meta{font-size:11px;color:var(--sub);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .channel-desc{font-size:11px;color:var(--sub);margin-top:6px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .channel-body>.channel-desc{font-size:13px;display:block;-webkit-line-clamp:unset;white-space:pre-wrap;overflow:visible}
+  .channel-modal-box{background:#1a1a1a;border:1px solid var(--border);border-radius:12px;width:min(940px,96vw);max-height:92vh;display:flex;flex-direction:column;overflow:hidden}
+  .channel-body{overflow:auto;padding:16px;display:flex;flex-direction:column;gap:16px;min-height:0}
+  .channel-hero{display:flex;gap:14px;align-items:flex-start}
+  .channel-hero .channel-avatar{width:72px;height:72px}
+  .channel-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}
+  .channel-actions a{text-decoration:none}
+  .channel-tabs{display:flex;gap:8px;border-bottom:1px solid var(--border);padding-bottom:10px;align-items:center;flex-shrink:0;flex-wrap:nowrap;min-height:0}
+  .channel-tabs-btns{display:flex;gap:8px;overflow-x:auto;flex-shrink:0}
+  .channel-tab{background:#242424;border:1px solid var(--border);border-radius:18px;color:var(--sub);padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .2s}
+  .channel-tab:hover{border-color:var(--primary);color:var(--text)}
+  .channel-tab.active{background:rgba(0,212,255,0.15);border-color:var(--primary);color:var(--primary)}
+  .channel-search-wrap{flex:1;min-width:0;max-width:220px;margin-left:auto;position:relative}
+  .channel-search-wrap input{width:100%;padding:7px 12px 7px 30px;border-radius:18px;border:1px solid var(--border);background:#242424;color:var(--text);font-size:13px;outline:none;transition:border-color .2s}
+  .channel-search-wrap input:focus{border-color:var(--primary);background:#1a2024}
+  .channel-search-wrap input::placeholder{color:var(--sub)}
+  .channel-search-wrap svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);width:14px;height:14px;fill:var(--sub);pointer-events:none}
+  .channel-section{border-top:1px solid var(--border);padding-top:14px}
+  .channel-panel{display:none}
+  .channel-panel.active{display:block}
+  .channel-section-title{font-size:13px;font-weight:800;margin-bottom:10px;color:var(--text)}
+  .channel-mini-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+  .channel-status{font-size:12px;color:var(--sub);padding:12px 2px;text-align:center;min-height:40px;display:flex;align-items:center;justify-content:center}
+  .channel-mini-card{background:linear-gradient(135deg,#0f0f0f,#1a1a1a);border:1px solid var(--border);border-radius:8px;padding:8px;cursor:pointer;transition:all .2s;overflow:hidden}
+  .channel-mini-card:hover{background:linear-gradient(135deg,#1a1a1a,#242424);border-color:var(--primary);transform:translateY(-2px)}
+  .channel-mini-thumb{width:100%;aspect-ratio:16/9;background:linear-gradient(135deg,#0a0a0a,#0f0f0f);border-radius:6px;overflow:hidden;margin-bottom:8px;display:flex;align-items:center;justify-content:center}
+  .channel-mini-thumb img{width:100%;height:100%;object-fit:cover}
+  .channel-mini-info{display:flex;flex-direction:column;gap:4px}
+  .channel-mini-title{font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
+  .channel-mini-meta{font-size:10px;color:var(--sub)}
+  .channel-post{background:var(--surface);border-radius:8px;padding:12px;margin-bottom:10px}
+  .channel-post-text{font-size:13px;line-height:1.45;white-space:pre-wrap}
+  .channel-post-meta{font-size:11px;color:var(--sub);margin-top:8px}
+  .channel-post-media{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap}
+  .channel-post-media img{max-width:170px;border-radius:6px;border:1px solid var(--border)}
+  /* YouTube-like full-page player */
+  #videoFullModal.open{display:flex!important;background:transparent!important;backdrop-filter:none!important;align-items:flex-start!important;justify-content:flex-start!important;padding:0!important}
+  .yt-container{display:flex;flex-direction:column;height:100vh;background:#000;width:100vw;overflow:hidden;position:fixed;top:0;left:0;z-index:999}
+  .yt-topbar{display:flex;align-items:center;gap:12px;padding:14px 24px;background:linear-gradient(180deg,rgba(0,0,0,.95),rgba(0,0,0,.85));border-bottom:1px solid var(--border);backdrop-filter:blur(10px);flex-shrink:0;z-index:10}
+  .yt-topbar .yt-logo{font-size:22px;font-weight:900;color:var(--primary);letter-spacing:2px;font-family:'Orbitron',monospace;text-transform:uppercase;cursor:pointer;flex-shrink:0}
+  .yt-topbar .yt-logo:hover{opacity:.85}
+  .yt-topbar .search-wrap{flex:1;max-width:500px;position:relative}
+  .yt-topbar .search-wrap input{width:100%;padding:10px 16px;border-radius:12px;border:1px solid var(--border);background:rgba(255,255,255,0.03);color:var(--text);font-size:12px;outline:none;font-family:'Rajdhani',sans-serif;transition:all 0.2s ease}
+  .yt-topbar .search-wrap input:focus{background:rgba(255,255,255,0.05);border-color:var(--primary);box-shadow:0 0 0 3px rgba(0,212,255,0.15)}
+  .yt-topbar .search-wrap input::placeholder{color:var(--sub)}
+  .yt-main{display:flex;gap:16px;padding:16px;overflow:hidden;flex:1;min-height:0}
+  .yt-player-section{flex:1;display:flex;flex-direction:column;overflow-y:auto;min-width:0;min-height:0;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;}
+  .yt-sidebar{width:320px;min-width:320px;overflow-y:auto;border-left:1px solid var(--border);display:flex;flex-direction:column}
+  .yt-embed-wrap{width:100%;aspect-ratio:16/9;background:#0a0a0a;border-radius:8px;overflow:hidden;margin-bottom:16px}
+  .yt-info{padding:0;margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:16px}
+  .yt-vid-title{font-size:18px;font-weight:700;margin-bottom:8px}
+  .yt-meta{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+  .yt-stats{font-size:13px;color:var(--sub)}
+  .yt-channel-btn a{background:var(--primary);color:#000;padding:8px 16px;border-radius:20px;text-decoration:none;font-weight:700;font-size:13px;transition:all .2s;display:inline-block}
+  .yt-channel-btn a:hover{transform:scale(1.05);box-shadow:0 4px 12px rgba(0,212,255,0.3)}
+  .yt-description{font-size:13px;line-height:1.6;color:var(--text);white-space:pre-wrap;max-height:none;overflow:visible;margin-bottom:16px;padding:12px;background:rgba(0,212,255,0.05);border-radius:6px;border-left:3px solid var(--primary)}
+  .yt-comments{flex:0 0 auto}
+  .yt-comments-title{font-size:14px;font-weight:700;margin-bottom:12px}
+  .yt-comments-list{display:flex;flex-direction:column;gap:12px}
+  .yt-comment{background:var(--surface);border-radius:8px;padding:12px;border:1px solid var(--border)}
+  .yt-comment-author{font-weight:700;font-size:13px;margin-bottom:4px}
+  .yt-comment-text{font-size:12px;line-height:1.4;white-space:pre-wrap;word-break:break-word}
+  .yt-comment-meta{font-size:11px;color:var(--sub);margin-top:8px}
+  .yt-comments-status{font-size:12px;color:var(--sub);padding:12px;text-align:center;font-weight:600}
+  .yt-recommended-title{font-size:14px;font-weight:700;padding:12px 12px 0;position:sticky;top:0;background:linear-gradient(135deg,#0a0a0a,#1a1a1a);z-index:1}
+  .yt-recommended-list{display:flex;flex-direction:column;gap:8px;padding:12px}
+  .yt-rec-item{background:var(--surface);border-radius:6px;padding:8px;cursor:pointer;transition:all .2s;border:1px solid var(--border);display:flex;gap:8px}
+  .yt-rec-item:hover{background:linear-gradient(135deg,#1a1a1a,#242424);border-color:var(--primary)}
+  .yt-rec-thumb{width:100px;height:56px;background:#0b0b0b;border-radius:4px;flex-shrink:0;overflow:hidden}
+  .yt-rec-thumb img{width:100%;height:100%;object-fit:cover}
+  .yt-rec-info{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}
+  .yt-rec-title{font-size:12px;font-weight:700;white-space:normal;line-height:1.3}
+  .yt-rec-meta{font-size:11px;color:var(--sub)}
+  @media(max-width:900px){.yt-main{flex-direction:column}.yt-sidebar{width:100%;height:300px;border-left:none;border-top:1px solid var(--border)}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">HyperZMedia</div>
+  <div class="dropdown-container">
+    <button class="dropdown-toggle" id="apiToggle">Music</button>
+    <div class="dropdown-menu" id="apiMenu">
+      <div class="dropdown-item active" data-value="online">Music</div>
+      <div class="dropdown-item" data-value="local">Local</div>
+      <div class="dropdown-item" data-value="radio">Radio</div>
+      <div class="dropdown-item" data-value="video">Videos</div>
+      <div class="dropdown-item" data-value="podcast">Podcasts</div>
+    </div>
+  </div>
+  <div class="search-wrap"><input type="text" id="searchInput" placeholder="Search tracks..."></div>
+  <button class="inline-btn" id="ngBtn" style="display:none">Newgrounds</button>
+  <button class="nav-btn" id="uploadBtn">Import</button>
+  <input type="file" id="fileInput" accept="audio/*,video/mp4,video/webm,video/ogg,video/quicktime,video/x-matroska,.mkv,.mp4,.webm,.mov,.m4a,.3gp,.3g2" multiple style="display:none">
+  <button class="nav-btn" id="plBtn">Playlists</button>
+</header>
+<main id="main"><div class="grid" id="grid"><div class="loading">Loading tracks...</div></div></main>
+
+<div class="sidebar" id="sidebar">
+  <div class="sb-header">
+    <button class="sb-close" id="sbClose"><svg width="18" height="18" viewBox="0 0 24 24" fill="var(--sub)"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>
+    <div class="sb-title" id="sbTitle">Playlist</div>
+  </div>
+  <div class="sb-list" id="sbList"></div>
+  <div class="sb-footer">
+    <button class="sb-add-btn" id="sbAddBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="#000"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Add Song</button>
+    <div class="sb-dropdown" id="sbDropdown"></div>
+  </div>
+</div>
+
+<div class="modal" id="plModal">
+  <div class="modal-box">
+    <div class="modal-title">Your Playlists</div>
+    <div class="pl-list" id="plList"></div>
+    <input class="modal-input" id="newPlInput" placeholder="New playlist name...">
+    <div class="modal-btns"><button class="m-btn g" id="closePl">Cancel</button><button class="m-btn p" id="createPl">Create</button></div>
+  </div>
+</div>
+
+<div class="player" id="player" style="display:none">
+  <div class="p-info">
+    <div class="p-title" id="pTitle"></div>
+    <div class="p-ctx" id="pCtx"></div>
+  </div>
+  <div class="player-center">
+    <div class="controls">
+      <button class="btn" id="prevBtn"><svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg></button>
+      <button class="btn btn-play" id="ppBtn"><svg id="playIc" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><svg id="pauseIc" viewBox="0 0 24 24" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg></button>
+      <button class="btn" id="nextBtn"><svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg></button>
+      <button class="btn" id="repBtn" title="Repeat One"><svg viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg></button>
+    </div>
+    <div class="prog-wrap">
+      <span id="cTime">0:00</span>
+      <div class="prog-bar" id="pBar"><div class="prog-fill" id="pFill"><div class="prog-handle"></div></div></div>
+      <span id="dTime">0:00</span>
+    </div>
+  </div>
+  <div class="vol-wrap">
+    <button id="volIconBtn" style="background:none;border:none;cursor:pointer;padding:0;display:flex;align-items:center">
+      <svg id="volIcon" viewBox="0 0 24 24" style="width:16px;height:16px;fill:var(--sub)">
+        <path id="volIconPath" d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+      </svg>
+    </button>
+    <div class="vol-slider-wrap">
+      <div class="vol-snap-line" id="volSnapLine"></div>
+      <input type="range" id="volRange" min="0" max="200" step="1" value="100">
+    </div>
+  </div>
+</div>
+<audio id="audio" crossorigin="anonymous"></audio>
+<div class="dropdown" id="gridDropdown"></div>
+<div class="upload-toast" id="uploadToast"></div>
+
+<!-- Newgrounds modal -->
+<div class="modal" id="ngModal">
+  <div class="ng-box">
+    <div class="ng-header">
+      <div class="ng-title">🎵 Newgrounds Audio</div>
+      <button class="video-modal-close" id="ngModalClose">✕</button>
+    </div>
+    <p class="ng-hint">Enter the song ID and name from <a href="https://www.newgrounds.com/audio" target="_blank" style="color:var(--primary)">newgrounds.com/audio</a>.<br>ID = number in the URL · Name = song title</p>
+    <div class="ng-row">
+      <input type="number" id="ngIdInput" placeholder="Song ID e.g. 32207" min="1" style="width:140px;background:var(--card);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:8px 12px;font-size:14px">
+      <input type="text" id="ngNameInput" placeholder="Song name e.g. Forsaken Neon" style="flex:1;background:var(--card);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:8px 12px;font-size:14px">
+      <button class="nav-btn visible" id="ngPlayBtn" style="display:block!important">Play</button>
+    </div>
+    <div id="ngStatus" style="font-size:12px;color:var(--sub);margin-top:8px;min-height:16px"></div>
+    <div id="ngPlayer" style="display:none;margin-top:12px">
+      <iframe id="ngFrame" scrolling="no" frameborder="0" style="display:none"></iframe>
+      <button class="inline-btn" id="ngSaveBtn" style="margin-top:10px;width:100%;justify-content:center">⬇ Save to Local</button>
+    </div>
+  </div>
+</div>
+
+<!-- Video modal -->
+<div class="modal" id="videoModal">
+  <div class="video-modal-box">
+    <div class="video-modal-header">
+      <div class="video-modal-title" id="videoModalTitle"></div>
+      <div class="video-modal-sub" id="videoModalSub"></div>
+      <button class="video-modal-close" id="videoModalClose">✕</button>
+    </div>
+    <div class="video-iframe-wrap">
+      <iframe id="videoFrame" allowfullscreen allow="autoplay; fullscreen; encrypted-media" frameborder="0"></iframe>
+      <video id="videoEl" controls style="display:none;width:100%;height:100%;background:#000;display:block"></video>
+    </div>
+  </div>
+</div>
+
+<!-- Full-page Video Player (YouTube-like) -->
+<div class="modal" id="videoFullModal" style="display:none">
+  <div class="yt-container">
+    <div class="yt-topbar">
+      <div class="yt-logo" id="ytLogo">HyperZMedia</div>
+      <div class="dropdown-container" id="ytDropdownContainer">
+        <button class="dropdown-toggle" id="ytApiToggle">Videos</button>
+        <div class="dropdown-menu" id="ytApiMenu">
+          <div class="dropdown-item active" data-value="video">Videos</div>
+          <div class="dropdown-item" data-value="online">Music</div>
+          <div class="dropdown-item" data-value="radio">Radio</div>
+          <div class="dropdown-item" data-value="podcast">Podcasts</div>
+          <div class="dropdown-item" data-value="local">Local</div>
+        </div>
+      </div>
+      <div class="search-wrap"><input type="text" id="ytSearchInput" placeholder="Search videos..."></div>
+      <button class="inline-btn" id="ytUploadBtn" style="display:none">Import</button>
+      <button class="nav-btn" id="ytPlBtn" style="display:none">Playlists</button>
+    </div>
+    <div class="yt-main">
+      <div class="yt-player-section">
+        <div class="yt-embed-wrap">
+          <iframe id="ytFrame" width="100%" height="100%" frameborder="0" allowfullscreen="" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture"></iframe>
+        </div>
+        <div class="yt-info">
+          <div class="yt-vid-title" id="ytVidTitle"></div>
+          <div class="yt-meta">
+            <div class="yt-stats" id="ytStats"></div>
+            <div class="yt-channel-btn">
+              <a href="#" id="ytChannelLink" target="_blank" rel="noopener">View Channel</a>
+            </div>
+          </div>
+          <div class="yt-description" id="ytDescription"></div>
+        </div>
+        <div class="yt-comments">
+          <div class="yt-comments-title">Comments</div>
+          <div id="ytCommentsList" class="yt-comments-list"></div>
+          <div id="ytCommentsStatus" class="yt-comments-status"></div>
+        </div>
+      </div>
+      <div class="yt-sidebar">
+        <div class="yt-recommended-title">Recommended</div>
+        <div id="ytRecommended" class="yt-recommended-list"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- YouTube channel modal -->
+<div class="modal" id="channelModal">
+  <div class="channel-modal-box">
+    <div class="video-modal-header">
+      <div class="video-modal-title" id="channelModalTitle">Channel</div>
+      <div class="video-modal-sub" id="channelModalSub"></div>
+      <button class="video-modal-close" id="channelModalClose">✕</button>
+    </div>
+    <div class="channel-body">
+      <div class="channel-hero">
+        <img class="channel-avatar" id="channelAvatar" alt="">
+        <div class="channel-info">
+          <div class="channel-name" id="channelName"></div>
+          <div class="channel-meta" id="channelStats"></div>
+          <div class="channel-actions">
+            <a class="inline-btn" id="channelYoutubeLink" target="_blank" rel="noopener">View on YouTube</a>
+          </div>
+        </div>
+      </div>
+      <div class="channel-desc" id="channelDescription"></div>
+      <div class="channel-tabs" id="channelTabs">
+        <div class="channel-tabs-btns">
+          <button class="channel-tab active" data-channel-tab="videos">Videos</button>
+          <button class="channel-tab" data-channel-tab="streams">Livestreams</button>
+          <button class="channel-tab" data-channel-tab="posts">Posts</button>
+        </div>
+        <div class="channel-search-wrap">
+          <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+          <input type="text" id="channelSearchInput" placeholder="Search videos...">
+        </div>
+      </div>
+      <div class="channel-panel active" data-channel-panel="videos">
+        <div class="channel-mini-grid" id="channelLatest"></div>
+        <div class="channel-status" id="channelLatestStatus"></div>
+      </div>
+      <div class="channel-panel" data-channel-panel="streams">
+        <div class="channel-mini-grid" id="channelStreams"></div>
+        <div class="channel-status" id="channelStreamsStatus"></div>
+      </div>
+      <div class="channel-panel" data-channel-panel="posts">
+        <div id="channelPosts"></div>
+        <div class="channel-status" id="channelPostsStatus"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const REPO='hyperzteam555/hyperzhubapps',FOLDER='Music',BRANCH='main';
+const CDN1=f=>`https://raw.githubusercontent.com/${REPO}/${BRANCH}/${FOLDER}/${f}`;
+const CDN2=f=>`https://cdn.jsdelivr.net/gh/${REPO}@${BRANCH}/${FOLDER}/${f}`;
+const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s);
+const grid=$('#grid'),main=$('#main'),sidebar=$('#sidebar'),sbList=$('#sbList');
+const audio=$('#audio'),player=$('#player'),pTitle=$('#pTitle'),pCtx=$('#pCtx');
+const ppBtn=$('#ppBtn'),playIc=$('#playIc'),pauseIc=$('#pauseIc');
+const progFill=$('#pFill'),pBar=$('#pBar'),cTime=$('#cTime'),dTime=$('#dTime');
+const repBtn=$('#repBtn'),prevBtn=$('#prevBtn'),nextBtn=$('#nextBtn');
+const search=$('#searchInput'),plBtn=$('#plBtn'),plModal=$('#plModal'),plList=$('#plList');
+const sbDropdown=$('#sbDropdown'),gridDropdown=$('#gridDropdown');
+const uploadBtn=$('#uploadBtn'),fileInput=$('#fileInput'),uploadToast=$('#uploadToast');
+
+let currentApi='online';
+let tracks=[];
+let playTracks=null;
+let playlists=[];
+let curPlId=null,curIdx=-1,repeating=false,curTrack=null;
+let localBlobURLs={}; // filename -> blob URL (in-memory, per session)
+
+function getTracks(){return playTracks||tracks}
+
+// ── IndexedDB helpers ──────────────────────────────────────────────────────
+const DB_NAME='ZMusicDB',DB_VERSION=1,STORE='tracks';
+let db=null;
+function openDB(){
+  return new Promise((res,rej)=>{
+    if(db)return res(db);
+    const req=indexedDB.open(DB_NAME,DB_VERSION);
+    req.onupgradeneeded=e=>{e.target.result.createObjectStore(STORE,{keyPath:'name'})};
+    req.onsuccess=e=>{db=e.target.result;res(db)};
+    req.onerror=()=>rej(req.error);
+  });
+}
+function dbGetAll(){
+  return openDB().then(db=>new Promise((res,rej)=>{
+    const tx=db.transaction(STORE,'readonly');
+    const req=tx.objectStore(STORE).getAll();
+    req.onsuccess=()=>res(req.result);
+    req.onerror=()=>rej(req.error);
+  }));
+}
+function dbPut(record){
+  return openDB().then(db=>new Promise((res,rej)=>{
+    const tx=db.transaction(STORE,'readwrite');
+    const req=tx.objectStore(STORE).put(record);
+    req.onsuccess=()=>res();
+    req.onerror=()=>rej(req.error);
+  }));
+}
+function dbDelete(name){
+  return openDB().then(db=>new Promise((res,rej)=>{
+    const tx=db.transaction(STORE,'readwrite');
+    const req=tx.objectStore(STORE).delete(name);
+    req.onsuccess=()=>res();
+    req.onerror=()=>rej(req.error);
+  }));
+}
+
+// ── Save to Local helper ───────────────────────────────────────────────────
+async function saveToLocal(t,btnEl){
+  if(!t.url){toast('No direct URL to save');return}
+  if(btnEl){btnEl.textContent='Saving…';btnEl.style.pointerEvents='none'}
+  try{
+    const res=await fetch(t.url);
+    if(!res.ok)throw new Error('Fetch failed');
+    const buf=await res.arrayBuffer();
+    const ext=t.url.split('?')[0].match(/\.[a-z0-9]+$/i)?.[0]||'.mp3';
+    const safeName=(t.name||'track').replace(/[/\\:*?"<>|]/g,'_').slice(0,80)+ext;
+    const blob=new Blob([buf],{type:res.headers.get('content-type')||'audio/mpeg'});
+    await dbPut({name:safeName,blob});
+    toast(`Saved "${t.name}" to Local`);
+    if(btnEl){btnEl.textContent='✓ Saved';btnEl.style.color='var(--primary)'}
+  }catch(e){
+    toast('Could not save — track may be protected');
+    if(btnEl){btnEl.textContent='Save to Local';btnEl.style.pointerEvents=''}
+  }
+}
+let toastT;
+function toast(msg){
+  uploadToast.textContent=msg;uploadToast.classList.add('show');
+  clearTimeout(toastT);toastT=setTimeout(()=>uploadToast.classList.remove('show'),2500);
+}
+
+// ── Native: load from IndexedDB ────────────────────────────────────────────
+async function fetchNative(){
+  const rows=await dbGetAll();
+  return rows.map(r=>{
+    if(r.ngId){
+      // Newgrounds reference — no blob, play via CDN URL
+      return{
+        name:r.ngName||`Newgrounds #${r.ngId}`,
+        file:r.name,
+        isNative:true,isLocal:true,isNGRef:true,
+        ngId:r.ngId,ngName:r.ngName,
+        blob:null
+      };
+    }
+    return{
+      name:r.name.replace(/\.[^.]+$/,''),
+      file:r.name,
+      isNative:true,isLocal:true,
+      isLocalVideo:/\.(mp4|webm|mov|mkv|avi)$/i.test(r.name),
+      blob:r.blob
+    };
+  });
+}
+
+// ── Upload handler ─────────────────────────────────────────────────────────
+uploadBtn.onclick=()=>fileInput.click();
+fileInput.onchange=async()=>{
+  const files=[...fileInput.files].filter(f=>/\.(mp3|wav|ogg|m4a|aac|flac|webm|mp4|mov|mkv|avi|3gp|3g2)$/i.test(f.name));
+  if(!files.length){toast('No supported audio/video files selected');return}
+  uploadBtn.classList.add('upload-active');
+  uploadBtn.textContent='Uploading…';
+  let added=0;
+  for(const f of files){
+    const buf=await f.arrayBuffer();
+    await dbPut({name:f.name,blob:new Blob([buf],{type:f.type||'audio/mpeg'})});
+    added++;
+  }
+  fileInput.value='';
+  uploadBtn.textContent='Upload';
+  uploadBtn.classList.remove('upload-active');
+  toast(`Added ${added} file${added!==1?'s':''}`);
+  if(currentApi==='local'){tracks=await fetchNative();renderGrid()}
+};
+
+// ── Audius — open music platform, full streams, no key needed ─────────────
+async function fetchAudius(q){
+  // api.audius.co is the stable gateway; add app_name as requested by their docs
+  const res=await fetch(`https://api.audius.co/v1/tracks/search?query=${encodeURIComponent(q)}&limit=20&app_name=ZMusic`,{cache:'no-store'});
+  if(!res.ok) throw null;
+  const d=await res.json();
+  return (d.data||[]).filter(t=>t.id).map(t=>({
+    id:t.id,
+    name:t.title||'Unknown',
+    artist:t.user?.name||'',
+    url:`https://api.audius.co/v1/tracks/${t.id}/stream?app_name=ZMusic`,
+    art:t.artwork?.['480x480']||t.artwork?.['150x150']||t.artwork?.['_']||'',
+    provider:'Audius',isNative:false
+  }));
+}
+
+// ── iTunes — 30s previews, CORS-friendly, no key needed ───────────────────
+async function fetchITunes(q){
+  const res=await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(q)}&media=music&limit=20`,{cache:'no-store'});
+  if(!res.ok) throw null;
+  const d=await res.json();
+  return (d.results||[]).filter(t=>t.previewUrl).map(t=>({
+    id:t.trackId,
+    name:t.trackName||'Unknown',
+    artist:t.artistName||'',
+    url:t.previewUrl,
+    art:(t.artworkUrl100||'').replace('100x100bb','300x300bb'),
+    provider:'iTunes',isNative:false
+  }));
+}
+
+// ── Deezer — 30s previews, needs CORS proxy ───────────────────────────────
+async function fetchDeezer(q){
+  const target=`https://api.deezer.com/search?q=${encodeURIComponent(q)}&limit=20`;
+  const res=await fetch(`https://proxy.corsfix.com/?${target}`,{cache:'no-store'});
+  if(!res.ok) throw null;
+  const d=await res.json();
+  return (d.data||[]).filter(t=>t.preview).map(t=>({
+    id:t.id,
+    name:t.title||'Unknown',
+    artist:t.artist?.name||'',
+    url:t.preview,
+    art:t.album?.cover_medium||'',
+    provider:'Deezer',isNative:false
+  }));
+}
+
+// ── Jamendo — full CC tracks, free test client ID ─────────────────────────
+async function fetchJamendo(q){
+  const res=await fetch(`https://api.jamendo.com/v3.0/tracks/?client_id=709fa152&format=json&limit=20&namesearch=${encodeURIComponent(q)}&audioformat=mp32`,{cache:'no-store'});
+  if(!res.ok) throw null;
+  const d=await res.json();
+  return (d.results||[]).filter(t=>t.audio).map(t=>({
+    id:t.id,
+    name:t.name||'Unknown',
+    artist:t.artist_name||'',
+    url:t.audio,
+    art:t.album_image||'',
+    provider:'Jamendo',isNative:false
+  }));
+}
+
+// ── ccMixter — CC remix community, full tracks, no key ────────────────────
+async function fetchCCMixter(q){
+  // Returns JSONP-style array; f=json gives raw JSON array
+  const res=await fetch(`https://ccmixter.org/api/query?search=${encodeURIComponent(q)}&format=json&limit=20&type=any`,{cache:'no-store'});
+  if(!res.ok) throw null;
+  let text=await res.text();
+  // ccMixter JSON can have bad octals — strip them safely
+  text=text.replace(/\\[0-7]{3}/g,'');
+  const data=JSON.parse(text);
+  return (Array.isArray(data)?data:[]).filter(t=>{
+    const mp3=t.files?.find?.(f=>f.download_url&&/\.mp3$/i.test(f.download_url));
+    return mp3;
+  }).map(t=>{
+    const mp3=t.files.find(f=>f.download_url&&/\.mp3$/i.test(f.download_url));
+    return{
+      id:t.upload_id,
+      name:t.upload_name||'Unknown',
+      artist:t.user_real_name||t.user_name||'',
+      url:mp3.download_url,
+      art:'',
+      provider:'ccMixter',isNative:false
+    };
+  });
+}
+
+// ── Internet Archive — public domain & CC audio, no key ───────────────────
+async function fetchArchive(q){
+  const url=`https://archive.org/advancedsearch.php?q=${encodeURIComponent(q)}+AND+mediatype:audio&fl[]=identifier,title,creator&rows=12&output=json`;
+  const res=await fetch(url,{cache:'no-store'});
+  if(!res.ok) throw null;
+  const d=await res.json();
+  const items=d.response?.docs||[];
+  // Return items immediately; actual audio URL is resolved lazily in playArchive()
+  return items.map(it=>({
+    id:it.identifier,
+    name:it.title||it.identifier,
+    artist:Array.isArray(it.creator)?it.creator[0]:it.creator||'Internet Archive',
+    url:null, // resolved at play time
+    art:`https://archive.org/services/get-item-image.php?identifier=${it.identifier}`,
+    provider:'Archive',isNative:false,isArchive:true
+  }));
+}
+
+// Resolve the real audio file URL for an Archive item on demand
+async function resolveArchiveUrl(t){
+  if(t.url)return t.url;
+  const meta=await fetch(`https://archive.org/metadata/${t.id}`,{cache:'no-store'});
+  if(!meta.ok)throw new Error('Archive metadata failed');
+  const m=await meta.json();
+  const files=m.files||[];
+  const pick=files.find(f=>/\.mp3$/i.test(f.name))||
+             files.find(f=>/\.ogg$/i.test(f.name))||
+             files.find(f=>/\.(opus|flac|m4a|wav)$/i.test(f.name));
+  if(!pick)throw new Error('No audio file found');
+  const server=m.server||'ia803400.us.archive.org';
+  const dir=m.dir||`/0/items/${t.id}`;
+  t.url=`https://${server}${dir}/${encodeURIComponent(pick.name)}`;
+  return t.url;
+}
+
+// ── Mixcloud — DJ mixes, podcasts, radio shows — open search, no key ───────
+async function fetchMixcloud(q){
+  const url=`https://api.mixcloud.com/search/?q=${encodeURIComponent(q)}&type=cloudcast&limit=20`;
+  const res=await fetch(url,{cache:'no-store'});
+  if(!res.ok)throw null;
+  const d=await res.json();
+  return (d.data||[]).map(c=>({
+    id:c.key,
+    name:c.name||'Unknown',
+    artist:c.user?.name||c.user?.username||'',
+    description:'',
+    thumb:c.pictures?.large||c.pictures?.medium||'',
+    embedUrl:`https://www.mixcloud.com/widget/iframe/?hide_cover=1&feed=${encodeURIComponent(c.key)}`,
+    pageUrl:`https://www.mixcloud.com${c.key}`,
+    provider:'Mixcloud',isVideo:true
+  }));
+}
+
+// ── Wikimedia Commons audio — CC/PD recordings, no key, MediaWiki API ───────
+async function fetchWikimediaAudio(q){
+  const url=`https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(q)}&gsrnamespace=6&gsrlimit=20&prop=imageinfo|pageimages&iiprop=url|mime&pithumbsize=300&format=json&origin=*`;
+  const res=await fetch(url,{cache:'no-store'});
+  if(!res.ok)throw null;
+  const d=await res.json();
+  const pages=Object.values(d.query?.pages||{});
+  return pages.filter(p=>{
+    const mime=p.imageinfo?.[0]?.mime||'';
+    return /^audio\//.test(mime)||/\.(mp3|ogg|flac|wav|oga)$/i.test(p.imageinfo?.[0]?.url||'');
+  }).map(p=>{
+    const ii=p.imageinfo?.[0]||{};
+    const title=p.title?.replace(/^File:/,'');
+    return{
+      id:p.pageid,
+      name:title?.replace(/\.[^.]+$/,'')||'Unknown',
+      artist:'Wikimedia Commons',
+      url:ii.url||'',
+      art:p.thumbnail?.source||'',
+      provider:'Wikimedia',isNative:false
+    };
+  }).filter(t=>t.url);
+}
+
+async function fetchOnline(q,onUpdate,isCurrent){
+  const providers=[
+    {label:'Audius',fetcher:fetchAudius},
+    {label:'iTunes',fetcher:fetchITunes},
+    {label:'Deezer',fetcher:fetchDeezer},
+    {label:'Jamendo',fetcher:fetchJamendo},
+    {label:'ccMixter',fetcher:fetchCCMixter},
+    {label:'Wikimedia',fetcher:fetchWikimediaAudio},
+    {label:'Archive',fetcher:fetchArchive}
+  ];
+  // Music priority order — Audius floats to top regardless of arrival order.
+  // Lower number = higher priority.
+  const musicPriority={'Audius':0,'iTunes':1,'Deezer':2,'Jamendo':2,'ccMixter':3,'Wikimedia':3,'Archive':3};
+  const all=[];
+  const seen=new Set();
+  let completed=0;
+  const total=providers.length;
+  const sortAll=()=>{
+    all.sort((a,b)=>{
+      const pa=musicPriority[a.provider]!==undefined?musicPriority[a.provider]:99;
+      const pb=musicPriority[b.provider]!==undefined?musicPriority[b.provider]:99;
+      if(pa!==pb)return pa-pb;
+      return 0; // stable within same priority (preserves arrival order)
+    });
+  };
+  if(onUpdate)onUpdate(all,`Searching ${total} providers in parallel...`);
+  // Fire ALL providers simultaneously — results stream in as they arrive
+  const promises=providers.map(async p=>{
+    try{
+      const items=await p.fetcher(q);
+      if(isCurrent&&!isCurrent())return;
+      for(const t of (Array.isArray(items)?items:[])){
+        const key=`${t.provider||''}:${t.id||t.url||t.name}`;
+        if(seen.has(key))continue;
+        seen.add(key);
+        all.push(t);
+      }
+      sortAll();
+      completed++;
+      if(onUpdate&&(!isCurrent||isCurrent()))onUpdate(all,`${completed}/${total} providers loaded`);
+    }catch(e){
+      completed++;
+      if(onUpdate&&(!isCurrent||isCurrent()))onUpdate(all,`${completed}/${total} providers loaded`);
+      console.warn(`${p.label} music search failed`,e);
+    }
+  });
+  await Promise.all(promises);
+  sortAll();
+  if(isCurrent&&!isCurrent())return all;
+  return all;
+}
+
+// ── RadioBrowser — global radio stations, no key ───────────────────────────
+// Use the stable anycast DNS-resolved mirror
+const RB='https://de1.api.radio-browser.info';
+async function fetchRadio(q,onUpdate,isCurrent){
+  const params=`hidebroken=true&lastcheckok=1&limit=60&order=clickcount&reverse=true`;
+  const all=[];
+  const seen=new Set();
+  let completed=0;
+  const total=2; // byName + byTag
+  if(onUpdate)onUpdate(all,`Searching radio stations in parallel...`);
+  const doSearch=async(label,url)=>{
+    try{
+      const res=await fetch(url,{headers:{'User-Agent':'ZMusic/1.0'},cache:'no-store'});
+      const data=await res.json();
+      if(isCurrent&&!isCurrent())return;
+      for(const s of (Array.isArray(data)?data:[])){
+        if(!s.url_resolved&&!s.url)continue;
+        if(seen.has(s.stationuuid))continue;
+        seen.add(s.stationuuid);
+        all.push({
+          id:s.stationuuid,
+          name:s.name||'Unknown Station',
+          artist:s.country||'',
+          url:s.url_resolved||s.url,
+          art:s.favicon||'',
+          tags:s.tags||'',
+          bitrate:s.bitrate||0,
+          codec:s.codec||'',
+          provider:'Radio',isNative:false,isRadio:true
+        });
+      }
+    }catch(e){
+      console.warn(`${label} radio search failed`,e);
+    }
+    completed++;
+    if(onUpdate&&(!isCurrent||isCurrent()))onUpdate(all,`${completed}/${total} searches loaded`);
+  };
+  await Promise.all([
+    doSearch('byName',`${RB}/json/stations/search?name=${encodeURIComponent(q)}&${params}`),
+    doSearch('byTag',`${RB}/json/stations/search?tag=${encodeURIComponent(q)}&${params}`)
+  ]);
+  if(isCurrent&&!isCurrent())return all;
+  return all;
+}
+
+let searchToken=0;
+
+// ── Video sources ──────────────────────────────────────────────────────────
+
+const INVIDIOUS_FALLBACK_INSTANCES=[
+  'https://yt.chocolatemoo53.com',
+  'https://invidious.nerdvpn.de'
+];
+let invidiousInstancesCache=null;
+
+function escapeHtml(v){
+  return String(v??'').replace(/[&<>"']/g,ch=>({
+    '&':'&amp;',
+    '<':'&lt;',
+    '>':'&gt;',
+    '"':'&quot;',
+    "'":'&#39;'
+  })[ch]);
+}
+
+function compactDuration(seconds){
+  seconds=Number(seconds);
+  if(!seconds||!isFinite(seconds))return '';
+  const h=Math.floor(seconds/3600);
+  const m=Math.floor((seconds%3600)/60);
+  const s=Math.floor(seconds%60);
+  return h?`${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`:`${m}:${String(s).padStart(2,'0')}`;
+}
+
+function compactNumber(n){
+  n=Number(n);
+  if(!n||!isFinite(n))return '';
+  if(n>=1e9)return `${(n/1e9).toFixed(n>=1e10?0:1)}B`;
+  if(n>=1e6)return `${(n/1e6).toFixed(n>=1e7?0:1)}M`;
+  if(n>=1e3)return `${(n/1e3).toFixed(n>=1e4?0:1)}K`;
+  return String(n);
+}
+
+async function getInvidiousInstances(){
+  if(invidiousInstancesCache)return invidiousInstancesCache;
+  const found=[];
+  try{
+    const res=await fetch('https://api.invidious.io/instances.json',{cache:'no-store'});
+    if(res.ok){
+      const rows=await res.json();
+      found.push(...(Array.isArray(rows)?rows:[])
+        .map(row=>row?.[1])
+        .filter(info=>info?.uri&&info.type==='https'&&info.api!==false&&info.cors!==false&&info.monitor?.down!==true)
+        .sort((a,b)=>(b.monitor?.uptime||0)-(a.monitor?.uptime||0))
+        .map(info=>info.uri.replace(/\/$/,'')));
+    }
+  }catch(e){}
+  invidiousInstancesCache=[...new Set([...INVIDIOUS_FALLBACK_INSTANCES,...found])];
+  return invidiousInstancesCache;
+}
+
+function pickInvidiousThumb(thumbnails,instance){
+  const list=Array.isArray(thumbnails)?thumbnails:[];
+  const pick=list.find(t=>/mqdefault|medium/i.test(t.quality||''))||
+             list.find(t=>/hqdefault|high/i.test(t.quality||''))||
+             list[list.length-1]||list[0];
+  const url=pick?.url||'';
+  if(!url)return '';
+  if(/^https?:\/\//i.test(url))return url;
+  if(url.startsWith('//'))return `https:${url}`;
+  if(url.startsWith('/'))return `${instance}${url}`;
+  return url;
+}
+
+function mapInvidiousVideo(v,instance,provider='YouTube'){
+  const src=v?.video||v?.item||v?.data||v||{};
+  const id=src.videoId||src.id||src.video_id||'';
+  const title=src.title||src.name||src.videoTitle||src.titleText||'Untitled YouTube video';
+  const duration=compactDuration(src.lengthSeconds||src.length_seconds||src.duration);
+  return{
+    id,
+    name:title,
+    artist:[src.author||src.channelName||provider,duration||src.publishedText].filter(Boolean).join(' · '),
+    description:src.description||src.descriptionHtml?.replace(/<[^>]+>/g,'')||'',
+    thumb:pickInvidiousThumb(src.videoThumbnails||src.thumbnails||src.thumbnail,instance),
+    // Use privacy-enhanced nocookie domain — no tracking cookies until play, fewer ads
+    embedUrl:`https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&rel=0`,
+    pageUrl:`https://www.youtube.com/watch?v=${encodeURIComponent(id)}`,
+    provider,isVideo:true,isYouTube:true,
+    liveNow:!!src.liveNow
+  };
+}
+
+function mapChannelInvidiousVideo(item,instance){
+  const mapped=mapInvidiousVideo(item,instance);
+  if(!mapped.id)return null;
+  return mapped;
+}
+
+async function fetchInvidiousJson(path,preferredInstance='',timeout=8000){
+  const instances=await getInvidiousInstances();
+  const ordered=[...new Set([preferredInstance,...instances].filter(Boolean))].slice(0,6);
+  // Race all instances in parallel — first success wins (much faster than sequential)
+  const fetchFromInstance=async(instance)=>{
+    const res=await withTimeout(fetch(`${instance}${path}`,{cache:'no-store'}),timeout);
+    if(!res.ok)throw new Error(`HTTP ${res.status}`);
+    return {data:await res.json(),instance};
+  };
+  return Promise.any(ordered.map(fetchFromInstance));
+}
+
+async function fetchInvidiousChannels(q){
+  const instances=await getInvidiousInstances();
+  for(const instance of instances){
+    try{
+      const params=new URLSearchParams({q,type:'channel',page:'1',region:'US'});
+      const res=await withTimeout(fetch(`${instance}/api/v1/search?${params}`,{cache:'no-store'}),5000);
+      if(!res.ok)continue;
+      const data=await res.json();
+      let results=data;
+      if(!Array.isArray(data)){
+        if(data.results&&Array.isArray(data.results)){
+          results=data.results;
+        }else{
+          continue;
+        }
+      }
+      const channels=results.filter(c=>c.type==='channel'&&c.authorId).slice(0,4);
+      if(!channels.length)continue;
+      return channels.map(c=>({
+        id:c.authorId,
+        name:c.author||'YouTube Channel',
+        thumb:pickInvidiousThumb(c.authorThumbnails,instance),
+        description:c.description||'',
+        subCount:c.subCount||0,
+        videoCount:c.videoCount||0,
+        pageUrl:`https://www.youtube.com/channel/${encodeURIComponent(c.authorId)}`,
+        instance
+      }));
+    }catch(e){}
+  }
+  return [];
+}
+
+// YouTube search through public Invidious instances; playback uses YouTube Embed.
+let _lastInvidiousInstance='';
+async function fetchInvidiousYouTube(q,page=1){
+  const instances=await getInvidiousInstances();
+  for(const instance of instances){
+    try{
+      const params=new URLSearchParams({q,type:'video',page:String(page),region:'US'});
+      const res=await fetch(`${instance}/api/v1/search?${params}`,{cache:'no-store'});
+      if(!res.ok)continue;
+      const data=await res.json();
+      let results=data;
+      if(!Array.isArray(data)){
+        if(data.results&&Array.isArray(data.results)){
+          results=data.results;
+        }else{
+          continue;
+        }
+      }
+      const videos=results.filter(v=>v.type==='video'&&v.videoId&&!v.paid&&!v.premium);
+      if(!videos.length)continue;
+      _lastInvidiousInstance=instance;
+      return videos.slice(0,20).map(v=>mapInvidiousVideo(v,instance));
+    }catch(e){}
+  }
+  return [];
+}
+
+// Internet Archive Videos — public domain movies, CC films, no key
+async function fetchArchiveVideo(q){
+  const url=`https://archive.org/advancedsearch.php?q=${encodeURIComponent(q)}+AND+mediatype:movies&fl[]=identifier,title,creator,description&rows=12&output=json`;
+  const res=await fetch(url,{cache:'no-store'});
+  if(!res.ok)throw null;
+  const d=await res.json();
+  return (d.response?.docs||[]).map(it=>({
+    id:it.identifier,
+    name:it.title||it.identifier,
+    artist:Array.isArray(it.creator)?it.creator[0]:it.creator||'Internet Archive',
+    description:it.description||'',
+    thumb:`https://archive.org/services/get-item-image.php?identifier=${it.identifier}`,
+    embedUrl:`https://archive.org/embed/${it.identifier}`,
+    pageUrl:`https://archive.org/details/${it.identifier}`,
+    provider:'Archive Video',isVideo:true
+  }));
+}
+
+// PeerTube — SepiaSearch indexes thousands of federated instances, no key
+async function fetchPeerTube(q){
+  const url=`https://sepiasearch.org/api/v1/search/videos?search=${encodeURIComponent(q)}&count=20&sort=-match&nsfw=false`;
+  const res=await fetch(url,{cache:'no-store'});
+  if(!res.ok)throw null;
+  const d=await res.json();
+  return (d.data||[]).filter(v=>v.uuid&&v.embedPath).map(v=>{
+    const host=v.account?.host||'peer.tube';
+    const thumb=v.thumbnailPath?`https://${host}${v.thumbnailPath}`:'';
+    return{
+      id:v.uuid,
+      name:v.name||'Unknown',
+      artist:v.account?.displayName||v.account?.name||'',
+      description:v.description||'',
+      thumb,
+      embedUrl:`https://${host}/videos/embed/${v.uuid}?title=0&warningTitle=0`,
+      pageUrl:`https://${host}/videos/watch/${v.uuid}`,
+      provider:'PeerTube',isVideo:true
+    };
+  });
+}
+
+// TED Talks — oEmbed for known slugs; search via their open search endpoint
+async function fetchTED(q){
+  // TED's website search returns JSON at this undocumented but stable endpoint
+  const url=`https://api.ted.com/v2/talks?q=${encodeURIComponent(q)}&per_page=20&fields=slug,title,speaker_name,thumb,description`;
+  // Fallback: use their public search page via a CORS proxy
+  const proxyUrl=`https://proxy.corsfix.com/?https://www.ted.com/talks?q=${encodeURIComponent(q)}&per_page=12`;
+  try{
+    // Try the undocumented v2 API first (no key required for reads)
+    const res=await fetch(url,{cache:'no-store'});
+    if(res.ok){
+      const d=await res.json();
+      if(d.talks&&d.talks.length){
+        return d.talks.map(t=>({
+          id:t.slug,
+          name:t.title||'Unknown',
+          artist:t.speaker_name||'TED',
+          description:t.description||'',
+          thumb:t.thumb||'',
+          embedUrl:`https://embed.ted.com/talks/${t.slug}`,
+          pageUrl:`https://www.ted.com/talks/${t.slug}`,
+          provider:'TED',isVideo:true
+        }));
+      }
+    }
+  }catch(e){}
+  // Fallback: search TED's public search JSON (RSS/API)
+  const rss=await fetch(`https://www.ted.com/talks.json?search=${encodeURIComponent(q)}&page=1`,{cache:'no-store'}).catch(()=>null);
+  if(rss?.ok){
+    const d=await rss.json();
+    return (d.talks||[]).map(t=>({
+      id:t.slug,
+      name:t.title||'Unknown',
+      artist:t.speakers?.map(s=>s.name).join(', ')||'TED',
+      description:t.description||'',
+      thumb:t.thumbnails?.find(x=>x.type==='small')?.src||'',
+      embedUrl:`https://embed.ted.com/talks/${t.slug}`,
+      pageUrl:`https://www.ted.com/talks/${t.slug}`,
+      provider:'TED',isVideo:true
+    }));
+  }
+  return [];
+}
+
+// Vimeo — oEmbed is free, but search requires a token.
+// We use their open search-by-tag endpoint via the public Vimeo site search
+// which is accessible without auth at the /videos/ endpoint with a CORS proxy.
+async function fetchVimeo(q){
+  // Vimeo's API requires a token for search. Use their public oEmbed + search proxy.
+  const url=`https://proxy.corsfix.com/?https://vimeo.com/api/rest/v2?method=vimeo.videos.search&query=${encodeURIComponent(q)}&per_page=20&format=json`;
+  try{
+    const res=await fetch(url,{cache:'no-store'});
+    if(!res.ok)throw null;
+    const d=await res.json();
+    const videos=d.videos?.video;
+    if(!Array.isArray(videos))return [];
+    return videos.map(v=>({
+      id:v.id,
+      name:v.title||'Unknown',
+      artist:v.owner?.realname||v.owner?.display_name||'Vimeo',
+      description:v.description||'',
+      thumb:(v.thumbnails?.thumbnail||[]).find(t=>t._content)?.['url']||
+            (Array.isArray(v.thumbnails?.thumbnail)?v.thumbnails.thumbnail.slice(-1)[0]?._content:'')||'',
+      embedUrl:`https://player.vimeo.com/video/${v.id}?title=0&byline=0`,
+      pageUrl:`https://vimeo.com/${v.id}`,
+      provider:'Vimeo',isVideo:true
+    }));
+  }catch(e){return []}
+}
+
+// ── Dailymotion — public data API, no key required for search ──────────────
+async function fetchDailymotion(q){
+  const url=`https://api.dailymotion.com/videos?search=${encodeURIComponent(q)}&fields=id,title,owner.screenname,thumbnail_360_url&limit=20&family_filter=1`;
+  const res=await fetch(url,{cache:'no-store'});
+  if(!res.ok)throw null;
+  const d=await res.json();
+  return (d.list||[]).filter(v=>v.id).map(v=>({
+    id:v.id,
+    name:v.title||'Unknown',
+    artist:v['owner.screenname']||'Dailymotion',
+    description:'',
+    thumb:v.thumbnail_360_url||'',
+    // Use the stable legacy embed URL — works without a registered Player ID
+    embedUrl:`https://www.dailymotion.com/embed/video/${v.id}?autoplay=1&mute=0`,
+    pageUrl:`https://www.dailymotion.com/video/${v.id}`,
+    provider:'Dailymotion',isVideo:true
+  }));
+}
+
+// ── Wikimedia Commons — public domain / CC video via MediaWiki API ─────────
+async function fetchWikimediaVideo(q){
+  const url=`https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(q)}&gsrnamespace=6&gsrlimit=20&prop=imageinfo|pageimages&iiprop=url|mime|extmetadata&iiextmetadatafilter=License,LicenseShortName,ImageDescription&pithumbsize=360&format=json&origin=*`;
+  const res=await fetch(url,{cache:'no-store'});
+  if(!res.ok)throw null;
+  const d=await res.json();
+  const pages=Object.values(d.query?.pages||{});
+  return pages.filter(p=>{
+    const mime=p.imageinfo?.[0]?.mime||'';
+    return /^video\//.test(mime);
+  }).map(p=>{
+    const ii=p.imageinfo?.[0]||{};
+    const title=p.title?.replace(/^File:/,'');
+    const desc=ii.extmetadata?.ImageDescription?.value?.replace(/<[^>]+>/g,'')||'';
+    return{
+      id:p.pageid,
+      name:title?.replace(/\.[^.]+$/,'')||'Unknown',
+      artist:'Wikimedia Commons',
+      description:desc,
+      thumb:p.thumbnail?.source||'',
+      embedUrl:`https://commons.wikimedia.org/wiki/File:${encodeURIComponent(title)}?embedplayer=yes`,
+      pageUrl:`https://commons.wikimedia.org/wiki/File:${encodeURIComponent(title)}`,
+      provider:'Wikimedia',isVideo:true
+    };
+  });
+}
+
+// ── NASA Image & Video Library — completely open API, no key ───────────────
+async function fetchNASA(q){
+  const url=`https://images-api.nasa.gov/search?q=${encodeURIComponent(q)}&media_type=video&page_size=20`;
+  const res=await fetch(url,{cache:'no-store'});
+  if(!res.ok)throw null;
+  const d=await res.json();
+  const items=(d.collection?.items||[]).filter(it=>it.links&&it.data?.[0]);
+  return items.map(it=>{
+    const meta=it.data[0];
+    const thumb=(it.links||[]).find(l=>l.rel==='preview')?.href||'';
+    const nasaId=meta.nasa_id||'';
+    return{
+      id:nasaId,
+      name:meta.title||'Unknown',
+      artist:meta.center||'NASA',
+      description:meta.description||'',
+      thumb,
+      embedUrl:`https://images-assets.nasa.gov/video/${nasaId}/${nasaId}~orig.mp4`,
+      pageUrl:`https://images.nasa.gov/details/${nasaId}`,
+      provider:'NASA',isVideo:true,isNasaVideo:true
+    };
+  });
+}
+
+const VIDEO_PROVIDER_TIMEOUT=9000;
+const EXTRA_YOUTUBE_TIMEOUT=5000;
+const DEEP_YOUTUBE_TIMEOUT=3000;
+const FAST_YOUTUBE_TIMEOUT=1500;
+const QUICK_YOUTUBE_TIMEOUT=1000;
+const BLINK_YOUTUBE_TIMEOUT=500;
+const VIDEO_PROVIDERS=[
+  {label:'YouTube',fetcher:q=>fetchInvidiousYouTube(q,1)},
+  {label:'YouTube page 2',fetcher:q=>fetchInvidiousYouTube(q,2),timeout:EXTRA_YOUTUBE_TIMEOUT},
+  {label:'YouTube page 3',fetcher:q=>fetchInvidiousYouTube(q,3),timeout:EXTRA_YOUTUBE_TIMEOUT},
+  {label:'YouTube page 4',fetcher:q=>fetchInvidiousYouTube(q,4),timeout:DEEP_YOUTUBE_TIMEOUT},
+  {label:'YouTube page 5',fetcher:q=>fetchInvidiousYouTube(q,5),timeout:DEEP_YOUTUBE_TIMEOUT},
+  {label:'YouTube page 6',fetcher:q=>fetchInvidiousYouTube(q,6),timeout:FAST_YOUTUBE_TIMEOUT},
+  {label:'YouTube page 7',fetcher:q=>fetchInvidiousYouTube(q,7),timeout:FAST_YOUTUBE_TIMEOUT},
+  {label:'YouTube page 8',fetcher:q=>fetchInvidiousYouTube(q,8),timeout:QUICK_YOUTUBE_TIMEOUT},
+  {label:'YouTube page 9',fetcher:q=>fetchInvidiousYouTube(q,9),timeout:QUICK_YOUTUBE_TIMEOUT},
+  {label:'YouTube page 10',fetcher:q=>fetchInvidiousYouTube(q,10),timeout:BLINK_YOUTUBE_TIMEOUT},
+  {label:'YouTube page 11',fetcher:q=>fetchInvidiousYouTube(q,11),timeout:BLINK_YOUTUBE_TIMEOUT},
+  {label:'Archive Video',fetcher:fetchArchiveVideo},
+  {label:'PeerTube',fetcher:fetchPeerTube},
+  {label:'TED',fetcher:fetchTED},
+  {label:'Vimeo',fetcher:fetchVimeo},
+  {label:'Dailymotion',fetcher:fetchDailymotion},
+  {label:'Wikimedia',fetcher:fetchWikimediaVideo},
+  {label:'NASA',fetcher:fetchNASA}
+];
+const PODCAST_PROVIDERS=[
+  {label:'Mixcloud',fetcher:fetchMixcloud}
+];
+
+function withTimeout(promise,ms){
+  return Promise.race([
+    promise,
+    new Promise((_,rej)=>setTimeout(()=>rej(new Error('Timed out')),ms))
+  ]);
+}
+
+function addUniqueVideos(target,items,seen){
+  for(const v of (Array.isArray(items)?items:[])){
+    const key=`${v.provider||''}:${v.id||v.embedUrl||v.pageUrl||v.name}`;
+    if(seen.has(key))continue;
+    seen.add(key);
+    target.push(v);
+  }
+}
+
+async function fetchVideoAll(q,onUpdate,isCurrent){
+  const all=[];
+  const seen=new Set();
+  let completed=0;
+  const total=VIDEO_PROVIDERS.length;
+  // Video priority order — YouTube floats to top regardless of arrival order.
+  // Lower number = higher priority. YouTube (all pages) = 0, others grouped by source quality.
+  const videoPriority={'YouTube':0,'Archive Video':1,'PeerTube':2,'TED':2,'Vimeo':3,'Dailymotion':3,'Wikimedia':4,'NASA':4};
+  const sortAll=()=>{
+    all.sort((a,b)=>{
+      const pa=videoPriority[a.provider]!==undefined?videoPriority[a.provider]:99;
+      const pb=videoPriority[b.provider]!==undefined?videoPriority[b.provider]:99;
+      if(pa!==pb)return pa-pb;
+      return 0; // stable within same priority (preserves arrival order)
+    });
+  };
+  if(onUpdate)onUpdate(all,`Searching ${total} providers in parallel...`);
+  // Fire ALL providers simultaneously for maximum speed
+  const promises=VIDEO_PROVIDERS.map(async(provider)=>{
+    try{
+      const items=await withTimeout(provider.fetcher(q),provider.timeout||VIDEO_PROVIDER_TIMEOUT);
+      if(isCurrent&&!isCurrent())return;
+      // Merge results into shared array as they arrive
+      addUniqueVideos(all,items,seen);
+      sortAll();
+      completed++;
+      if(onUpdate)onUpdate(all,`${completed}/${total} providers loaded`);
+    }catch(e){
+      completed++;
+      if(onUpdate&&isCurrent&&isCurrent())onUpdate(all,`${completed}/${total} providers loaded`);
+      console.warn(`${provider.label} video search failed`,e);
+    }
+  });
+  await Promise.all(promises);
+  sortAll();
+  if(isCurrent&&!isCurrent())return all;
+  return all;
+}
+
+async function fetchPodcastAll(q,onUpdate,isCurrent){
+  const all=[];
+  const seen=new Set();
+  let completed=0;
+  const total=PODCAST_PROVIDERS.length;
+  if(onUpdate)onUpdate(all,`Searching ${total} providers in parallel...`);
+  const promises=PODCAST_PROVIDERS.map(async(provider)=>{
+    try{
+      const items=await withTimeout(provider.fetcher(q),provider.timeout||VIDEO_PROVIDER_TIMEOUT);
+      if(isCurrent&&!isCurrent())return;
+      addUniqueVideos(all,items,seen);
+      completed++;
+      if(onUpdate)onUpdate(all,`${completed}/${total} providers loaded`);
+    }catch(e){
+      completed++;
+      if(onUpdate&&isCurrent&&isCurrent())onUpdate(all,`${completed}/${total} providers loaded`);
+      console.warn(`${provider.label} podcast search failed`,e);
+    }
+  });
+  await Promise.all(promises);
+  if(isCurrent&&!isCurrent())return all;
+  return all;
+}
+
+$('#ngBtn').style.display='block';  // visible by default since Music is default mode
+const ngModal=$('#ngModal'),ngFrame=$('#ngFrame'),ngStatus=$('#ngStatus'),ngPlayer=$('#ngPlayer');
+$('#ngBtn').onclick=()=>ngModal.classList.add('open');
+$('#ngModalClose').onclick=()=>{
+  ngModal.classList.remove('open');
+  ngFrame.src='';
+  ngPlayer.style.display='none';
+  ngStatus.textContent='';
+  const a=document.getElementById('ngAudioEl');
+  if(a){a.pause();a.src=''}
+};
+ngModal.onclick=e=>{
+  if(e.target===ngModal){
+    ngModal.classList.remove('open');
+    ngFrame.src='';
+    ngPlayer.style.display='none';
+    ngStatus.textContent='';
+    const a=document.getElementById('ngAudioEl');
+    if(a){a.pause();a.src=''}
+  }
+};
+$('#ngIdInput').onkeydown=e=>{if(e.key==='Enter')$('#ngPlayBtn').click()};
+$('#ngNameInput').onkeydown=e=>{if(e.key==='Enter')$('#ngPlayBtn').click()};
+$('#ngPlayBtn').onclick=async()=>{
+  const id=$('#ngIdInput').value.trim();
+  const nameRaw=$('#ngNameInput').value.trim();
+  if(!id||isNaN(id)){ngStatus.textContent='Please enter a valid song ID.';return}
+  if(!nameRaw){ngStatus.textContent='Please enter the song name too.';return}
+
+  const saveBtn=$('#ngSaveBtn');
+  saveBtn.textContent='⬇ Save to Local';
+  saveBtn.style.color='';
+  saveBtn.style.pointerEvents='';
+  saveBtn.dataset.ngid=id;
+  saveBtn.dataset.ngtitle=nameRaw;
+
+  // Build the CDN URL using NG's known pattern:
+  // https://audio.ngfiles.com/{floor(id/1000)*1000}/{id}_{sanitized_name_max26}.mp3
+  // Sanitization: keep alphanumeric, hyphen, underscore; replace spaces with dashes; strip rest; max 26 chars
+  const folder=Math.floor(parseInt(id)/1000)*1000;
+  const base=`https://audio.ngfiles.com/${folder}/${id}`;
+
+  // NG sanitization (from AutoHotkey GD downloader source):
+  // spaces→dash, &→amp, <→lt, >→gt, "→quot, everything else non-word/dash deleted, max 26
+  const ngSanitize=(s,max=26)=>s
+    .replace(/&/g,'amp').replace(/</g,'lt').replace(/>/g,'gt').replace(/"/g,'quot')
+    .replace(/\s+/g,'-')
+    .replace(/[^\w-]/g,'')
+    .slice(0,max);
+
+  // Underscore variant (spaces→underscore, strip non-alphanum/underscore)
+  const ngUnderscore=(s,max=26)=>s
+    .replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_]/g,'').slice(0,max);
+
+  // First 6 lowercase alphanumeric chars
+  const slug6=nameRaw.toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,6);
+
+  const san26=ngSanitize(nameRaw,26);
+  const sanFull=ngSanitize(nameRaw,999);
+  const und26=ngUnderscore(nameRaw,26);
+  const undFull=ngUnderscore(nameRaw,999);
+
+  const variants=[
+    // Dash-separated variants (AutoHotkey/GD downloader confirmed)
+    `${base}_${san26}.mp3`,
+    `${base}_${ngSanitize(nameRaw,28)}.mp3`,
+    `${base}_${ngSanitize(nameRaw,30)}.mp3`,
+    `${base}_${ngSanitize(nameRaw,32)}.mp3`,
+    `${base}_${sanFull}.mp3`,
+    // Underscore variants (user confirmed: At_the_Speed_of_Light_FINA)
+    `${base}_${und26}.mp3`,
+    `${base}_${ngUnderscore(nameRaw,28)}.mp3`,
+    `${base}_${ngUnderscore(nameRaw,30)}.mp3`,
+    `${base}_${ngUnderscore(nameRaw,32)}.mp3`,
+    `${base}_${undFull}.mp3`,
+    // newgrounds_ prefix (user confirmed: 32207_newgrounds_forsa)
+    `${base}_newgrounds_${slug6}.mp3`,
+    // Lowercase dash variants
+    `${base}_${san26.toLowerCase()}.mp3`,
+    `${base}_${sanFull.toLowerCase()}.mp3`,
+    // Lowercase underscore variants
+    `${base}_${und26.toLowerCase()}.mp3`,
+    `${base}_${undFull.toLowerCase()}.mp3`,
+  ];
+  const urls=[...new Set(variants)];
+  saveBtn.dataset.ngurl=urls[0];
+
+  let ngAudio=document.getElementById('ngAudioEl');
+  if(!ngAudio){
+    ngAudio=document.createElement('audio');
+    ngAudio.id='ngAudioEl';
+    ngAudio.controls=true;
+    ngAudio.style.cssText='width:100%;border-radius:8px';
+    const wrap=document.createElement('div');
+    wrap.id='ngAudioWrap';
+    wrap.appendChild(ngAudio);
+    ngPlayer.insertBefore(wrap,ngPlayer.firstChild);
+  }
+
+  let tryIdx=0;
+  const tryNext=()=>{
+    if(tryIdx>=urls.length){
+      ngStatus.textContent=`Couldn't play — double-check the ID and name are correct.`;
+      ngPlayer.style.display='none';
+      return;
+    }
+    const u=urls[tryIdx++];
+    saveBtn.dataset.ngurl=u;
+    ngAudio.src=u;
+    ngAudio.load();
+  };
+  ngAudio.onerror=tryNext;
+  ngAudio.oncanplay=()=>{ngAudio.play().catch(()=>{})};
+  tryNext();
+  ngStatus.textContent=nameRaw;
+  ngPlayer.style.display='block';
+};
+$('#ngSaveBtn').onclick=async function(){
+  const url=this.dataset.ngurl;
+  const id=this.dataset.ngid;
+  const title=this.dataset.ngtitle||`Newgrounds_${id}`;
+  if(!id)return;
+  this.textContent='Saving…';this.style.pointerEvents='none';
+  try{
+    await dbPut({name:`ng_${id}`,ngId:id,ngName:title,blob:null});
+    toast(`Saved "${title}" to Local`);
+    this.textContent='✓ Saved';this.style.color='var(--primary)';
+  }catch(e){
+    toast('Could not save');
+    this.textContent='⬇ Save to Local';this.style.pointerEvents='';
+  }
+};
+const videoModal=$('#videoModal'),videoFrame=$('#videoFrame'),videoEl=$('#videoEl');
+$('#videoModalClose').onclick=closeVideoModal;
+videoModal.onclick=e=>{if(e.target===videoModal)closeVideoModal()};
+
+// ── Smart video sizing: shrinks the whole modal box to fit 16:9 ──────────
+const videoModalBox=$('.video-modal-box'),videoIframeWrap=$('.video-iframe-wrap');
+function fitVideoPlayer(){
+  if(!videoModal.classList.contains('open'))return;
+  const vw=window.innerWidth,vh=window.innerHeight;
+  const maxBoxW=Math.min(860,vw*0.96);
+  const headerH=videoModal.querySelector('.video-modal-header').offsetHeight||50;
+  // Total space the entire modal can use
+  const maxTotalH=vh*0.92;
+  const availVideoH=maxTotalH-headerH;
+  const availVideoW=maxBoxW;
+  // Solve for best 16:9 fit inside availVideoW × availVideoH
+  const hFromW=availVideoW*9/16;
+  let videoW,videoH;
+  if(hFromW<=availVideoH){
+    videoW=availVideoW; videoH=hFromW;
+  } else {
+    videoH=availVideoH; videoW=Math.min(availVideoH*16/9,availVideoW);
+  }
+  // Set the wrap
+  videoIframeWrap.style.width=Math.round(videoW)+'px';
+  videoIframeWrap.style.height=Math.round(videoH)+'px';
+  videoIframeWrap.style.margin='0 auto';
+  // Shrink the box itself so it hugs the content
+  videoModalBox.style.width=Math.round(videoW)+'px';
+  videoModalBox.style.height=Math.round(videoH+headerH)+'px';
+}
+window.addEventListener('resize',fitVideoPlayer);
+window.addEventListener('orientationchange',()=>setTimeout(fitVideoPlayer,120));
+
+let _currentVideoObj=null;
+
+function buildNativeYouTubeUrl(id){
+  return `https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&rel=0&modestbranding=1`;
+}
+
+function loadVideoSrc(v){
+  if(v.blobUrl||v.isNasaVideo){
+    videoFrame.style.display='none';
+    videoFrame.src='';
+    videoEl.style.display='block';
+    if(v.blobUrl){
+      videoEl.src=v.blobUrl;
+    } else {
+      videoEl.src=v.embedUrl;
+      videoEl.onerror=()=>{
+        fetch(`https://images-api.nasa.gov/asset/${v.id}`,{cache:'no-store'})
+          .then(r=>r.json()).then(d=>{
+            const mp4=(d.collection?.items||[]).find(i=>/\.mp4$/i.test(i.href));
+            if(mp4)videoEl.src=mp4.href;
+          }).catch(()=>{});
+        videoEl.onerror=null;
+      };
+    }
+    videoEl.play().catch(()=>{});
+  } else {
+    videoEl.style.display='none';
+    videoEl.src='';
+    videoFrame.style.display='block';
+    videoFrame.src=v.isYouTube ? buildNativeYouTubeUrl(v.id) : v.embedUrl;
+  }
+}
+
+function openVideoModal(v){
+  _currentVideoObj=v;
+  $('#videoModalTitle').textContent=v.name;
+  $('#videoModalSub').textContent=v.artist?(v.artist+' · '+(v.provider||'Local')):v.provider||'Local';
+  loadVideoSrc(v);
+  videoModal.classList.add('open');
+  requestAnimationFrame(fitVideoPlayer);
+}
+function closeVideoModal(){
+  videoModal.classList.remove('open');
+  videoFrame.src='';
+  videoEl.pause();
+  videoEl.src='';
+  _currentVideoObj=null;
+  if(videoEl._blobURL){URL.revokeObjectURL(videoEl._blobURL);videoEl._blobURL=null}
+}
+
+const channelModal=$('#channelModal'),channelAvatar=$('#channelAvatar'),channelLatest=$('#channelLatest'),channelStreams=$('#channelStreams'),channelPosts=$('#channelPosts');
+const channelLatestStatus=$('#channelLatestStatus'),channelStreamsStatus=$('#channelStreamsStatus'),channelPostsStatus=$('#channelPostsStatus');
+const channelTabBtns=$$('.channel-tab'),channelPanels=$$('.channel-panel'),channelSearchInput=$('#channelSearchInput');
+let channelModalToken=0,channelPostVideos=[],channelState=null,channelSearchByTab={videos:'',streams:'',posts:''};
+channelSearchInput.oninput=e=>{
+  if(!channelState)return;
+  channelSearchByTab[channelState.active]=e.target.value.toLowerCase().trim();
+  renderChannelSection(channelState.active);
+};
+const CHANNEL_PAGE_TIMEOUTS=[8000,5000,5000,3000,3000,1500,1500,1000,1000,500,500];
+$('#channelModalClose').onclick=closeChannelModal;
+channelModal.onclick=e=>{if(e.target===channelModal)closeChannelModal()};
+channelTabBtns.forEach(btn=>btn.onclick=()=>showChannelTab(btn.dataset.channelTab));
+
+function closeChannelModal(){
+  channelModal.classList.remove('open');
+  channelModalToken++;
+  channelState=null;
+  channelSearchByTab={videos:'',streams:'',posts:''};
+  channelSearchInput.value='';
+}
+
+function renderChannelStrip(channels){
+  if(!channels?.length)return '';
+  return`<div class="channel-strip">${channels.map((ch,i)=>{
+    const sub=ch.subCount?`${compactNumber(ch.subCount)} subscribers`:'YouTube channel';
+    const vids=ch.videoCount?` · ${compactNumber(ch.videoCount)} videos`:'';
+    const avatar=ch.thumb?`<img class="channel-avatar" src="${escapeHtml(ch.thumb)}" alt="">`:`<div class="channel-avatar"></div>`;
+    return`<div class="channel-card" data-cidx="${i}">
+      ${avatar}
+      <div class="channel-info">
+        <div class="channel-name">${escapeHtml(ch.name)}</div>
+        <div class="channel-meta">${escapeHtml(sub+vids)}</div>
+        <div class="channel-desc">${escapeHtml(ch.description||'View channel details, latest videos, livestreams, and community posts.')}</div>
+      </div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+function bindChannelCards(channels){
+  $$('.channel-card').forEach(c=>c.onclick=()=>openChannelModal(channels[+c.dataset.cidx]));
+}
+
+function channelQueryFor(kind){
+  return channelSearchByTab[kind]||'';
+}
+
+function updateChannelSearchBox(kind){
+  const labels={videos:'Search videos...',streams:'Search livestreams...',posts:'Search posts...'};
+  channelSearchInput.placeholder=labels[kind]||'Search...';
+  channelSearchInput.value=channelSearchByTab[kind]||'';
+}
+
+function renderChannelVideoCards(el,videos,emptyText,query=''){
+  const filtered=query
+    ?videos.filter(v=>(v.name||'').toLowerCase().includes(query)||(v.artist||'').toLowerCase().includes(query)||(v.description||'').toLowerCase().includes(query))
+    :videos;
+  const needsFullRedraw=el._filterKey!==query;
+  if(needsFullRedraw){
+    el.innerHTML='';
+    el._filterKey=query;
+  }
+
+  if(!filtered.length){
+    const msg=query&&videos.length?`No results for "${query}"`:emptyText;
+    if(needsFullRedraw||!el.querySelector('.channel-mini-card')){
+      el.innerHTML=`<div class="empty" style="padding:18px">${escapeHtml(msg)}</div>`;
+    }
+    return;
+  }
+
+  // Count how many cards are already rendered
+  const existing=el.querySelectorAll('.channel-mini-card').length;
+  const startIdx=needsFullRedraw?0:existing;
+  const newItems=filtered.slice(startIdx);
+  if(!newItems.length)return;
+
+  const fragment=document.createDocumentFragment();
+  newItems.forEach((v,offset)=>{
+    const i=startIdx+offset;
+    const thumb=v.thumb?`<img src="${escapeHtml(v.thumb)}" alt="">`:'';
+    const div=document.createElement('div');
+    div.className='channel-mini-card';
+    div.innerHTML=`<div class="channel-mini-thumb">${thumb}</div>
+      <div class="card-title">${escapeHtml(v.name)}</div>
+      <div class="card-sub">${escapeHtml(v.artist||'')}</div>`;
+    div._videoObj=v;
+    div.onclick=()=>{closeChannelModal();openVideoModal(div._videoObj);};
+    fragment.appendChild(div);
+  });
+  el.appendChild(fragment);
+
+  // Remove empty placeholder if cards are now present
+  el.querySelectorAll('.empty').forEach(e=>e.remove());
+}
+
+function renderChannelPosts(posts,instance,query=''){
+  channelPostVideos=[];
+  const rows=Array.isArray(posts)?posts:[];
+  const filtered=query?rows.filter(post=>{
+    const attach=post.attachment||{};
+    return (post.content||'').toLowerCase().includes(query)||
+      (post.contentHtml||'').replace(/<[^>]+>/g,'').toLowerCase().includes(query)||
+      (post.publishedText||'').toLowerCase().includes(query)||
+      (attach.title||attach.author||'').toLowerCase().includes(query);
+  }):rows;
+  if(!filtered.length){
+    const msg=query&&rows.length?`No results for "${query}"`:'No community posts found';
+    channelPosts.innerHTML=`<div class="empty" style="padding:18px">${escapeHtml(msg)}</div>`;
+    return;
+  }
+  channelPosts.innerHTML=filtered.map(post=>{
+    const attachments=[];
+    const attach=post.attachment;
+    if(attach?.type==='video'&&attach.videoId){
+      const idx=channelPostVideos.push(mapInvidiousVideo(attach,instance))-1;
+      attachments.push(`<button class="inline-btn channel-post-video" data-post-video="${idx}">Watch attached video</button>`);
+    }else if(attach?.type==='image'){
+      const img=pickInvidiousThumb(attach.imageThumbnails||attach.thumbnails,instance)||attach.url||'';
+      if(img)attachments.push(`<img src="${escapeHtml(img)}" alt="">`);
+    }else if(attach?.type==='multiImage'&&Array.isArray(attach.images)){
+      attach.images.slice(0,4).forEach(imgObj=>{
+        const img=pickInvidiousThumb(Array.isArray(imgObj)?imgObj:(imgObj.imageThumbnails||imgObj.thumbnails),instance)||imgObj.url||'';
+        if(img)attachments.push(`<img src="${escapeHtml(img)}" alt="">`);
+      });
+    }else if(attach?.type==='poll'&&Array.isArray(attach.choices)){
+      attachments.push(`<div class="channel-post-meta">${escapeHtml(attach.choices.map(c=>c.text||c).join(' · '))}</div>`);
+    }
+    const meta=[post.publishedText,post.likeCount?`${compactNumber(post.likeCount)} likes`:null].filter(Boolean).join(' · ');
+    return`<div class="channel-post">
+      <div class="channel-post-text">${escapeHtml(post.content||post.contentHtml?.replace(/<[^>]+>/g,'')||'')}</div>
+      ${attachments.length?`<div class="channel-post-media">${attachments.join('')}</div>`:''}
+      <div class="channel-post-meta">${escapeHtml(meta)}</div>
+    </div>`;
+  }).join('');
+  channelPosts.querySelectorAll('.channel-post-video').forEach(btn=>btn.onclick=()=>{
+    closeChannelModal();
+    openVideoModal(channelPostVideos[+btn.dataset.postVideo]);
+  });
+}
+
+function makeChannelState(ch,instance){
+  const id=encodeURIComponent(ch.id);
+  return{
+    id,instance:instance||ch.instance,active:'videos',
+    tabs:{
+      videos:{kind:'videos',label:'Videos',basePath:`/api/v1/channels/${id}/videos`,items:[],keys:new Set(),continuation:null,pagesLoaded:0,done:false,loading:false,started:false,el:channelLatest,statusEl:channelLatestStatus,emptyText:'No latest videos found'},
+      streams:{kind:'streams',label:'Livestreams',basePath:`/api/v1/channels/${id}/streams`,items:[],keys:new Set(),continuation:null,pagesLoaded:0,done:false,loading:false,started:false,el:channelStreams,statusEl:channelStreamsStatus,emptyText:'No livestreams found'},
+      posts:{kind:'posts',label:'Posts',basePath:`/api/v1/channels/${id}/community`,items:[],keys:new Set(),continuation:null,pagesLoaded:0,done:false,loading:false,started:false,el:channelPosts,statusEl:channelPostsStatus,emptyText:'No community posts found'}
+    }
+  };
+}
+
+function setChannelTab(kind){
+  channelTabBtns.forEach(btn=>btn.classList.toggle('active',btn.dataset.channelTab===kind));
+  channelPanels.forEach(panel=>panel.classList.toggle('active',panel.dataset.channelPanel===kind));
+  updateChannelSearchBox(kind);
+}
+
+function setChannelStatus(sec,msg){
+  if(sec?.statusEl)sec.statusEl.textContent=msg||'';
+}
+
+function renderChannelSection(kind){
+  if(!channelState)return;
+  const sec=channelState.tabs[kind];
+  if(!sec)return;
+  const query=channelQueryFor(kind);
+  if(!sec.items.length&&sec.loading){
+    // Only show spinner if grid is completely empty (no cards yet)
+    if(!sec.el.querySelector('.channel-mini-card,.channel-post'))
+      sec.el.innerHTML=`<div class="loading">Loading ${escapeHtml(sec.label.toLowerCase())}...</div>`;
+  }else if(sec.kind==='posts'){
+    renderChannelPosts(sec.items,channelState.instance,query);
+  }else{
+    renderChannelVideoCards(sec.el,sec.items,sec.emptyText,query);
+  }
+}
+
+function showChannelTab(kind){
+  if(!channelState?.tabs[kind])return;
+  channelState.active=kind;
+  setChannelTab(kind);
+  renderChannelSection(kind);
+  if(!channelState.tabs[kind].started)loadChannelTabPages(kind,channelModalToken);
+}
+
+function channelPagePath(sec){
+  if(!sec.continuation)return sec.basePath;
+  return `${sec.basePath}${sec.basePath.includes('?')?'&':'?'}continuation=${encodeURIComponent(sec.continuation)}`;
+}
+
+function channelRowsForSection(sec,data){
+  if(!data){console.warn('No data provided');return [];}
+  if(sec.kind==='posts'){
+    if(Array.isArray(data?.comments))return data.comments;
+    if(Array.isArray(data?.data?.comments))return data.data.comments;
+    return [];
+  }
+  let result=[];
+  if(Array.isArray(data))result=data;
+  else if(Array.isArray(data?.videos))result=data.videos;
+  else if(Array.isArray(data?.latestVideos))result=data.latestVideos;
+  else if(Array.isArray(data?.items))result=data.items;
+  else if(Array.isArray(data?.data))result=data.data;
+  else if(data?.continuationContents?.gridContinuation?.items){
+    result=data.continuationContents.gridContinuation.items;
+  }else{
+    const keys=Object.keys(data||{});
+    if(keys.length>0){
+      const firstVal=data[keys[0]];
+      if(Array.isArray(firstVal))result=firstVal;
+    }
+  }
+  return result;
+}
+
+function addChannelItems(sec,data,instance){
+  const rows=channelRowsForSection(sec,data);
+  for(const item of rows){
+    if(!item)continue;
+    const mapped=sec.kind==='posts'?item:mapChannelInvidiousVideo(item,instance);
+    if(!mapped)continue;
+    const key=sec.kind==='posts'
+      ?(item.commentId||`${item.published||''}:${item.content||''}`)
+      :mapped.id;
+    if(!key||sec.keys.has(key))continue;
+    sec.keys.add(key);
+    sec.items.push(mapped);
+  }
+  sec.continuation=data?.continuation||'';
+  sec.done=!sec.continuation||!rows.length;
+}
+
+async function loadChannelTabPages(kind,token){
+  if(!channelState?.tabs[kind])return;
+  const sec=channelState.tabs[kind];
+  if(sec.loading||sec.done)return;
+  sec.loading=true;
+  sec.started=true;
+  renderChannelSection(kind);
+  const instances=await getInvidiousInstances();
+  const ordered=[...new Set([channelState.instance,...instances].filter(Boolean))].slice(0,6);
+
+  // Race all instances in parallel — first successful response wins.
+  // This is dramatically faster than trying instances one-by-one.
+  const fetchFromInstance=async(instance)=>{
+    const url=`${instance}${channelPagePath(sec)}`;
+    const res=await withTimeout(fetch(url,{cache:'no-store'}),8000);
+    if(!res.ok)throw new Error(`HTTP ${res.status}`);
+    return {data:await res.json(),instance};
+  };
+
+  try{
+    const result=await Promise.any(ordered.map(fetchFromInstance));
+    if(token!==channelModalToken)return;
+    channelState.instance=result.instance;
+    sec.pagesLoaded++;
+    addChannelItems(sec,result.data||{},result.instance);
+  }catch(e){
+    // All instances failed — try fallback strategies
+    console.warn(`${sec.label} load failed from all instances:`,e);
+    // Fallback 1 for videos: try channel info endpoint which includes latestVideos
+    if(kind==='videos'&&!sec.items.length){
+      try{
+        const info=await fetchInvidiousJson(`/api/v1/channels/${channelState.id}`,channelState.instance,8000);
+        if(token!==channelModalToken)return;
+        const latest=info.data?.latestVideos||[];
+        for(const v of latest){
+          const mapped=mapChannelInvidiousVideo(v,info.instance);
+          if(mapped&&!sec.keys.has(mapped.id)){
+            sec.keys.add(mapped.id);
+            sec.items.push(mapped);
+          }
+        }
+        if(info.instance)channelState.instance=info.instance;
+      }catch(e2){
+        console.warn('Channel info fallback also failed:',e2);
+      }
+    }
+    // Fallback 2 for videos: search for channel name and filter by authorId
+    if(kind==='videos'&&!sec.items.length){
+      try{
+        const channelName=document.getElementById('channelName').textContent;
+        const searchRes=await fetchInvidiousJson(`/api/v1/search?q=${encodeURIComponent(channelName)}&type=video&page=1`,channelState.instance,8000);
+        if(token!==channelModalToken)return;
+        const videos=searchRes.data||[];
+        const channelId=decodeURIComponent(channelState.id);
+        for(const v of videos){
+          // Match by authorId or author name
+          if(v.authorId===channelId||v.author===channelName){
+            const mapped=mapChannelInvidiousVideo(v,searchRes.instance);
+            if(mapped&&!sec.keys.has(mapped.id)){
+              sec.keys.add(mapped.id);
+              sec.items.push(mapped);
+            }
+          }
+        }
+        if(searchRes.instance)channelState.instance=searchRes.instance;
+      }catch(e3){
+        console.warn('Search fallback also failed:',e3);
+      }
+    }
+    // Fallback for streams: search for channel name + "live" and filter
+    if(kind==='streams'&&!sec.items.length){
+      try{
+        const channelName=document.getElementById('channelName').textContent;
+        const searchRes=await fetchInvidiousJson(`/api/v1/search?q=${encodeURIComponent(channelName+' live')}&type=video&page=1`,channelState.instance,8000);
+        if(token!==channelModalToken)return;
+        const videos=searchRes.data||[];
+        const channelId=decodeURIComponent(channelState.id);
+        for(const v of videos){
+          if((v.authorId===channelId||v.author===channelName)&&v.liveNow){
+            const mapped=mapChannelInvidiousVideo(v,searchRes.instance);
+            if(mapped&&!sec.keys.has(mapped.id)){
+              sec.keys.add(mapped.id);
+              sec.items.push(mapped);
+            }
+          }
+        }
+        if(searchRes.instance)channelState.instance=searchRes.instance;
+      }catch(e4){
+        console.warn('Streams search fallback failed:',e4);
+      }
+    }
+  }
+
+  sec.done=true;
+  sec.loading=false;
+  if(token!==channelModalToken)return;
+  renderChannelSection(kind);
+  if(sec.items.length){
+    setChannelStatus(sec,`Loaded ${sec.items.length} ${sec.label.toLowerCase()}.`);
+  }else{
+    setChannelStatus(sec,`No ${sec.label.toLowerCase()} found.`);
+  }
+}
+
+async function openChannelModal(ch){
+  if(!ch)return;
+  const token=++channelModalToken;
+  $('#channelModalTitle').textContent=ch.name;
+  $('#channelModalSub').textContent='YouTube Channel';
+  $('#channelName').textContent=ch.name;
+  $('#channelStats').textContent=[ch.subCount?`${compactNumber(ch.subCount)} subscribers`:null,ch.videoCount?`${compactNumber(ch.videoCount)} videos`:null].filter(Boolean).join(' · ')||'Loading channel stats...';
+  $('#channelDescription').textContent=ch.description||'Loading description...';
+  $('#channelYoutubeLink').href=ch.pageUrl||`https://www.youtube.com/channel/${encodeURIComponent(ch.id)}`;
+  if(ch.thumb){channelAvatar.src=ch.thumb}else{channelAvatar.removeAttribute('src')}
+  channelState=makeChannelState(ch,ch.instance);
+  channelLatest.innerHTML='';
+  channelStreams.innerHTML='';
+  channelPosts.innerHTML='';
+  channelLatestStatus.textContent='';
+  channelStreamsStatus.textContent='';
+  channelPostsStatus.textContent='';
+  channelModal.classList.add('open');
+  showChannelTab('videos');
+  try{
+    const id=encodeURIComponent(ch.id);
+    const about=await fetchInvidiousJson(`/api/v1/channels/${id}`,ch.instance,8000).catch(()=>({data:null,instance:ch.instance}));
+    if(token!==channelModalToken)return;
+    const info=about.data||{};
+    const instance=about.instance||ch.instance;
+    if(channelState)channelState.instance=instance;
+    const name=info.author||ch.name;
+    $('#channelModalTitle').textContent=name;
+    $('#channelName').textContent=name;
+    $('#channelStats').textContent=[
+      (info.subCount||ch.subCount)?`${compactNumber(info.subCount||ch.subCount)} subscribers`:null,
+      (info.totalViews)?`${compactNumber(info.totalViews)} views`:null,
+      (info.videoCount||ch.videoCount)?`${compactNumber(info.videoCount||ch.videoCount)} videos`:null
+    ].filter(Boolean).join(' · ')||'YouTube Channel';
+    $('#channelDescription').textContent=info.description||ch.description||'No description available.';
+    const avatar=pickInvidiousThumb(info.authorThumbnails,instance)||ch.thumb;
+    if(avatar)channelAvatar.src=avatar;
+    // Immediately populate videos tab from latestVideos in the channel info response.
+    // The dedicated /videos endpoint is unreliable on many Invidious instances, so this
+    // ensures the Videos tab always has content even when that endpoint fails.
+    if(info.latestVideos&&info.latestVideos.length&&channelState){
+      const sec=channelState.tabs.videos;
+      for(const v of info.latestVideos){
+        const mapped=mapChannelInvidiousVideo(v,instance);
+        if(mapped&&!sec.keys.has(mapped.id)){
+          sec.keys.add(mapped.id);
+          sec.items.push(mapped);
+        }
+      }
+      if(sec.items.length){
+        sec.done=true;
+        sec.started=true;
+        setChannelStatus(sec,`Loaded ${sec.items.length} videos.`);
+        renderChannelSection('videos');
+      }
+    }
+  }catch(e){
+    console.warn('Channel details failed',e);
+    if(token!==channelModalToken)return;
+    setChannelStatus(channelState?.tabs.videos,'Could not load channel details.');
+  }
+}
+
+// Tracks what's currently rendered in the main video grid to avoid scroll-resetting full redraws
+let _gridRenderedIds=[];
+
+function renderVideoGrid(list,statusText='',emptyText='No videos found',channels=[]){
+  const badgeClass={
+    'Archive Video':'badge-archive-v','PeerTube':'badge-peertube','TED':'badge-ted',
+    'Vimeo':'badge-vimeo','Dailymotion':'badge-dailymotion','Wikimedia':'badge-wikimedia',
+    'NASA':'badge-nasa','Mixcloud':'badge-mixcloud','YouTube':'badge-youtube'
+  };
+
+  // Build/update channel strip without touching video cards
+  let channelStrip=grid.querySelector('.channel-strip');
+  if(channels?.length){
+    const channelHtml=renderChannelStrip(channels);
+    if(!channelStrip){
+      grid.insertAdjacentHTML('afterbegin',channelHtml);
+    }
+    bindChannelCards(channels);
+    channelStrip=grid.querySelector('.channel-strip');
+  } else if(channelStrip){
+    channelStrip.remove();
+    channelStrip=null;
+  }
+
+  // Status/loading element — always at the end, update in place
+  let statusEl=grid.querySelector('.grid-status');
+  if(!statusEl){
+    statusEl=document.createElement('div');
+    statusEl.className='grid-status';
+    grid.appendChild(statusEl);
+  }
+
+  if(!list.length){
+    // Clear any existing video cards and reset tracker
+    grid.querySelectorAll('.video-card').forEach(c=>c.remove());
+    _gridRenderedIds=[];
+    statusEl.className='grid-status '+(statusText?'loading':'empty');
+    statusEl.innerHTML=statusText?escapeHtml(statusText):escapeHtml(emptyText);
+    // Move status after channel strip if present
+    if(channelStrip)channelStrip.after(statusEl);
+    return;
+  }
+
+  // Figure out which items are new (append-only, preserving scroll)
+  const newItems=list.slice(_gridRenderedIds.length);
+  if(newItems.length){
+    const fragment=document.createDocumentFragment();
+    newItems.forEach((v,offset)=>{
+      const i=_gridRenderedIds.length+offset;
+      const bc=badgeClass[v.provider]||'';
+      const thumb=v.thumb
+        ?`<img src="${escapeHtml(v.thumb)}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">`
+        :`<svg viewBox="0 0 24 24" style="width:26px;height:26px;fill:var(--primary)"><path d="M10 8l6 4-6 4V8z"/><path d="M21 3H3a2 2 0 00-2 2v14a2 2 0 002 2h18a2 2 0 002-2V5a2 2 0 00-2-2zm0 16H3V5h18v14z"/></svg>`;
+      const div=document.createElement('div');
+      div.className='card video-card';
+      div.style.cursor='pointer';
+      div.innerHTML=`<div class="card-icon" style="width:100%;height:90px;border-radius:6px;margin-bottom:10px">${thumb}</div>
+        <div class="card-title">${escapeHtml(v.name)}</div>
+        <div class="card-sub">${escapeHtml(v.artist||'')}</div>
+        <span class="card-badge ${bc}">${escapeHtml(v.provider)}</span>`;
+      div._videoObj=v;
+      div.onclick=()=>openVideoFull(div._videoObj,list);
+      fragment.appendChild(div);
+      _gridRenderedIds.push(v.id||v.name||i);
+    });
+    // Insert before status element
+    statusEl.before(fragment);
+  }
+
+  // Update status
+  if(statusText){
+    statusEl.className='grid-status loading';
+    statusEl.textContent=statusText;
+    statusEl.style.display='';
+  } else {
+    statusEl.style.display='none';
+  }
+}
+
+async function loadOrSearch(){
+  const token=++searchToken;
+  const q=search.value.trim();
+  if(currentApi==='online'&&!q){
+    tracks=[];_gridRenderedIds=[];
+    grid.innerHTML='<div class="empty">Type something to search...</div>';
+    return;
+  }
+  if(currentApi==='radio'&&!q){
+    tracks=[];_gridRenderedIds=[];
+    grid.innerHTML='<div class="empty">Search for a station, genre, or country...</div>';
+    return;
+  }
+  if(currentApi==='video'&&!q){
+    tracks=[];_gridRenderedIds=[];
+    grid.innerHTML='<div class="empty">Search for a video, topic, or talk...</div>';
+    return;
+  }
+  if(currentApi==='podcast'&&!q){
+    tracks=[];_gridRenderedIds=[];
+    grid.innerHTML='<div class="empty">Search for a podcast, DJ mix, or show...</div>';
+    return;
+  }
+  grid.innerHTML='<div class="loading">Loading...</div>';
+  _gridRenderedIds=[];
+  try{
+    let result;
+    if(currentApi==='local'){
+      result=await fetchNative();
+      if(token!==searchToken)return;
+      tracks=result;
+      if(!tracks.length){
+        grid.innerHTML='<div class="empty">No tracks yet — click <strong>Upload</strong> to add your music</div>';
+        return;
+      }
+    } else if(currentApi==='radio'){
+      result=await fetchRadio(q,(partial,status)=>{
+        if(token===searchToken){
+          tracks=partial;
+          renderGrid();
+          let s=grid.querySelector('.grid-status');
+          if(!s){s=document.createElement('div');s.className='grid-status loading';grid.appendChild(s)}
+          s.textContent=status;s.style.display='';
+        }
+      },()=>token===searchToken);
+      if(token!==searchToken)return;
+      tracks=result;
+      renderGrid();
+      return;
+    } else if(currentApi==='video'){
+      let channelResults=[],partialVideos=[];
+      const channelLoad=withTimeout(fetchInvidiousChannels(q),5000).then(channels=>{
+        if(token!==searchToken)return;
+        channelResults=channels;
+        renderVideoGrid(partialVideos,'Searching YouTube...','No videos found',channelResults);
+      }).catch(()=>[]);
+      result=await fetchVideoAll(q,(partial,status)=>{
+        partialVideos=partial;
+        if(token===searchToken)renderVideoGrid(partial,status,'No videos found',channelResults);
+      },()=>token===searchToken);
+      await channelLoad;
+      if(token!==searchToken)return;
+      renderVideoGrid(result,'','No videos found',channelResults);
+      return;
+    } else if(currentApi==='podcast'){
+      result=await fetchPodcastAll(q,(partial,status)=>{
+        if(token===searchToken)renderVideoGrid(partial,status,'No podcasts found');
+      },()=>token===searchToken);
+      if(token!==searchToken)return;
+      renderVideoGrid(result,'','No podcasts found');
+      return;
+    } else {
+      result=await fetchOnline(q,(partial,status)=>{
+        if(token===searchToken){
+          tracks=partial;
+          renderGrid();
+          let s=grid.querySelector('.grid-status');
+          if(!s){s=document.createElement('div');s.className='grid-status loading';grid.appendChild(s)}
+          s.textContent=status;s.style.display='';
+        }
+      },()=>token===searchToken);
+      if(token!==searchToken)return;
+      tracks=result;
+      renderGrid();
+      return;
+    }
+    renderGrid();
+  }catch(e){
+    if(token!==searchToken)return;
+    console.error(e);
+    grid.innerHTML=`<div class="empty">Error: ${e.message}</div>`;
+  }
+}
+
+// ── Newgrounds CDN URL builder (shared by modal + play()) ─────────────────
+function buildNGUrls(id,nameRaw){
+  const folder=Math.floor(parseInt(id)/1000)*1000;
+  const base=`https://audio.ngfiles.com/${folder}/${id}`;
+  const ngSanitize=(s,max)=>s.replace(/&/g,'amp').replace(/</g,'lt').replace(/>/g,'gt').replace(/"/g,'quot').replace(/\s+/g,'-').replace(/[^\w-]/g,'').slice(0,max);
+  const ngUnderscore=(s,max)=>s.replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_]/g,'').slice(0,max);
+  const slug6=nameRaw.toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,6);
+  const variants=[
+    ...[26,28,30,32].map(n=>`${base}_${ngSanitize(nameRaw,n)}.mp3`),
+    `${base}_${ngSanitize(nameRaw,999)}.mp3`,
+    `${base}_newgrounds_${slug6}.mp3`,
+    ...[26,28,30,32].map(n=>`${base}_${ngUnderscore(nameRaw,n)}.mp3`),
+    `${base}_${ngUnderscore(nameRaw,999)}.mp3`,
+    ...[26,28,30,32].map(n=>`${base}_${ngSanitize(nameRaw,n).toLowerCase()}.mp3`),
+    ...[26,28,30,32].map(n=>`${base}_${ngUnderscore(nameRaw,n).toLowerCase()}.mp3`),
+    `${base}_${ngSanitize(nameRaw,999).toLowerCase()}.mp3`,
+    `${base}_${ngUnderscore(nameRaw,999).toLowerCase()}.mp3`,
+  ];
+  return [...new Set(variants)];
+}
+
+async function play(i){
+  const t=getTracks()[i];if(!t)return;
+  // Stop and clear any active NG proxy
+  if(audio._ngProxy){
+    const p=audio._ngProxy;
+    p.pause();p.src='';p.onerror=null;p.ontimeupdate=null;p.onended=null;
+    audio._ngProxy=null;
+  }
+  audio.pause();
+  if(audio._blobURL){URL.revokeObjectURL(audio._blobURL);audio._blobURL=null}
+  // Temporarily disable onerror to prevent empty-src from triggering chain
+  audio.onerror=null;
+  audio.src='';
+  curIdx=i;curTrack=t;
+  player.style.display='flex';
+  pTitle.textContent=t.name;
+  pCtx.textContent=t.isLocal?'Local Library':t.provider||'Online';
+  cTime.textContent='0:00';dTime.textContent='0:00';progFill.style.width='0';
+
+  if(t.isLocalVideo&&t.blob){
+    // Local video — show in video modal, not audio player
+    const blobUrl=URL.createObjectURL(t.blob);
+    videoEl._blobURL=blobUrl;
+    player.style.display='none';
+    openVideoModal({name:t.name,artist:'Local Library',blobUrl});
+    return;
+  } else if(t.isNGRef){
+    const urls=buildNGUrls(t.ngId,t.ngName);
+    let idx=0;
+    let ngLocal=document.getElementById('ngLocalAudio');
+    if(!ngLocal){
+      ngLocal=document.createElement('audio');
+      ngLocal.id='ngLocalAudio';
+      ngLocal.style.display='none';
+      document.body.appendChild(ngLocal);
+    }
+    ngLocal.pause();
+    ngLocal.src='';
+    ngLocal.onerror=null;ngLocal.oncanplay=null;ngLocal.ontimeupdate=null;ngLocal.onended=null;ngLocal.onplay=null;ngLocal.onpause=null;
+    const tryNext=()=>{
+      if(idx>=urls.length)return;
+      ngLocal.src=urls[idx++];
+      ngLocal.load();
+    };
+    ngLocal.onerror=tryNext;
+    ngLocal.oncanplay=()=>{ngLocal.play().catch(()=>{});ngLocal.oncanplay=null;};
+    ngLocal.ontimeupdate=()=>{
+      if(ngLocal.duration){
+        progFill.style.width=(ngLocal.currentTime/ngLocal.duration*100)+'%';
+        cTime.textContent=fmt(ngLocal.currentTime);
+        dTime.textContent=fmt(ngLocal.duration);
+      }
+    };
+    ngLocal.onended=()=>{if(repeating){ngLocal.currentTime=0;ngLocal.play().catch(()=>{})}else nextBtn.click()};
+    ngLocal.onplay=()=>updateUI();
+    ngLocal.onpause=()=>updateUI();
+    audio._ngProxy=ngLocal;
+    player.style.display='flex';
+    tryNext();
+    updateUI();
+    return;
+  } else if(t.isLocal&&t.blob){
+    const url=URL.createObjectURL(t.blob);
+    audio._blobURL=url;
+    audio.src=url;
+  } else if(t.isNative){
+    t.cdn=0;
+    audio.src=CDN1(t.file);
+  } else if(t.isArchive){
+    try{
+      const resolved=await resolveArchiveUrl(t);
+      // bail if user already moved on to another track
+      if(curTrack!==t)return;
+      audio.src=resolved;
+    }catch(e){
+      toast('Could not load Archive track');nextBtn.click();return;
+    }
+  } else {
+    audio.src=t.url;
+  }
+
+  audio.onerror=ngOnerror;
+  audio.load();
+  audio.play().catch(()=>{
+    if(t.isNative&&!t.isLocal){t.cdn=1;audio.src=CDN2(t.file);audio.play().catch(()=>nextBtn.click())}
+  });
+  updateUI();
+}
+
+function updateUI(){
+  const a=audio._ngProxy||audio;
+  const playing=!a.paused&&!a.ended&&a.readyState>2;
+  playIc.style.display=playing?'none':'block';
+  pauseIc.style.display=playing?'block':'none';
+  repBtn.classList.toggle('active',repeating);
+  $$('.card').forEach(c=>c.classList.toggle('playing-card',+c.dataset.idx===curIdx));
+  $$('.sb-item').forEach(c=>c.classList.toggle('active',+c.dataset.idx===curIdx));
+}
+
+function renderGrid(){
+  const q=search.value.toLowerCase();
+  const list=q?tracks.filter(t=>t.name.toLowerCase().includes(q)):tracks;
+  if(!list.length){grid.innerHTML='<div class="empty">No tracks found</div>';return}
+  grid.innerHTML=list.map((t,i)=>{
+    const real=tracks.indexOf(t);
+    const icon=t.isNative?`<div class="card-icon">${t.isLocalVideo?`<svg viewBox="0 0 24 24"><path d="M17 10.5V7a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h12a1 1 0 001-1v-3.5l4 4v-11l-4 4z"/></svg>`:`<svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55C7.79 13 6 14.79 6 17s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>`}</div>`:
+      `<div class="card-icon"><img src="${t.art||''}" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><svg viewBox="0 0 24 24" style="display:none"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55C7.79 13 6 14.79 6 17s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg></div>`;
+    const providerBadge=(()=>{
+      if(t.isLocal||t.isNative)return'';
+      const bc={'Mixcloud':'badge-mixcloud','Wikimedia':'badge-wikimedia-a','Jamendo':'','ccMixter':'','Archive':'','Audius':'','iTunes':'','Deezer':''};
+      const cls=bc[t.provider];
+      if(cls===undefined)return`<span class="card-badge" style="background:#1a2a3a;color:#93c5fd">${t.provider}</span>`;
+      if(!cls)return'';
+      return`<span class="card-badge ${cls}">${t.provider}</span>`;
+    })();
+    const saveBtn=(!t.isNative&&!t.isLocal&&t.url&&!t.isArchive)?
+      `<button class="card-save" data-sidx="${real}">⬇ Save to Local</button>`:'';
+    return`<div class="card" data-idx="${real}">
+      ${t.isNative?`<button class="card-add"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></button>`:''}
+      ${icon}
+      <div class="card-title">${t.name}</div>
+      <div class="card-sub">${t.isLocalVideo?'Local Video':t.isNGRef?'Newgrounds':t.isLocal?'Local':t.provider?(t.artist?`${t.provider} · ${t.artist}`:t.provider):'Online'}</div>
+      ${providerBadge}
+      ${saveBtn}
+    </div>`;
+  }).join('');
+  $$('.card').forEach(c=>{
+    c.onclick=e=>{if(!e.target.closest('.card-add')&&!e.target.closest('.card-save'))play(+c.dataset.idx)};
+    const add=c.querySelector('.card-add');
+    if(add) add.onclick=e=>{e.stopPropagation();showGridDD(+c.dataset.idx,add)};
+    const save=c.querySelector('.card-save');
+    if(save) save.onclick=e=>{e.stopPropagation();saveToLocal(tracks[+save.dataset.sidx],save)};
+  });
+  updateUI();
+}
+
+function renderPlModal(){
+  if(!playlists.length){plList.innerHTML='<div class="empty" style="padding:16px">No playlists</div>';return}
+  plList.innerHTML=playlists.map(p=>`
+    <div class="pl-row" data-id="${p.id}">
+      <span>${p.name} (${p.tracks.length})</span>
+      <button class="del">✕</button>
+    </div>`).join('');
+  plList.querySelectorAll('.pl-row span').forEach(el=>el.onclick=()=>{
+    curPlId=+el.closest('.pl-row').dataset.id;plModal.classList.remove('open');openSb(curPlId);
+  });
+  plList.querySelectorAll('.del').forEach(b=>b.onclick=()=>{
+    const id=+b.closest('.pl-row').dataset.id;
+    playlists=playlists.filter(x=>x.id!==id);renderPlModal();
+    if(curPlId===id)closeSb();
+  });
+}
+
+function openSb(id){
+  const p=playlists.find(x=>x.id===id);if(!p)return;
+  curPlId=id;
+  sidebar.classList.add('open');main.classList.add('shifted');player.classList.add('shifted');
+  $('#sbTitle').textContent=p.name;
+  renderSb();
+}
+
+function closeSb(){
+  sidebar.classList.remove('open');main.classList.remove('shifted');player.classList.remove('shifted');
+  curPlId=null;
+  playTracks=null;
+  if(currentApi==='local')renderGrid();
+}
+
+function renderSb(){
+  const p=playlists.find(x=>x.id===curPlId);if(!p)return;
+  if(!p.tracks.length){sbList.innerHTML='<div class="empty" style="padding:30px">Empty</div>';updateUI();return}
+  sbList.innerHTML=p.tracks.map((t,i)=>`
+    <div class="sb-item" data-idx="${i}">
+      <span class="sb-num">${i+1}</span>
+      <div class="sb-info"><div class="sb-name">${t.name}</div><div class="sb-ext">${t.file.split('.').pop().toUpperCase()}</div></div>
+      <button class="sb-del">✕</button>
+    </div>`).join('');
+  $$('.sb-item').forEach(el=>{
+    el.onclick=e=>{if(!e.target.closest('.sb-del')){
+      playTracks=p.tracks;curPlId=p.id;play(+el.dataset.idx);
+    }};
+    el.querySelector('.sb-del').onclick=()=>{p.tracks.splice(+el.dataset.idx,1);renderSb()};
+  });
+  updateUI();
+}
+
+function showGridDD(idx,btn){
+  const t=tracks[idx];
+  const plItems=playlists.map(p=>{
+    const inPl=p.tracks.some(x=>x.file===t.file);
+    return`<div class="dd-item ${inPl?'disabled':''}" data-id="${p.id}">${inPl?'✓':'+ '}${p.name}</div>`;
+  }).join('');
+  const delItem=t?.isLocal?`<div class="dd-item dd-del" style="color:#f55;margin-top:4px;border-top:1px solid var(--border)">🗑 Remove from library</div>`:'';
+  gridDropdown.innerHTML=plItems+(playlists.length?'':`<div class="dd-item disabled">No playlists</div>`)+delItem;
+  const r=btn.getBoundingClientRect();
+  gridDropdown.style.top=`${r.bottom+6}px`;gridDropdown.style.left=`${Math.min(r.left,innerWidth-180)}px`;
+  gridDropdown.classList.add('show');
+  gridDropdown.querySelectorAll('.dd-item:not(.disabled):not(.dd-del)').forEach(d=>d.onclick=()=>{
+    const p=playlists.find(x=>x.id===+d.dataset.id);
+    if(p&&tracks[idx]){p.tracks.push({...tracks[idx]})}
+    gridDropdown.classList.remove('show');
+  });
+  const delBtn=gridDropdown.querySelector('.dd-del');
+  if(delBtn)delBtn.onclick=async()=>{
+    gridDropdown.classList.remove('show');
+    await dbDelete(t.file);
+    if(curTrack?.file===t.file){audio.pause();audio.src='';player.style.display='none';}
+    tracks=await fetchNative();renderGrid();
+    toast(`Removed "${t.name}"`);
+  };
+}
+
+$('#sbAddBtn').onclick=e=>{
+  e.stopPropagation();
+  if(sbDropdown.classList.contains('show')){sbDropdown.classList.remove('show');return}
+  const p=playlists.find(x=>x.id===curPlId);if(!p)return;
+  const q=search.value.toLowerCase();
+  const avail=q?tracks.filter(t=>t.name.toLowerCase().includes(q)):tracks;
+  const list=avail.filter(t=>!p.tracks.some(x=>x.file===t.file));
+  sbDropdown.innerHTML=list.length?list.map(t=>`<div class="sb-dd-item" data-file="${t.file}">${t.name}</div>`).join(''):'<div class="sb-dd-item disabled">All added</div>';
+  sbDropdown.querySelectorAll('.sb-dd-item:not(.disabled)').forEach(d=>d.onclick=()=>{
+    const t=tracks.find(x=>x.file===d.dataset.file);
+    if(t){p.tracks.push({...t});renderSb();sbDropdown.classList.remove('show')}
+  });
+  sbDropdown.classList.add('show');
+};
+
+// Custom Dropdown Handler
+const apiToggle=document.getElementById('apiToggle');
+const apiMenu=document.getElementById('apiMenu');
+
+apiToggle.onclick=e=>{
+  e.stopPropagation();
+  apiMenu.classList.toggle('show');
+  apiToggle.classList.toggle('active');
+};
+
+apiMenu.querySelectorAll('.dropdown-item').forEach(item=>{
+  item.onclick=e=>{
+    e.stopPropagation();
+    const value=item.dataset.value;
+    currentApi=value;
+    playTracks=null;
+    
+    // Update toggle text and active state
+    apiToggle.textContent=item.textContent;
+    apiToggle.classList.remove('active');
+    apiMenu.classList.remove('show');
+    
+    // Update menu items
+    apiMenu.querySelectorAll('.dropdown-item').forEach(i=>i.classList.remove('active'));
+    item.classList.add('active');
+    
+    // Update UI based on API
+    const isLocal=currentApi==='local';
+    plBtn.classList.toggle('visible',isLocal);
+    uploadBtn.classList.toggle('visible',isLocal);
+    if(!isLocal)closeSb();
+    closeVideoModal();
+    closeChannelModal();
+    $('#ngBtn').style.display=currentApi==='online'?'block':'none';
+    
+    loadOrSearch();
+  };
+});
+
+document.onclick=e=>{
+  // Check if click is in video full modal topbar
+  const inVideoTopbar=e.target.closest('.yt-topbar');
+  
+  if(!inVideoTopbar){
+    if(!e.target.closest('.card-add')&&!e.target.closest('.dropdown'))gridDropdown.classList.remove('show');
+    if(!e.target.closest('.sb-add-btn')&&!e.target.closest('.sb-dropdown'))sbDropdown.classList.remove('show');
+  }
+  
+  if(!e.target.closest('.dropdown-container')){
+    const apiMenu=document.getElementById('apiMenu');
+    const apiToggle=document.getElementById('apiToggle');
+    if(apiMenu&&apiToggle){
+      apiMenu.classList.remove('show');
+      apiToggle.classList.remove('active');
+    }
+  }
+  if(!e.target.closest('.card-add')&&!e.target.closest('.dropdown'))gridDropdown.classList.remove('show');
+  if(!e.target.closest('.sb-add-btn')&&!e.target.closest('.sb-dropdown'))sbDropdown.classList.remove('show');
+};
+
+$('#plBtn').onclick=()=>{plModal.classList.add('open');renderPlModal();$('#newPlInput').value=''};
+$('#closePl').onclick=()=>plModal.classList.remove('open');
+$('#createPl').onclick=()=>{const n=$('#newPlInput').value.trim();if(n){playlists.push({id:Date.now(),name:n,tracks:[]});renderPlModal();$('#newPlInput').value=''}};
+$('#newPlInput').onkeydown=e=>{if(e.key==='Enter')$('#createPl').click()};
+$('#sbClose').onclick=closeSb;
+document.querySelector('.logo').onclick=()=>{closeSb();closeVideoModal();closeChannelModal();try{closeVideoFull()}catch(e){}search.value='';search.focus();loadOrSearch()};
+
+let searchT;
+search.oninput=()=>{clearTimeout(searchT);searchT=setTimeout(()=>currentApi==='local'?renderGrid():loadOrSearch(),300)};
+// NOTE: #apiSelect element no longer exists (replaced by custom .dropdown-container).
+// Placeholder sync is handled by the dropdown-item onclick wrapper below.
+// Keep placeholder in sync with dropdown selection
+apiMenu.querySelectorAll('.dropdown-item').forEach(item=>{
+  const orig=item._origOnclick||item.onclick;
+  item.onclick=function(e){
+    const placeholders={online:'Search tracks...',radio:'Search stations...',video:'Search videos...',podcast:'Search podcasts...',local:'Filter local tracks...'};
+    search.placeholder=placeholders[item.dataset.value]||'Search...';
+    orig.call(this,e);
+  };
+  item._origOnclick=orig;
+});
+
+ppBtn.onclick=()=>{
+  const a=audio._ngProxy||audio;
+  if(!a.src)return;
+  if(a.paused){a.play().catch(()=>{}).then(()=>updateUI())}
+  else{a.pause();updateUI()}
+};
+prevBtn.onclick=()=>{const t=getTracks();if(t.length)play((curIdx-1+t.length)%t.length)};
+nextBtn.onclick=()=>{const t=getTracks();if(t.length)play((curIdx+1)%t.length)};
+repBtn.onclick=()=>{repeating=!repeating;updateUI()};
+// ── Volume with Web Audio boost ────────────────────────────────────────────
+let audioCtx=null,gainNode=null;
+
+function ensureAudioCtx(){
+  if(audioCtx)return;
+  try{
+    audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+    gainNode=audioCtx.createGain();
+    gainNode.gain.value=1;
+    gainNode.connect(audioCtx.destination);
+    const src=audioCtx.createMediaElementSource(audio);
+    src.connect(gainNode);
+  }catch(e){audioCtx=null;gainNode=null;}
+}
+
+// Init Web Audio on first user gesture so it's ready before playback
+document.addEventListener('click',function initCtx(){
+  ensureAudioCtx();
+  if(audioCtx&&audioCtx.state==='suspended')audioCtx.resume();
+  document.removeEventListener('click',initCtx);
+},{once:true});
+
+const VOL_ICONS={
+  mute:'M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z',
+  low:'M18.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM5 9v6h4l5 5V4L9 9H5z',
+  mid:'M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z',
+  high:'M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z'
+};
+let isMuted=false,premuteVol=100;
+
+function setVolume(pct){
+  pct=Math.max(0,Math.min(200,pct));
+  if(pct<=100){
+    // Normal range — pure native volume, no Web Audio needed
+    audio.volume=pct/100;
+    if(audio._ngProxy)audio._ngProxy.volume=pct/100;
+    if(gainNode)gainNode.gain.value=1;
+  } else {
+    // Boost range — native at 1.0, gain node multiplies
+    audio.volume=1;
+    if(audio._ngProxy)audio._ngProxy.volume=1;
+    ensureAudioCtx();
+    if(audioCtx&&audioCtx.state==='suspended')audioCtx.resume();
+    if(gainNode)gainNode.gain.value=pct/100;
+  }
+  // Icon state
+  const path=document.getElementById('volIconPath');
+  if(path){
+    if(pct===0)path.setAttribute('d',VOL_ICONS.mute);
+    else if(pct<=50)path.setAttribute('d',VOL_ICONS.low);
+    else if(pct<=100)path.setAttribute('d',VOL_ICONS.mid);
+    else path.setAttribute('d',VOL_ICONS.high);
+  }
+  // Label
+  const lbl=$('#volPct');
+  if(lbl){lbl.textContent=pct+'%';lbl.style.color=pct>100?'var(--primary)':'var(--sub)';}
+}
+
+$('#volRange').oninput=e=>{
+  let v=parseInt(e.target.value);
+  if(Math.abs(v-100)<=3){v=100;e.target.value=100;}
+  isMuted=false;
+  premuteVol=v;
+  setVolume(v);
+};
+
+$('#volIconBtn').onclick=()=>{
+  if(isMuted){
+    isMuted=false;
+    $('#volRange').value=premuteVol;
+    setVolume(premuteVol);
+  } else {
+    premuteVol=parseInt($('#volRange').value);
+    isMuted=true;
+    audio.volume=0;
+    if(audio._ngProxy)audio._ngProxy.volume=0;
+    if(gainNode)gainNode.gain.value=0;
+    const path=document.getElementById('volIconPath');
+    if(path)path.setAttribute('d',VOL_ICONS.mute);
+    const lbl=$('#volPct');
+    if(lbl){lbl.textContent='0%';lbl.style.color='var(--sub)';}
+  }
+};
+setVolume(100);
+// Draggable progress bar (Spotify-style)
+let progDragging=false,progScrubbing=false;
+function seekToClientX(clientX){
+  const a=audio._ngProxy||audio;
+  const r=pBar.getBoundingClientRect();
+  const ratio=Math.max(0,Math.min(1,(clientX-r.left)/r.width));
+  if(a.duration&&isFinite(a.duration)){
+    a.currentTime=ratio*a.duration;
+    cTime.textContent=fmt(ratio*a.duration);
+    progFill.style.width=(ratio*100)+'%';
+  }
+}
+pBar.onmousedown=e=>{
+  e.preventDefault();
+  progDragging=true;progScrubbing=true;
+  pBar.classList.add('dragging');
+  document.body.style.userSelect='none';
+  seekToClientX(e.clientX);
+};
+window.addEventListener('mousemove',e=>{
+  if(!progDragging)return;
+  seekToClientX(e.clientX);
+});
+window.addEventListener('mouseup',()=>{
+  if(!progDragging)return;
+  progDragging=false;progScrubbing=false;
+  pBar.classList.remove('dragging');
+  document.body.style.userSelect='';
+});
+// Touch support for mobile drag
+pBar.ontouchstart=e=>{
+  if(!e.touches[0])return;
+  progDragging=true;progScrubbing=true;
+  pBar.classList.add('dragging');
+  seekToClientX(e.touches[0].clientX);
+};
+window.addEventListener('touchmove',e=>{
+  if(!progDragging||!e.touches[0])return;
+  seekToClientX(e.touches[0].clientX);
+},{passive:true});
+window.addEventListener('touchend',()=>{
+  if(!progDragging)return;
+  progDragging=false;progScrubbing=false;
+  pBar.classList.remove('dragging');
+});
+// Suppress click navigation after drag
+pBar.onclick=e=>{if(progScrubbing){progScrubbing=false;e.preventDefault();e.stopPropagation();}};
+
+audio.onloadedmetadata=()=>{if(audio.duration&&isFinite(audio.duration))dTime.textContent=fmt(audio.duration)};
+audio.ondurationchange=()=>{if(audio.duration&&isFinite(audio.duration))dTime.textContent=fmt(audio.duration)};
+audio.onplay=()=>updateUI();
+audio.onplaying=()=>updateUI();
+audio.onpause=()=>updateUI();
+audio.onwaiting=()=>{playIc.style.display='none';pauseIc.style.display='none'};
+audio.ontimeupdate=()=>{if(!audio.duration||!isFinite(audio.duration))return;cTime.textContent=fmt(audio.currentTime);progFill.style.width=(audio.currentTime/audio.duration*100)+'%';if(audio.duration&&isFinite(audio.duration))dTime.textContent=fmt(audio.duration)};
+audio.onended=()=>{if(repeating){audio.currentTime=0;audio.play().catch(()=>{})}else nextBtn.click()};
+audio.oncanplay=()=>{if(curTrack?.isNGRef)audio.play().catch(()=>{})};
+function ngOnerror(){
+  if(curTrack?.isNGRef){
+    if(!curTrack._ngUrls){
+      curTrack._ngUrls=buildNGUrls(curTrack.ngId,curTrack.ngName);
+      curTrack._ngIdx=0;
+    }
+    if(curTrack._ngIdx<curTrack._ngUrls.length){
+      audio.src=curTrack._ngUrls[curTrack._ngIdx++];
+      audio.load();
+    }
+  } else if(curTrack?.isNative&&!curTrack?.isLocal){
+    curTrack.cdn=1;audio.src=CDN2(curTrack.file);audio.play().catch(()=>nextBtn.click());
+  } else if(curTrack?.isArchive&&!curTrack?._archiveFallback){
+    curTrack._archiveFallback=true;audio.src=`https://archive.org/download/${curTrack.id}`;audio.load();audio.play().catch(()=>nextBtn.click());
+  }
+}
+audio.onerror=ngOnerror;
+
+function fmt(s){
+  s=Math.max(0,Math.floor(s||0));
+  const h=Math.floor(s/3600);
+  const m=Math.floor((s%3600)/60);
+  const sec=s%60;
+  if(h>0)return h+':'+String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0');
+  return m+':'+String(sec).padStart(2,'0');
+}
+
+// Full-page video player
+var videoFullModal,ytFrame,ytLogo,ytSearchInput,ytApiToggle,ytApiMenu,currentVideoFull=null,allVideosForRecommended=[];
+
+function closeVideoFull(){
+  if(!videoFullModal)return;
+  videoFullModal.classList.remove('open');
+  videoFullModal.style.display='none';
+  // Clear lingering inline visibility/pointer-events so the next open works
+  videoFullModal.style.visibility='';
+  videoFullModal.style.pointerEvents='';
+  if(ytFrame)ytFrame.src='';
+  currentVideoFull=null;
+  // Also close the old video modal to ensure it's not visible
+  const videoModal=document.getElementById('videoModal');
+  if(videoModal){
+    videoModal.classList.remove('open');
+    videoModal.style.display='';
+  }
+  // NOTE: do NOT reset handler flags — listeners are attached once and reused.
+  // Resetting them causes duplicate listeners to pile up on every reopen.
+}
+
+function initVideoElements(){
+  videoFullModal=videoFullModal||document.getElementById('videoFullModal');
+  ytFrame=ytFrame||document.getElementById('ytFrame');
+  ytLogo=ytLogo||document.getElementById('ytLogo');
+  ytSearchInput=ytSearchInput||document.getElementById('ytSearchInput');
+  ytApiToggle=ytApiToggle||document.getElementById('ytApiToggle');
+  ytApiMenu=ytApiMenu||document.getElementById('ytApiMenu');
+  return videoFullModal&&ytFrame&&ytLogo&&ytSearchInput&&ytApiToggle&&ytApiMenu;
+}
+
+function initVideoPlayer(){
+  if(!initVideoElements())return;
+  
+  // Check if handlers are already set up to avoid duplicates
+  if(ytLogo._backButtonHandler)return;
+  
+  // Logo acts as back button — closes video full and returns to main page
+  const logoBackButtonHandler=function(e){
+   e.stopPropagation();
+   closeVideoFull();
+   closeSb();
+   closeVideoModal();
+   closeChannelModal();
+   search.value='';
+   search.focus();
+   loadOrSearch();
+  };
+  ytLogo.addEventListener('click',logoBackButtonHandler);
+  ytLogo._backButtonHandler=true;
+  
+  // Topbar dropdown in video full
+  if(ytApiToggle&&ytApiMenu){
+   const dropdownToggleHandler=function(e){
+     e.stopPropagation();
+     e.stopImmediatePropagation();
+     ytApiMenu.classList.toggle('show');
+     ytApiToggle.classList.toggle('active');
+   };
+   ytApiToggle.addEventListener('click',dropdownToggleHandler);
+   ytApiToggle._dropdownHandler=true;
+    
+   ytApiMenu.querySelectorAll('.dropdown-item').forEach(function(item){
+     if(item._dropdownItemHandler)return;
+     const itemHandler=function(e){
+       e.stopPropagation();
+       e.stopImmediatePropagation();
+       var value=item.dataset.value;
+       currentApi=value;
+       apiToggle.textContent=item.textContent;
+       apiMenu.querySelectorAll('.dropdown-item').forEach(function(i){i.classList.remove('active')});
+       var match=apiMenu.querySelector('.dropdown-item[data-value="'+value+'"]');
+       if(match)match.classList.add('active');
+       apiMenu.classList.remove('show');
+       apiToggle.classList.remove('active');
+       ytApiMenu.classList.remove('show');
+       ytApiToggle.classList.remove('active');
+       var isLocal=currentApi==='local';
+       plBtn.classList.toggle('visible',isLocal);
+       uploadBtn.classList.toggle('visible',isLocal);
+       if(!isLocal)closeSb();
+       $('#ngBtn').style.display=currentApi==='online'?'block':'none';
+       var placeholders={online:'Search tracks...',radio:'Search stations...',video:'Search videos...',podcast:'Search podcasts...',local:'Filter local tracks...'};
+       search.placeholder=placeholders[currentApi]||'Search...';
+       var q=ytSearchInput.value.trim();
+       search.value=q;
+       closeVideoFull();
+       loadOrSearch();
+     };
+     item.addEventListener('click',itemHandler);
+     item._dropdownItemHandler=true;
+   });
+  }
+  
+  // Search in video full
+  if(ytSearchInput&&!ytSearchInput._searchHandler){
+   const searchHandler=function(e){
+     if(e.key==='Enter'){
+       e.stopPropagation();
+       e.stopImmediatePropagation();
+       var q=ytSearchInput.value.trim();
+       closeVideoFull();
+       if(q){
+         search.value=q;
+         search.focus();
+         loadOrSearch();
+       }
+     }
+   };
+   ytSearchInput.addEventListener('keydown',searchHandler);
+   ytSearchInput._searchHandler=true;
+  }
+}
+
+document.addEventListener('DOMContentLoaded',initVideoPlayer);
+if(document.readyState!=='loading')initVideoPlayer();
+
+async function openVideoFull(video,allVideos=[]){
+  if(!video||!video.embedUrl)return;
+  initVideoElements();
+  initVideoPlayer();
+  if(!videoFullModal)return;
+  allVideosForRecommended=allVideos;
+  currentVideoFull=video;
+  // Sync the search box in the video topbar with the current main page query
+  if(ytSearchInput)ytSearchInput.value=search.value||'';
+  // Sync the dropdown label in the video topbar with the main page mode
+  if(ytApiToggle&&currentApi){
+    const map={online:'Music',local:'Local',radio:'Radio',video:'Videos',podcast:'Podcasts'};
+    ytApiToggle.textContent=map[currentApi]||'Videos';
+    if(ytApiMenu)ytApiMenu.querySelectorAll('.dropdown-item').forEach(function(i){
+      i.classList.toggle('active',i.dataset.value===currentApi);
+    });
+  }
+  // Clear any inline hide-styles left by closeVideoFull, then show via .open class
+  videoFullModal.style.display='';
+  videoFullModal.style.visibility='';
+  videoFullModal.style.pointerEvents='';
+  videoFullModal.classList.add('open');
+  // Reset scroll position so the video is at the top
+  const ps=document.querySelector('.yt-player-section');
+  if(ps)ps.scrollTop=0;
+  document.getElementById('ytVidTitle').textContent=video.name||'Video';
+  ytFrame.src=video.embedUrl;
+  
+  const statusEl=document.getElementById('ytCommentsStatus');
+  statusEl.textContent='Loading metadata...';
+  
+  document.getElementById('ytStats').textContent=(video.views?`${compactNumber(video.views)} views`:'')+(video.artist?` · ${video.artist}`:'')+(video.provider?` · ${video.provider}`:'');
+  document.getElementById('ytDescription').textContent=video.description||'';
+  if(video.pageUrl){
+    document.getElementById('ytChannelLink').href=video.pageUrl;
+    document.getElementById('ytChannelLink').textContent='View on '+(video.provider||'YouTube');
+  }
+  renderRecommended(allVideos.filter(v=>v.id!==video.id).slice(0,20));
+  
+  if(video.isYouTube&&video.id){
+    try{
+      const instance='https://invidious.io';
+      const vidRes=await fetch(`${instance}/api/v1/videos/${video.id}`,{cache:'no-store'});
+      if(vidRes.ok){
+        const vidData=await vidRes.json();
+        const likes=vidData.likeCount!==undefined?`${compactNumber(vidData.likeCount)} likes`:'';
+        const views=vidData.viewCount!==undefined?`${compactNumber(vidData.viewCount)} views`:'';
+        const metaParts=[views,likes].filter(Boolean);
+        if(metaParts.length){
+          document.getElementById('ytStats').textContent=metaParts.join(' · ')+(video.artist?` · ${video.artist}`:'')+(video.provider?` · ${video.provider}`:'');
+        }
+        if(vidData.description){
+          document.getElementById('ytDescription').textContent=vidData.description;
+        }
+      }
+    }catch(e){
+      console.warn('Video metadata failed:',e);
+    }
+    loadVideoComments(video.id,'youtube');
+  }else{
+    statusEl.textContent='Comments not available for this provider';
+  }
+}
+
+function renderRecommended(vids){
+  const list=document.getElementById('ytRecommended');
+  if(!vids.length){list.innerHTML='<div style="padding:12px;color:var(--sub);font-size:12px">No recommendations</div>';return}
+  list.innerHTML=vids.map(v=>`
+    <div class="yt-rec-item" data-vid="${v.id||''}">
+      <div class="yt-rec-thumb">
+        <img src="${v.thumb||''}" onerror="this.style.display='none'" alt="">
+      </div>
+      <div class="yt-rec-info">
+        <div class="yt-rec-title">${escapeHtml(v.name||'')}</div>
+        <div class="yt-rec-meta">${escapeHtml(v.artist||v.provider||'')}</div>
+      </div>
+    </div>
+  `).join('');
+  list.querySelectorAll('.yt-rec-item').forEach(el=>{
+    el.onclick=()=>{
+      const vid=allVideosForRecommended.find(v=>v.id===el.dataset.vid);
+      if(vid)openVideoFull(vid,allVideosForRecommended);
+    };
+  });
+}
+
+async function loadVideoComments(videoId,source='youtube'){
+  const el=document.getElementById('ytCommentsList');
+  const status=document.getElementById('ytCommentsStatus');
+  status.textContent='Loading comments...';
+  try{
+    const instance='https://invidious.io';
+    const res=await fetch(`${instance}/api/v1/comments/${videoId}?source=${source}`,{cache:'no-store'});
+    if(!res.ok)throw new Error('Comments API failed');
+    const data=await res.json();
+    const comments=(data.comments||[]).slice(0,30);
+    if(!comments.length){
+      status.textContent='No comments available';
+      return;
+    }
+    el.innerHTML=comments.map(c=>`
+      <div class="yt-comment">
+        <div class="yt-comment-author">${escapeHtml(c.author||'Anonymous')}</div>
+        <div class="yt-comment-text">${escapeHtml(c.content||'')}</div>
+        <div class="yt-comment-meta">${escapeHtml(c.publishedText||'')}${c.likeCount?' · '+compactNumber(c.likeCount)+' likes':''}</div>
+      </div>
+    `).join('');
+    status.textContent=`${comments.length} comments`;
+  }catch(e){
+    status.textContent='Could not load comments';
+    console.warn('Comments failed:',e);
+  }
+}
+
+// Modify the play function to use fullpage
+const originalPlay=window.play;
+window.play=function(i){
+  const video=tracks[i];
+  if(video&&video.isVideo&&video.embedUrl){
+    openVideoFull(video,tracks);
+  }else if(originalPlay){
+    originalPlay.call(this,i);
+  }
+};
+
+loadOrSearch();
+</script>
+</body>
+</html>
