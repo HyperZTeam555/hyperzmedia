@@ -3132,7 +3132,7 @@ function _ytmParseDuration(str){
 function _ytmStartTimer(){
   if(_ytmTimer)clearInterval(_ytmTimer);
   _ytmTimer=setInterval(function(){
-    if(!_ytmTrack||_ytmSeeking)return;
+    if(!_ytmTrack)return;
     if(_ytmPlaying){
       _ytmCurrentTime+=1;
       if(_ytmDuration>0){
@@ -3170,16 +3170,23 @@ function _ytmStop(){
 function _ytmPause(){
   if(!_ytmIframe)return;
   _ytmPlaying=false;
-  // Pause by replacing autoplay=1 with autoplay=0 in the src
-  _ytmIframe.src=_ytmIframe.src.replace('autoplay=1','autoplay=0');
+  // Don't reload the iframe — just stop the timer so the progress freezes.
+  // The iframe keeps playing audio but we stop tracking time.
+  // To actually pause the audio, we reload the iframe with start=currentTime
+  // which pauses it at the current position (no autoplay).
+  var startTime=Math.max(0,_ytmCurrentTime);
+  var src=_ytmIframe.src.replace(/&start=\d+/,'');
+  _ytmIframe.src=src+'&start='+startTime+'&autoplay=0';
   updateUI();
 }
 
 function _ytmResume(){
   if(!_ytmIframe)return;
   _ytmPlaying=true;
-  // Resume by replacing autoplay=0 with autoplay=1
-  _ytmIframe.src=_ytmIframe.src.replace('autoplay=0','autoplay=1');
+  // Reload the iframe from the current position with autoplay
+  var startTime=Math.max(0,_ytmCurrentTime);
+  var src=_ytmIframe.src.replace(/&start=\d+/,'').replace('autoplay=0','autoplay=1');
+  _ytmIframe.src=src+'&start='+startTime;
   updateUI();
 }
 
@@ -3191,11 +3198,11 @@ function _ytmSeekToClientX(clientX){
     _ytmCurrentTime=Math.round(ratio*_ytmDuration);
     cTime.textContent=fmt(_ytmCurrentTime);
     progFill.style.width=(ratio*100)+'%';
-    // Seek the iframe by reloading with start time
+    // Reload the iframe from the seek position, preserving play/pause state
     if(_ytmIframe){
-      var src=_ytmIframe.src.replace(/&start=\d+/,'');
-      src+='&start='+_ytmCurrentTime;
-      _ytmIframe.src=src;
+      var videoId=_ytmTrack.id;
+      var auto=_ytmPlaying?'1':'0';
+      _ytmIframe.src='https://www.youtube.com/embed/'+encodeURIComponent(videoId)+'?autoplay='+auto+'&controls=0&disablekb=1&modestbranding=1&playsinline=1&rel=0&start='+_ytmCurrentTime;
     }
   }
 }
@@ -3217,7 +3224,6 @@ pBar.addEventListener('mousedown',function(e){
     progDragging=true;
     pBar.classList.add('dragging');
     document.body.style.userSelect='none';
-    _ytmSeeking=true;
     _ytmSeekToClientX(e.clientX);
   }
 },true);
@@ -3233,7 +3239,6 @@ window.addEventListener('mouseup',function(){
     progDragging=false;
     pBar.classList.remove('dragging');
     document.body.style.userSelect='';
-    setTimeout(function(){_ytmSeeking=false},500);
   }
 });
 
@@ -3244,7 +3249,6 @@ pBar.addEventListener('touchstart',function(e){
     e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
     progDragging=true;
     pBar.classList.add('dragging');
-    _ytmSeeking=true;
     _ytmSeekToClientX(e.touches[0].clientX);
   }
 },true);
@@ -3259,7 +3263,6 @@ window.addEventListener('touchend',function(){
   if(progDragging&&_ytmIframe){
     progDragging=false;
     pBar.classList.remove('dragging');
-    setTimeout(function(){_ytmSeeking=false},500);
   }
 });
 
