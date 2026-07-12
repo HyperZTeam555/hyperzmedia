@@ -2302,6 +2302,8 @@ function buildNGUrls(id,nameRaw){
 
 async function play(i){
   const t=getTracks()[i];if(!t)return;
+  // Stop YouTube Music player if active
+  if(typeof _ytmStop==='function')_ytmStop();
   // Stop and clear any active NG proxy
   if(audio._ngProxy){
     const p=audio._ngProxy;
@@ -3198,40 +3200,34 @@ function _ytmSeekToClientX(clientX){
   }
 }
 
-// Override play/pause to control YT music
-const _origPpClick=ppBtn.onclick;
-ppBtn.onclick=function(e){
-  e.stopPropagation();
+// YT music play/pause — add as capture-phase listener so it runs BEFORE
+// the regular handler. Only intercepts when YT music is active.
+ppBtn.addEventListener('click',function(e){
   if(_ytmIframe&&_ytmTrack){
+    e.stopPropagation();e.stopImmediatePropagation();
     if(_ytmPlaying)_ytmPause();
     else _ytmResume();
-    return;
   }
-  if(_origPpClick)_origPpClick.call(this,e);
-};
+},true);
 
-// Override progress bar seeking for YT music
-const _origPBarMousedown=pBar.onmousedown;
-pBar.onmousedown=function(e){
+// YT music seeking — capture phase, only when YT music is active
+pBar.addEventListener('mousedown',function(e){
   if(_ytmIframe&&_ytmTrack){
-    e.preventDefault();e.stopPropagation();
+    e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
     progDragging=true;
     pBar.classList.add('dragging');
     document.body.style.userSelect='none';
     _ytmSeeking=true;
     _ytmSeekToClientX(e.clientX);
-    return;
   }
-  if(_origPBarMousedown)_origPBarMousedown.call(this,e);
-};
+},true);
 
-// Mouse move for YT music seeking
 window.addEventListener('mousemove',function(e){
-  if(!progDragging||!_ytmIframe||!_ytmTrack)return;
-  _ytmSeekToClientX(e.clientX);
+  if(progDragging&&_ytmIframe&&_ytmTrack){
+    _ytmSeekToClientX(e.clientX);
+  }
 });
 
-// Mouse up for YT music seeking
 window.addEventListener('mouseup',function(){
   if(progDragging&&_ytmIframe){
     progDragging=false;
@@ -3241,21 +3237,24 @@ window.addEventListener('mouseup',function(){
   }
 });
 
-// Touch support for YT music seeking
-pBar.ontouchstart=function(e){
+// Touch for YT music
+pBar.addEventListener('touchstart',function(e){
   if(_ytmIframe&&_ytmTrack){
     if(!e.touches[0])return;
-    e.preventDefault();
+    e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
     progDragging=true;
     pBar.classList.add('dragging');
     _ytmSeeking=true;
     _ytmSeekToClientX(e.touches[0].clientX);
   }
-};
+},true);
+
 window.addEventListener('touchmove',function(e){
-  if(!progDragging||!_ytmIframe||!e.touches[0])return;
-  _ytmSeekToClientX(e.touches[0].clientX);
+  if(progDragging&&_ytmIframe&&e.touches[0]){
+    _ytmSeekToClientX(e.touches[0].clientX);
+  }
 },{passive:true});
+
 window.addEventListener('touchend',function(){
   if(progDragging&&_ytmIframe){
     progDragging=false;
@@ -3264,7 +3263,15 @@ window.addEventListener('touchend',function(){
   }
 });
 
-// Update UI for YT music
+// YT music click-to-seek on progress bar (for quick tap)
+pBar.addEventListener('click',function(e){
+  if(_ytmIframe&&_ytmTrack){
+    e.stopPropagation();e.stopImmediatePropagation();
+    _ytmSeekToClientX(e.clientX);
+  }
+},true);
+
+// Update UI for YT music — override the function but delegate to original
 const _origUpdateUI=updateUI;
 updateUI=function(){
   if(_ytmIframe&&_ytmTrack){
