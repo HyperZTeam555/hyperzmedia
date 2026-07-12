@@ -80,7 +80,9 @@
   .sb-dd-item.disabled{color:var(--sub);cursor:default;pointer-events:none}
   .player{position:fixed;bottom:0;left:0;right:0;background:rgba(10,10,18,0.55);border-top:1px solid rgba(255,255,255,0.08);display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:16px;z-index:40;backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);box-shadow:0 -8px 40px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.05);padding:12px 20px;height:auto}
   .player.shifted{right:0}
-  .p-info{min-width:0;flex:0 0 30%;max-width:300px;padding:0;display:flex;flex-direction:column;justify-content:center}
+  .p-info{min-width:0;flex:0 0 30%;max-width:300px;padding:0;display:flex;flex-direction:row;align-items:center;gap:10px;justify-content:center}
+  .p-art{width:40px;height:40px;border-radius:8px;flex-shrink:0;background:linear-gradient(135deg,#222,#1a1a1a);background-size:cover;background-position:center;display:none}
+  .p-text{min-width:0;flex:1;display:flex;flex-direction:column;justify-content:center}
   .p-title{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .p-ctx{font-size:11px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .player-center{flex:1;display:flex;flex-direction:column;gap:8px;max-width:722px;margin:0 auto;justify-content:center;min-width:0}
@@ -106,6 +108,8 @@
   .vol-slider-wrap{position:relative;flex:1;display:flex;align-items:center;max-width:110px}
   .vol-snap-line{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:2px;height:8px;background:var(--primary);opacity:0.5;border-radius:1px;pointer-events:none}
   .vol-wrap input[type=range]{width:100%;accent-color:var(--primary);height:4px;cursor:pointer}
+  .vol-pct{font-size:11px;color:var(--sub);min-width:36px;text-align:right;font-variant-numeric:tabular-nums;font-family:'Rajdhani',sans-serif;font-weight:600}
+  .np-close{display:none}
   .modal{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center;z-index:50;backdrop-filter:blur(10px)}
   #videoFullModal{background:transparent!important;backdrop-filter:none!important;align-items:flex-start!important;justify-content:flex-start!important;padding:0!important}
   #videoFullModal:not(.open){display:none !important;visibility:hidden !important;pointer-events:none !important}
@@ -138,7 +142,162 @@
   .live-dot{width:8px;height:8px;border-radius:50%;background:#e22;display:inline-block;margin-right:5px;animation:pulse 1.2s ease-in-out infinite}
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
   .prog-wrap.hidden{visibility:hidden}
-  @media(max-width:600px){header{padding:12px;gap:8px;flex-wrap:wrap}.search-wrap{order:3;min-width:100%}main{padding:12px 12px 150px;grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}.player{flex-wrap:wrap;gap:6px;padding:8px 12px}.p-info{flex:0 0 100%;max-width:100%}.player-center{flex:0 0 100%;max-width:100%;order:2}.vol-wrap{display:none}.player.shifted{right:0}main.shifted{margin-right:0}.sidebar{width:100%;right:-100%}.sidebar.open{right:0}}
+  /* ═══ MOBILE DESIGN (Spotify-style) ═══ */
+  @media(max-width:600px){
+    /* Header — compact, sticky */
+    header{padding:10px 12px;gap:8px;flex-wrap:wrap;position:sticky;top:0}
+    .logo{font-size:18px;letter-spacing:1px}
+    .dropdown-toggle{padding:6px 10px;font-size:11px;border-radius:10px}
+    .search-wrap{order:3;min-width:100%;max-width:100%}
+    .search-wrap input{padding:8px 12px;font-size:13px;border-radius:10px}
+    .nav-btn,.inline-btn{padding:6px 10px;font-size:10px;border-radius:10px}
+    #ngBtn{padding:6px 10px;font-size:10px}
+
+    /* Main grid — 2 columns on mobile */
+    main{padding:10px 10px 180px;grid-template-columns:repeat(2,1fr);gap:10px}
+    .grid{gap:10px}
+    .card{padding:10px;border-radius:10px}
+    .card-icon{width:100%;aspect-ratio:1;border-radius:8px;margin-bottom:8px}
+    .card-icon img{border-radius:8px}
+    .card-title{font-size:12px}
+    .card-sub{font-size:10px}
+    .card-badge{font-size:8px;padding:1px 4px}
+    .card-save{font-size:9px;padding:2px 6px}
+    .card-add{width:24px;height:24px}
+    .channel-strip{gap:8px;padding:0 0 6px}
+    .channel-card{min-width:200px;padding:10px;gap:8px}
+    .channel-avatar{width:40px;height:40px}
+    .channel-name{font-size:12px}
+    .channel-meta{font-size:10px}
+    .channel-desc{font-size:10px}
+
+    /* ═══ Mobile Music Player — Spotify/YouTube Music style ═══ */
+    /* Mini-player: album art + title + play button. Tap to expand. */
+    .player{flex-wrap:nowrap;flex-direction:row;align-items:center;gap:0;padding:6px 10px;height:57px;border-radius:0;transition:height .4s cubic-bezier(.22,1,.36,1),background .4s ease,backdrop-filter .4s ease,padding .4s cubic-bezier(.22,1,.36,1);overflow:hidden}
+    .p-info{flex:1;max-width:100%;order:1;flex-direction:row;align-items:center;gap:10px;padding:0;cursor:pointer;transition:all .4s cubic-bezier(.22,1,.36,1)}
+    .p-art{width:44px;height:44px;border-radius:6px;display:flex!important;align-items:center;justify-content:center;font-size:20px;transition:all .4s cubic-bezier(.22,1,.36,1);flex-shrink:0}
+    .p-text{flex:1;min-width:0;transition:all .4s cubic-bezier(.22,1,.36,1)}
+    .p-title{font-size:14px}
+    .p-ctx{font-size:11px;display:block!important}
+    /* Mini-player: only show play button, hide other controls */
+    .player-center{flex:0 0 auto;max-width:none;order:2;flex-direction:row;gap:0;align-items:center;transition:all .4s cubic-bezier(.22,1,.36,1)}
+    .controls{gap:0;transition:gap .4s cubic-bezier(.22,1,.36,1)}
+    .controls .btn:not(.btn-play){display:none!important;opacity:0;transition:opacity .3s ease .1s}
+    .prog-wrap{display:none!important;opacity:0;transition:opacity .3s ease .1s}
+    .btn-play{width:40px;height:40px;transition:all .4s cubic-bezier(.22,1,.36,1)}
+    .btn-play svg{width:18px;height:18px;transition:all .4s cubic-bezier(.22,1,.36,1)}
+    .vol-wrap{display:none!important;opacity:0;transition:opacity .3s ease .1s}
+    .np-close{display:none;opacity:0;transition:opacity .3s ease .15s}
+    .player.shifted{right:0}
+    main.shifted{margin-right:0}
+
+    /* ═══ Expanded Now Playing — smooth height transition from mini-player ═══ */
+    .player.np-expanded{
+      flex-direction:column;justify-content:space-between;align-items:stretch;
+      height:100dvh;padding:60px 24px 40px;gap:0;
+      background:rgba(5,5,10,0.98);backdrop-filter:blur(40px);
+      z-index:9999;border-top:none
+    }
+    .player.np-expanded .controls .btn:not(.btn-play){display:flex!important;opacity:1}
+    .player.np-expanded .prog-wrap{display:flex!important;opacity:1}
+    .player.np-expanded .vol-wrap{display:flex!important;opacity:1}
+    .player.np-expanded .np-close{display:flex!important;opacity:1}
+    /* Top section: art + title */
+    .player.np-expanded .p-info{
+      flex:0 0 auto;cursor:default;padding:0;
+      flex-direction:column;align-items:center;gap:20px;
+      border-bottom:none
+    }
+    .player.np-expanded .p-art{
+      width:240px;height:240px;border-radius:16px;margin:0
+    }
+    .player.np-expanded .p-text{text-align:center;align-items:center}
+    .player.np-expanded .p-title{font-size:22px;margin-bottom:6px}
+    .player.np-expanded .p-ctx{font-size:14px}
+    /* Bottom section: controls + progress + volume pushed to bottom */
+    .player.np-expanded .player-center{
+      flex:0 0 auto;order:2;flex-direction:column;gap:20px;width:100%;max-width:400px;margin:0 auto
+    }
+    .player.np-expanded .controls{gap:28px;margin-bottom:12px}
+    .player.np-expanded .controls .btn:not(.btn-play){display:flex!important}
+    .player.np-expanded .btn svg{width:30px;height:30px}
+    .player.np-expanded .btn-play{width:64px;height:64px}
+    .player.np-expanded .btn-play svg{width:26px;height:26px}
+    .player.np-expanded .prog-wrap{display:flex!important;gap:12px;width:100%}
+    .player.np-expanded .prog-wrap span{display:block!important;font-size:12px}
+    .player.np-expanded .prog-bar{height:6px;border-radius:3px}
+    .player.np-expanded .prog-bar:hover,.player.np-expanded .prog-bar.dragging{height:8px}
+    .player.np-expanded .prog-fill{border-radius:3px}
+    .player.np-expanded .vol-wrap{display:flex!important;flex:0 0 auto;width:100%;max-width:none;justify-content:center;gap:12px;flex-direction:column;align-items:center}
+    .player.np-expanded .vol-slider-wrap{max-width:200px}
+    .player.np-expanded .vol-pct{font-size:13px;min-width:auto;margin-top:4px}
+    .player.np-expanded .np-close{
+      display:flex!important;position:absolute;top:16px;right:16px;
+      width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.06);
+      align-items:center;justify-content:center;font-size:18px;cursor:pointer;color:var(--sub);
+      border:none;z-index:10
+    }
+
+    /* Sidebar — full screen overlay */
+    .sidebar{width:100%;right:-100%;border-left:none}
+    .sidebar.open{right:0}
+
+    /* Video full modal — mobile YouTube-style */
+    .yt-container{height:100dvh}
+    .yt-topbar{padding:8px 10px;gap:6px;flex-wrap:wrap;height:auto}
+    .yt-topbar .yt-logo{font-size:16px!important;letter-spacing:1px}
+    .yt-topbar .search-wrap{order:3;min-width:100%;max-width:100%}
+    .yt-topbar .search-wrap input{padding:8px 12px;font-size:12px}
+    .yt-topbar .dropdown-toggle{padding:5px 8px;font-size:10px}
+    .yt-main{flex-direction:column;gap:0;padding:0;overflow-y:auto}
+    .yt-player-section{overflow-y:visible;align-items:stretch}
+    .yt-embed-wrap{width:100%;max-width:100%!important;border-radius:0!important;margin-bottom:0!important;aspect-ratio:16/9}
+    .yt-info,.yt-comments{max-width:100%!important;align-self:stretch;padding:12px}
+    .yt-vid-title{font-size:15px}
+    .yt-stats{font-size:12px}
+    .yt-description{font-size:12px;padding:10px}
+    .yt-sidebar{width:100%;min-width:0;height:auto;max-height:none;border-left:none;border-top:1px solid var(--border);overflow-y:visible}
+    .yt-recommended-list{padding:8px;gap:6px}
+    .yt-rec-item{padding:6px;gap:6px}
+    .yt-rec-thumb{width:120px;height:68px;border-radius:6px}
+    .yt-rec-title{font-size:12px}
+    .yt-rec-meta{font-size:10px}
+    .yt-comment{padding:10px}
+    .yt-comment-author{font-size:12px}
+    .yt-comment-text{font-size:11px}
+
+    /* Video modal (compact) — full screen on mobile */
+    #videoModal .video-modal-box{width:100%;max-width:100%;border-radius:0;height:100dvh;max-height:100dvh}
+    #videoModal .video-iframe-wrap{flex:1}
+    #videoModal .video-modal-header{padding:10px 12px}
+    #videoModal .video-modal-title{font-size:14px}
+    #videoModal .video-modal-sub{font-size:11px}
+
+    /* Channel modal — full screen on mobile */
+    #channelModal .channel-modal-box{width:100%;max-width:100%;border-radius:0;max-height:100dvh}
+    .channel-hero{flex-direction:row;gap:10px;align-items:center}
+    .channel-hero .channel-avatar{width:56px;height:56px}
+    .channel-name{font-size:16px}
+    .channel-tabs{flex-wrap:wrap;gap:6px}
+    .channel-tab{padding:5px 10px;font-size:11px}
+    .channel-search-wrap{max-width:100%;margin-left:0;width:100%;margin-top:6px}
+    .channel-mini-grid{grid-template-columns:repeat(2,1fr);gap:8px}
+    .channel-mini-card{padding:6px}
+    .channel-mini-thumb{margin-bottom:6px}
+    .channel-mini-title{font-size:11px}
+    .channel-mini-meta{font-size:9px}
+
+    /* NG modal — full screen on mobile */
+    #ngModal .ng-box{width:94vw;max-width:94vw;padding:16px}
+    .ng-row{flex-direction:column;gap:6px}
+    .ng-row input{width:100%!important}
+
+    /* Playlist modal */
+    #plModal .modal-box{max-width:94vw;width:94vw}
+
+    /* Upload toast */
+    .upload-toast{bottom:180px;font-size:10px;padding:8px 12px}
+  }
   .video-modal-box{background:#1a1a1a;border:1px solid var(--border);border-radius:12px;display:flex;flex-direction:column;overflow:hidden}
   .video-modal-header{padding:12px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);flex-shrink:0}
   .video-modal-title{font-size:14px;font-weight:700;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -217,9 +376,10 @@
   .yt-topbar .search-wrap input:focus{background:rgba(255,255,255,0.05);border-color:var(--primary);box-shadow:0 0 0 3px rgba(0,212,255,0.15)}
   .yt-topbar .search-wrap input::placeholder{color:var(--sub)}
   .yt-main{display:flex;gap:16px;padding:16px;overflow:hidden;flex:1;min-height:0}
-  .yt-player-section{flex:1;display:flex;flex-direction:column;overflow-y:auto;min-width:0;min-height:0;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;}
+  .yt-player-section{flex:1;display:flex;flex-direction:column;overflow-y:auto;min-width:0;min-height:0;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;align-items:center}
   .yt-sidebar{width:320px;min-width:320px;overflow-y:auto;border-left:1px solid var(--border);display:flex;flex-direction:column}
-  .yt-embed-wrap{width:100%;aspect-ratio:16/9;background:#0a0a0a;border-radius:8px;overflow:hidden;margin-bottom:16px}
+  .yt-embed-wrap{width:100%;max-width:900px;aspect-ratio:16/9;background:#0a0a0a;border-radius:8px;overflow:hidden;margin-bottom:16px;flex-shrink:0}
+  .yt-info,.yt-comments{width:100%;max-width:900px;align-self:center}
   .yt-info{padding:0;margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:16px}
   .yt-vid-title{font-size:18px;font-weight:700;margin-bottom:8px}
   .yt-meta{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap}
@@ -254,6 +414,7 @@
     <button class="dropdown-toggle" id="apiToggle">Music</button>
     <div class="dropdown-menu" id="apiMenu">
       <div class="dropdown-item active" data-value="online">Music</div>
+      <div class="dropdown-item" data-value="ytmusic">YouTube Music</div>
       <div class="dropdown-item" data-value="local">Local</div>
       <div class="dropdown-item" data-value="radio">Radio</div>
       <div class="dropdown-item" data-value="video">Videos</div>
@@ -290,9 +451,12 @@
 </div>
 
 <div class="player" id="player" style="display:none">
-  <div class="p-info">
-    <div class="p-title" id="pTitle"></div>
-    <div class="p-ctx" id="pCtx"></div>
+  <div class="p-info" id="pInfo">
+    <div class="p-art" id="pArt"></div>
+    <div class="p-text">
+      <div class="p-title" id="pTitle"></div>
+      <div class="p-ctx" id="pCtx"></div>
+    </div>
   </div>
   <div class="player-center">
     <div class="controls">
@@ -317,7 +481,9 @@
       <div class="vol-snap-line" id="volSnapLine"></div>
       <input type="range" id="volRange" min="0" max="200" step="1" value="100">
     </div>
+    <span id="volPct" class="vol-pct">100%</span>
   </div>
+  <div class="np-close" id="npClose">✕</div>
 </div>
 <audio id="audio" crossorigin="anonymous"></audio>
 <div class="dropdown" id="gridDropdown"></div>
@@ -369,6 +535,7 @@
         <div class="dropdown-menu" id="ytApiMenu">
           <div class="dropdown-item active" data-value="video">Videos</div>
           <div class="dropdown-item" data-value="online">Music</div>
+          <div class="dropdown-item" data-value="ytmusic">YouTube Music</div>
           <div class="dropdown-item" data-value="radio">Radio</div>
           <div class="dropdown-item" data-value="podcast">Podcasts</div>
           <div class="dropdown-item" data-value="local">Local</div>
@@ -2017,6 +2184,11 @@ async function loadOrSearch(){
     grid.innerHTML='<div class="empty">Search for a podcast, DJ mix, or show...</div>';
     return;
   }
+  if(currentApi==='ytmusic'&&!q){
+    tracks=[];_gridRenderedIds=[];
+    grid.innerHTML='<div class="empty">Search for a song, artist, or album...</div>';
+    return;
+  }
   grid.innerHTML='<div class="loading">Loading...</div>';
   _gridRenderedIds=[];
   try{
@@ -2064,6 +2236,22 @@ async function loadOrSearch(){
       },()=>token===searchToken);
       if(token!==searchToken)return;
       renderVideoGrid(result,'','No podcasts found');
+      return;
+    } else if(currentApi==='ytmusic'){
+      // YouTube Music: search YouTube with "#music " prefix for music-only results
+      const musicQuery='#music '+q;
+      result=await fetchVideoAll(musicQuery,(partial,status)=>{
+        if(token===searchToken){
+          tracks=partial;
+          renderGrid();
+          let s=grid.querySelector('.grid-status');
+          if(!s){s=document.createElement('div');s.className='grid-status loading';grid.appendChild(s)}
+          s.textContent=status;s.style.display='';
+        }
+      },()=>token===searchToken);
+      if(token!==searchToken)return;
+      tracks=result;
+      renderGrid();
       return;
     } else {
       result=await fetchOnline(q,(partial,status)=>{
@@ -2127,6 +2315,12 @@ async function play(i){
   pTitle.textContent=t.name;
   pCtx.textContent=t.isLocal?'Local Library':t.provider||'Online';
   cTime.textContent='0:00';dTime.textContent='0:00';progFill.style.width='0';
+  // Set album art
+  var artEl=document.getElementById('pArt');
+  if(artEl){
+    if(t.art){artEl.style.backgroundImage='url("'+t.art+'")';artEl.textContent='';}
+    else{artEl.style.backgroundImage='';artEl.textContent='🎵';}
+  }
 
   if(t.isLocalVideo&&t.blob){
     // Local video — show in video modal, not audio player
@@ -2411,22 +2605,34 @@ search.oninput=()=>{clearTimeout(searchT);searchT=setTimeout(()=>currentApi==='l
 apiMenu.querySelectorAll('.dropdown-item').forEach(item=>{
   const orig=item._origOnclick||item.onclick;
   item.onclick=function(e){
-    const placeholders={online:'Search tracks...',radio:'Search stations...',video:'Search videos...',podcast:'Search podcasts...',local:'Filter local tracks...'};
+    const placeholders={online:'Search tracks...',ytmusic:'Search YouTube Music...',radio:'Search stations...',video:'Search videos...',podcast:'Search podcasts...',local:'Filter local tracks...'};
     search.placeholder=placeholders[item.dataset.value]||'Search...';
     orig.call(this,e);
   };
   item._origOnclick=orig;
 });
 
-ppBtn.onclick=()=>{
+ppBtn.onclick=(e)=>{
+  e.stopPropagation();
   const a=audio._ngProxy||audio;
   if(!a.src)return;
   if(a.paused){a.play().catch(()=>{}).then(()=>updateUI())}
   else{a.pause();updateUI()}
 };
-prevBtn.onclick=()=>{const t=getTracks();if(t.length)play((curIdx-1+t.length)%t.length)};
-nextBtn.onclick=()=>{const t=getTracks();if(t.length)play((curIdx+1)%t.length)};
-repBtn.onclick=()=>{repeating=!repeating;updateUI()};
+prevBtn.onclick=(e)=>{e.stopPropagation();const t=getTracks();if(t.length)play((curIdx-1+t.length)%t.length)};
+nextBtn.onclick=(e)=>{e.stopPropagation();const t=getTracks();if(t.length)play((curIdx+1)%t.length)};
+repBtn.onclick=(e)=>{e.stopPropagation();repeating=!repeating;updateUI()};
+// Mobile: tap the info bar to expand into Now Playing
+document.getElementById('pInfo')&&document.getElementById('pInfo').addEventListener('click',function(e){
+  if(window.innerWidth<=600){
+    document.getElementById('player').classList.add('np-expanded');
+  }
+});
+// Close button collapses back to mini-player (CSS transition handles the animation)
+document.getElementById('npClose').addEventListener('click',function(e){
+  e.stopPropagation();
+  document.getElementById('player').classList.remove('np-expanded');
+});
 // ── Volume with Web Audio boost ────────────────────────────────────────────
 let audioCtx=null,gainNode=null;
 
@@ -2486,6 +2692,7 @@ function setVolume(pct){
 }
 
 $('#volRange').oninput=e=>{
+  e.stopPropagation();
   let v=parseInt(e.target.value);
   if(Math.abs(v-100)<=3){v=100;e.target.value=100;}
   isMuted=false;
@@ -2493,7 +2700,8 @@ $('#volRange').oninput=e=>{
   setVolume(v);
 };
 
-$('#volIconBtn').onclick=()=>{
+$('#volIconBtn').onclick=(e)=>{
+  e.stopPropagation();
   if(isMuted){
     isMuted=false;
     $('#volRange').value=premuteVol;
@@ -2524,7 +2732,7 @@ function seekToClientX(clientX){
   }
 }
 pBar.onmousedown=e=>{
-  e.preventDefault();
+  e.preventDefault();e.stopPropagation();
   progDragging=true;progScrubbing=true;
   pBar.classList.add('dragging');
   document.body.style.userSelect='none';
@@ -2678,7 +2886,7 @@ function initVideoPlayer(){
        uploadBtn.classList.toggle('visible',isLocal);
        if(!isLocal)closeSb();
        $('#ngBtn').style.display=currentApi==='online'?'block':'none';
-       var placeholders={online:'Search tracks...',radio:'Search stations...',video:'Search videos...',podcast:'Search podcasts...',local:'Filter local tracks...'};
+       var placeholders={online:'Search tracks...',ytmusic:'Search YouTube Music...',radio:'Search stations...',video:'Search videos...',podcast:'Search podcasts...',local:'Filter local tracks...'};
        search.placeholder=placeholders[currentApi]||'Search...';
        var q=ytSearchInput.value.trim();
        search.value=q;
@@ -2827,15 +3035,105 @@ async function loadVideoComments(videoId,source='youtube'){
   }
 }
 
-// Modify the play function to use fullpage
+// Modify the play function to use fullpage for videos, or YouTube Music player for ytmusic
 const originalPlay=window.play;
 window.play=function(i){
   const video=tracks[i];
-  if(video&&video.isVideo&&video.embedUrl){
+  if(currentApi==='ytmusic'&&video&&video.isVideo&&video.embedUrl){
+    // YouTube Music: play audio-only via hidden YouTube embed
+    playYouTubeMusic(video);
+  }else if(video&&video.isVideo&&video.embedUrl&&currentApi!=='ytmusic'){
     openVideoFull(video,tracks);
   }else if(originalPlay){
     originalPlay.call(this,i);
   }
+};
+
+// ── YouTube Music player ──
+// Plays YouTube video audio through a hidden iframe, showing the thumbnail as art.
+let _ytmIframe=null,_ytmTrack=null;
+function playYouTubeMusic(video){
+  // Stop normal audio
+  if(audio._ngProxy){const p=audio._ngProxy;p.pause();p.src='';audio._ngProxy=null}
+  audio.pause();audio.src='';
+  // Stop any existing YT music iframe
+  if(_ytmIframe){_ytmIframe.src='';_ytmIframe.remove();_ytmIframe=null}
+
+  curIdx=tracks.indexOf(video);curTrack=video;
+  player.style.display='flex';
+  pTitle.textContent=video.name;
+  pCtx.textContent='YouTube Music';
+  cTime.textContent='0:00';dTime.textContent='0:00';progFill.style.width='0';
+
+  // Set album art to video thumbnail
+  var artEl=document.getElementById('pArt');
+  if(artEl&&video.thumb){artEl.style.backgroundImage='url("'+video.thumb+'")';artEl.textContent=''}
+  else if(artEl){artEl.style.backgroundImage='';artEl.textContent='🎵'}
+
+  // Create hidden YouTube iframe for audio playback
+  _ytmIframe=document.createElement('iframe');
+  _ytmIframe.style.cssText='position:fixed;bottom:-9999px;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none';
+  _ytmIframe.allow='autoplay;encrypted-media';
+  _ytmIframe.src='https://www.youtube-nocookie.com/embed/'+encodeURIComponent(video.id)+'?autoplay=1&controls=0&disablekb=1&modestbranding=1&playsinline=1&rel=0';
+  document.body.appendChild(_ytmIframe);
+  _ytmTrack=video;
+
+  // Poll the iframe for playback state (best-effort without YT API)
+  // We can't get currentTime/duration from a cross-origin iframe, so we
+  // show a simulated progress bar that runs for ~3-4 minutes (typical song length)
+  // and update the play/pause icon.
+  updateUI();
+
+  // Simulated progress (since we can't read cross-origin iframe time)
+  if(_ytmProgressTimer)clearInterval(_ytmProgressTimer);
+  var simulatedDuration=180; // default 3 min guess
+  var simulatedTime=0;
+  _ytmProgressTimer=setInterval(function(){
+    if(!_ytmIframe||!_ytmTrack)return;
+    simulatedTime+=1;
+    if(simulatedTime>=simulatedDuration){
+      clearInterval(_ytmProgressTimer);
+      nextBtn.click();
+      return;
+    }
+    cTime.textContent=fmt(simulatedTime);
+    dTime.textContent=fmt(simulatedDuration);
+    progFill.style.width=(simulatedTime/simulatedDuration*100)+'%';
+  },1000);
+}
+let _ytmProgressTimer=null;
+
+// Override play/pause to control YT music iframe
+const _origPpClick=ppBtn.onclick;
+ppBtn.onclick=function(e){
+  e.stopPropagation();
+  if(_ytmIframe){
+    // Toggle by reloading iframe with/without autoplay
+    if(_ytmIframe.dataset.paused==='1'){
+      _ytmIframe.src=_ytmIframe.src.replace('autoplay=0','autoplay=1');
+      _ytmIframe.dataset.paused='0';
+      updateUI();
+    }else{
+      _ytmIframe.src=_ytmIframe.src.replace('autoplay=1','autoplay=0');
+      _ytmIframe.dataset.paused='1';
+      updateUI();
+    }
+    return;
+  }
+  if(_origPpClick)_origPpClick.call(this,e);
+};
+
+// Update UI to show correct play/pause icon for YT music
+const _origUpdateUI=updateUI;
+updateUI=function(){
+  if(_ytmIframe){
+    const playing=_ytmIframe.dataset.paused!=='1';
+    playIc.style.display=playing?'none':'block';
+    pauseIc.style.display=playing?'block':'none';
+    repBtn.classList.toggle('active',repeating);
+    return;
+  }
+  _origUpdateUI();
 };
 
 loadOrSearch();
