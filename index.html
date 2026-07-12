@@ -3058,7 +3058,7 @@ window.play=function(i){
 
 // ── YouTube Music player (hidden iframe + Invidious metadata) ──
 let _ytmIframe=null,_ytmTrack=null,_ytmDuration=0,_ytmCurrentTime=0;
-let _ytmPlaying=false,_ytmTimer=null,_ytmSeeking=false;
+let _ytmPlaying=false,_ytmTimer=null,_ytmPausedSrc='';
 
 async function playYouTubeMusic(video){
   // Stop normal audio
@@ -3165,28 +3165,27 @@ function _ytmStop(){
   _ytmPlaying=false;
   _ytmCurrentTime=0;
   _ytmDuration=0;
+  _ytmPausedSrc='';
 }
 
 function _ytmPause(){
   if(!_ytmIframe)return;
   _ytmPlaying=false;
-  // Don't reload the iframe — just stop the timer so the progress freezes.
-  // The iframe keeps playing audio but we stop tracking time.
-  // To actually pause the audio, we reload the iframe with start=currentTime
-  // which pauses it at the current position (no autoplay).
-  var startTime=Math.max(0,_ytmCurrentTime);
-  var src=_ytmIframe.src.replace(/&start=\d+/,'');
-  _ytmIframe.src=src+'&start='+startTime+'&autoplay=0';
+  // Stop the audio by blanking the iframe src (instant, no reload flash)
+  // Save the src so we can resume from the current position
+  _ytmPausedSrc=_ytmIframe.src;
+  _ytmIframe.src='about:blank';
   updateUI();
 }
 
 function _ytmResume(){
   if(!_ytmIframe)return;
   _ytmPlaying=true;
-  // Reload the iframe from the current position with autoplay
+  // Reload from the current position with autoplay
   var startTime=Math.max(0,_ytmCurrentTime);
-  var src=_ytmIframe.src.replace(/&start=\d+/,'').replace('autoplay=0','autoplay=1');
-  _ytmIframe.src=src+'&start='+startTime;
+  var videoId=_ytmTrack.id;
+  _ytmIframe.src='https://www.youtube.com/embed/'+encodeURIComponent(videoId)+'?autoplay=1&controls=0&disablekb=1&modestbranding=1&playsinline=1&rel=0&start='+startTime;
+  _ytmPausedSrc='';
   updateUI();
 }
 
