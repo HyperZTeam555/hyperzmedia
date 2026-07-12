@@ -486,6 +486,7 @@
   <div class="np-close" id="npClose">✕</div>
 </div>
 <audio id="audio" crossorigin="anonymous"></audio>
+<div id="ytmPlayer" style="position:fixed;width:1px;height:1px;left:-9999px;top:-9999px;opacity:0;pointer-events:none"></div>
 <div class="dropdown" id="gridDropdown"></div>
 <div class="upload-toast" id="uploadToast"></div>
 
@@ -2698,6 +2699,8 @@ $('#volRange').oninput=e=>{
   isMuted=false;
   premuteVol=v;
   setVolume(v);
+  // Also set YT music player volume (capped at 100 — YT doesn't support boost)
+  if(_ytmPlayer&&_ytmTrack){try{_ytmPlayer.setVolume(Math.min(v,100))}catch(err){}}
 };
 
 $('#volIconBtn').onclick=(e)=>{
@@ -3040,7 +3043,7 @@ const originalPlay=window.play;
 window.play=function(i){
   const video=tracks[i];
   if(currentApi==='ytmusic'&&video&&video.isVideo&&video.embedUrl){
-    // YouTube Music: play audio-only via hidden YouTube embed
+    // YouTube Music: play audio-only via hidden YouTube IFrame API player
     playYouTubeMusic(video);
   }else if(video&&video.isVideo&&video.embedUrl&&currentApi!=='ytmusic'){
     openVideoFull(video,tracks);
@@ -3049,15 +3052,64 @@ window.play=function(i){
   }
 };
 
-// ── YouTube Music player ──
-// Plays YouTube video audio through a hidden iframe, showing the thumbnail as art.
-let _ytmIframe=null,_ytmTrack=null;
+// ── YouTube Music player (uses YouTube IFrame Player API) ──
+let _ytmPlayer=null,_ytmReady=false,_ytmTrack=null,_ytmPollTimer=null,_ytmSeeking=false;
+
+// Load the YouTube IFrame API
+(function(){
+  var tag=document.createElement('script');
+  tag.src='https://www.youtube.com/iframe_api';
+  document.head.appendChild(tag);
+})();
+
+// Called by the YT API when ready
+window.onYouTubeIframeAPIReady=function(){
+  _ytmReady=true;
+};
+
+function _ytmCreatePlayer(videoId){
+  // Destroy old player if exists
+  if(_ytmPlayer){
+    try{_ytmPlayer.destroy()}catch(e){}
+    _ytmPlayer=null;
+  }
+  // Recreate the container div (YT.Player replaces it with an iframe, so
+  // after destroy() the div is gone and we need to recreate it)
+  var oldDiv=document.getElementById('ytmPlayer');
+  if(oldDiv)oldDiv.remove();
+  var newDiv=document.createElement('div');
+  newDiv.id='ytmPlayer';
+  newDiv.style.cssText='position:fixed;width:1px;height:1px;left:-9999px;top:-9999px;opacity:0;pointer-events:none';
+  document.body.appendChild(newDiv);
+
+  _ytmPlayer=new YT.Player('ytmPlayer',{
+    videoId:videoId,
+    host:'https://www.youtube-nocookie.com',
+    playerVars:{autoplay:1,controls:0,disablekb:1,modestbranding:1,playsinline:1,rel:0},
+    events:{
+      onReady:function(e){
+        e.target.setVolume(parseInt($('#volRange').value)||100);
+        _ytmStartPolling();
+        updateUI();
+      },
+      onStateChange:function(e){
+        updateUI();
+        // 0 = ended
+        if(e.data===0){
+          if(repeating){_ytmPlayer.seekTo(0);_ytmPlayer.playVideo()}
+          else nextBtn.click();
+        }
+      }
+    }
+  });
+}
+
 function playYouTubeMusic(video){
   // Stop normal audio
   if(audio._ngProxy){const p=audio._ngProxy;p.pause();p.src='';audio._ngProxy=null}
   audio.pause();audio.src='';
-  // Stop any existing YT music iframe
-  if(_ytmIframe){_ytmIframe.src='';_ytmIframe.remove();_ytmIframe=null}
+  // Stop polling
+  if(_ytmPollTimer){clearInterval(_ytmPollTimer);_ytmPollTimer=null}
 
   curIdx=tracks.indexOf(video);curTrack=video;
   player.style.display='flex';
@@ -3070,64 +3122,135 @@ function playYouTubeMusic(video){
   if(artEl&&video.thumb){artEl.style.backgroundImage='url("'+video.thumb+'")';artEl.textContent=''}
   else if(artEl){artEl.style.backgroundImage='';artEl.textContent='🎵'}
 
-  // Create hidden YouTube iframe for audio playback
-  _ytmIframe=document.createElement('iframe');
-  _ytmIframe.style.cssText='position:fixed;bottom:-9999px;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none';
-  _ytmIframe.allow='autoplay;encrypted-media';
-  _ytmIframe.src='https://www.youtube-nocookie.com/embed/'+encodeURIComponent(video.id)+'?autoplay=1&controls=0&disablekb=1&modestbranding=1&playsinline=1&rel=0';
-  document.body.appendChild(_ytmIframe);
   _ytmTrack=video;
 
-  // Poll the iframe for playback state (best-effort without YT API)
-  // We can't get currentTime/duration from a cross-origin iframe, so we
-  // show a simulated progress bar that runs for ~3-4 minutes (typical song length)
-  // and update the play/pause icon.
+  if(!_ytmReady){
+    // API not loaded yet — wait and retry
+    var waitT=setInterval(function(){
+      if(_ytmReady){
+        clearInterval(waitT);
+        _ytmCreatePlayer(video.id);
+      }
+    },100);
+  } else {
+    _ytmCreatePlayer(video.id);
+  }
   updateUI();
-
-  // Simulated progress (since we can't read cross-origin iframe time)
-  if(_ytmProgressTimer)clearInterval(_ytmProgressTimer);
-  var simulatedDuration=180; // default 3 min guess
-  var simulatedTime=0;
-  _ytmProgressTimer=setInterval(function(){
-    if(!_ytmIframe||!_ytmTrack)return;
-    simulatedTime+=1;
-    if(simulatedTime>=simulatedDuration){
-      clearInterval(_ytmProgressTimer);
-      nextBtn.click();
-      return;
-    }
-    cTime.textContent=fmt(simulatedTime);
-    dTime.textContent=fmt(simulatedDuration);
-    progFill.style.width=(simulatedTime/simulatedDuration*100)+'%';
-  },1000);
 }
-let _ytmProgressTimer=null;
 
-// Override play/pause to control YT music iframe
+function _ytmStartPolling(){
+  if(_ytmPollTimer)clearInterval(_ytmPollTimer);
+  _ytmPollTimer=setInterval(function(){
+    if(!_ytmPlayer||_ytmSeeking)return;
+    try{
+      var dur=_ytmPlayer.getDuration();
+      var cur=_ytmPlayer.getCurrentTime();
+      if(dur>0&&isFinite(dur)){
+        dTime.textContent=fmt(dur);
+        if(!_ytmSeeking){
+          cTime.textContent=fmt(cur);
+          progFill.style.width=(cur/dur*100)+'%';
+        }
+      }
+    }catch(e){}
+  },500);
+}
+
+// Override play/pause to control YT music player
 const _origPpClick=ppBtn.onclick;
 ppBtn.onclick=function(e){
   e.stopPropagation();
-  if(_ytmIframe){
-    // Toggle by reloading iframe with/without autoplay
-    if(_ytmIframe.dataset.paused==='1'){
-      _ytmIframe.src=_ytmIframe.src.replace('autoplay=0','autoplay=1');
-      _ytmIframe.dataset.paused='0';
-      updateUI();
-    }else{
-      _ytmIframe.src=_ytmIframe.src.replace('autoplay=1','autoplay=0');
-      _ytmIframe.dataset.paused='1';
-      updateUI();
-    }
+  if(_ytmPlayer&&_ytmTrack){
+    try{
+      var state=_ytmPlayer.getPlayerState();
+      // 1=playing, 2=paused, 3=buffering, 5=cued
+      if(state===1){
+        _ytmPlayer.pauseVideo();
+      } else {
+        _ytmPlayer.playVideo();
+      }
+    }catch(err){}
+    updateUI();
     return;
   }
   if(_origPpClick)_origPpClick.call(this,e);
 };
 
+// Override progress bar seeking for YT music
+const _origPBarMousedown=pBar.onmousedown;
+pBar.onmousedown=function(e){
+  if(_ytmPlayer&&_ytmTrack){
+    e.preventDefault();e.stopPropagation();
+    progDragging=true;progScrubbing=true;
+    pBar.classList.add('dragging');
+    document.body.style.userSelect='none';
+    _ytmSeeking=true;
+    _ytmSeekToClientX(e.clientX);
+    return;
+  }
+  if(_origPBarMousedown)_origPBarMousedown.call(this,e);
+};
+
+function _ytmSeekToClientX(clientX){
+  if(!_ytmPlayer)return;
+  var r=pBar.getBoundingClientRect();
+  var ratio=Math.max(0,Math.min(1,(clientX-r.left)/r.width));
+  var dur=_ytmPlayer.getDuration();
+  if(dur&&isFinite(dur)){
+    var newTime=ratio*dur;
+    _ytmPlayer.seekTo(newTime,true);
+    cTime.textContent=fmt(newTime);
+    progFill.style.width=(ratio*100)+'%';
+  }
+}
+
+// Override mousemove for YT music seeking
+const _origMouseMove=window.onmousemove;
+window.addEventListener('mousemove',function(e){
+  if(!progDragging||!_ytmPlayer)return;
+  _ytmSeekToClientX(e.clientX);
+});
+
+// Override mouseup for YT music seeking
+window.addEventListener('mouseup',function(){
+  if(progDragging&&_ytmPlayer){
+    progDragging=false;
+    pBar.classList.remove('dragging');
+    document.body.style.userSelect='';
+    setTimeout(function(){_ytmSeeking=false},500);
+  }
+});
+
+// Touch support for YT music seeking on mobile
+pBar.ontouchstart=function(e){
+  if(_ytmPlayer&&_ytmTrack){
+    if(!e.touches[0])return;
+    e.preventDefault();
+    progDragging=true;
+    pBar.classList.add('dragging');
+    _ytmSeeking=true;
+    _ytmSeekToClientX(e.touches[0].clientX);
+  }
+};
+window.addEventListener('touchmove',function(e){
+  if(!progDragging||!_ytmPlayer||!e.touches[0])return;
+  _ytmSeekToClientX(e.touches[0].clientX);
+},{passive:true});
+window.addEventListener('touchend',function(){
+  if(progDragging&&_ytmPlayer){
+    progDragging=false;
+    pBar.classList.remove('dragging');
+    setTimeout(function(){_ytmSeeking=false},500);
+  }
+});
+
 // Update UI to show correct play/pause icon for YT music
 const _origUpdateUI=updateUI;
 updateUI=function(){
-  if(_ytmIframe){
-    const playing=_ytmIframe.dataset.paused!=='1';
+  if(_ytmPlayer&&_ytmTrack){
+    var state=_ytmPlayer.getPlayerState ? _ytmPlayer.getPlayerState() : -1;
+    // 1=playing, 3=buffering → show pause icon
+    var playing=(state===1||state===3);
     playIc.style.display=playing?'none':'block';
     pauseIc.style.display=playing?'block':'none';
     repBtn.classList.toggle('active',repeating);
