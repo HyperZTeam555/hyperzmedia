@@ -3140,15 +3140,19 @@ function _ytmStartTimer(){
         progFill.style.width=(_ytmCurrentTime/_ytmDuration*100)+'%';
         // Auto-advance when song ends
         if(_ytmCurrentTime>=_ytmDuration){
-          _ytmStop();
           if(repeating){
+            // Loop: reset time and reload the iframe from the start.
+            // Don't call _ytmStop() — that would remove the iframe.
             _ytmCurrentTime=0;
-            // Restart the iframe
-            if(_ytmIframe)_ytmIframe.src=_ytmIframe.src;
+            if(_ytmIframe&&_ytmTrack){
+              _ytmIframe.src='https://www.youtube.com/embed/'+encodeURIComponent(_ytmTrack.id)+'?autoplay=1&controls=0&disablekb=1&modestbranding=1&playsinline=1&rel=0&start=0';
+            }
             _ytmPlaying=true;
-            _ytmStartTimer();
+            cTime.textContent='0:00';
+            progFill.style.width='0%';
             updateUI();
           }else{
+            _ytmStop();
             nextBtn.click();
           }
         }
