@@ -13,7 +13,7 @@
   body::before{content:'';position:fixed;inset:0;background:radial-gradient(circle at 20% 80%,rgba(0,212,255,0.15) 0%,transparent 40%),radial-gradient(circle at 80% 20%,rgba(123,47,255,0.1) 0%,transparent 40%);pointer-events:none;z-index:-1}
   header{padding:16px 24px;display:flex;align-items:center;gap:12px;position:sticky;top:0;background:linear-gradient(180deg,rgba(0,0,0,.95),rgba(0,0,0,.85));z-index:20;border-bottom:1px solid var(--border);backdrop-filter:blur(10px)}
   .logo{font-size:22px;font-weight:900;color:var(--primary);letter-spacing:2px;font-family:'Orbitron',monospace;text-transform:uppercase}
-  /* Custom Dropdown */
+  
   .dropdown-container{position:relative;display:inline-block}
   .dropdown-toggle{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:12px;padding:8px 14px;font-size:12px;cursor:pointer;outline:none;color:var(--text);font-family:'Rajdhani',sans-serif;font-weight:600;display:flex;align-items:center;gap:6px;transition:all 0.2s ease}
   .dropdown-toggle:hover{border-color:var(--primary);background:rgba(0,212,255,0.05);color:var(--primary)}
@@ -80,8 +80,8 @@
   .sb-dd-item.disabled{color:var(--sub);cursor:default;pointer-events:none}
   .player{position:fixed;bottom:0;left:0;right:0;background:rgba(10,10,18,0.55);border-top:1px solid rgba(255,255,255,0.08);display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:16px;z-index:40;backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);box-shadow:0 -8px 40px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.05);padding:12px 20px;height:auto}
   .player.shifted{right:0}
-  .p-info{min-width:0;flex:0 0 30%;max-width:300px;padding:0;display:flex;flex-direction:row;align-items:center;gap:10px;justify-content:flex-start}
-  .p-art{width:40px;height:40px;border-radius:8px;flex-shrink:0;background:linear-gradient(135deg,#222,#1a1a1a);background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center;font-size:20px}
+  .p-info{min-width:0;flex:0 0 30%;max-width:300px;padding:0;display:flex;flex-direction:row;align-items:center;gap:10px;justify-content:center}
+  .p-art{width:40px;height:40px;border-radius:8px;flex-shrink:0;background:linear-gradient(135deg,#222,#1a1a1a);background-size:cover;background-position:center;display:none}
   .p-text{min-width:0;flex:1;display:flex;flex-direction:column;justify-content:center}
   .p-title{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .p-ctx{font-size:11px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -142,9 +142,9 @@
   .live-dot{width:8px;height:8px;border-radius:50%;background:#e22;display:inline-block;margin-right:5px;animation:pulse 1.2s ease-in-out infinite}
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
   .prog-wrap.hidden{visibility:hidden}
-  /* ═══ MOBILE DESIGN (Spotify-style) ═══ */
+  
   @media(max-width:600px){
-    /* Header — compact, sticky */
+    
     header{padding:10px 12px;gap:8px;flex-wrap:wrap;position:sticky;top:0}
     .logo{font-size:18px;letter-spacing:1px}
     .dropdown-toggle{padding:6px 10px;font-size:11px;border-radius:10px}
@@ -153,7 +153,7 @@
     .nav-btn,.inline-btn{padding:6px 10px;font-size:10px;border-radius:10px}
     #ngBtn{padding:6px 10px;font-size:10px}
 
-    /* Main grid — 2 columns on mobile */
+    
     main{padding:10px 10px 180px;grid-template-columns:repeat(2,1fr);gap:10px}
     .grid{gap:10px}
     .card{padding:10px;border-radius:10px}
@@ -171,15 +171,15 @@
     .channel-meta{font-size:10px}
     .channel-desc{font-size:10px}
 
-    /* ═══ Mobile Music Player — Spotify/YouTube Music style ═══ */
-    /* Mini-player: album art + title + play button. Tap to expand. */
+    
+    
     .player{flex-wrap:nowrap;flex-direction:row;align-items:center;gap:0;padding:6px 10px;height:57px;border-radius:0;transition:height .4s cubic-bezier(.22,1,.36,1),background .4s ease,backdrop-filter .4s ease,padding .4s cubic-bezier(.22,1,.36,1);overflow:hidden}
     .p-info{flex:1;max-width:100%;order:1;flex-direction:row;align-items:center;gap:10px;padding:0;cursor:pointer;transition:all .4s cubic-bezier(.22,1,.36,1)}
     .p-art{width:44px;height:44px;border-radius:6px;display:flex!important;align-items:center;justify-content:center;font-size:20px;transition:all .4s cubic-bezier(.22,1,.36,1);flex-shrink:0}
     .p-text{flex:1;min-width:0;transition:all .4s cubic-bezier(.22,1,.36,1)}
     .p-title{font-size:14px}
     .p-ctx{font-size:11px;display:block!important}
-    /* Mini-player: only show play button, hide other controls */
+    
     .player-center{flex:0 0 auto;max-width:none;order:2;flex-direction:row;gap:0;align-items:center;transition:all .4s cubic-bezier(.22,1,.36,1)}
     .controls{gap:0;transition:gap .4s cubic-bezier(.22,1,.36,1)}
     .controls .btn:not(.btn-play){display:none!important;opacity:0;transition:opacity .3s ease .1s}
@@ -191,7 +191,7 @@
     .player.shifted{right:0}
     main.shifted{margin-right:0}
 
-    /* ═══ Expanded Now Playing — smooth height transition from mini-player ═══ */
+    
     .player.np-expanded{
       flex-direction:column;justify-content:space-between;align-items:stretch;
       height:100dvh;padding:60px 24px 40px;gap:0;
@@ -202,7 +202,7 @@
     .player.np-expanded .prog-wrap{display:flex!important;opacity:1}
     .player.np-expanded .vol-wrap{display:flex!important;opacity:1}
     .player.np-expanded .np-close{display:flex!important;opacity:1}
-    /* Top section: art + title */
+    
     .player.np-expanded .p-info{
       flex:0 0 auto;cursor:default;padding:0;
       flex-direction:column;align-items:center;gap:20px;
@@ -214,7 +214,7 @@
     .player.np-expanded .p-text{text-align:center;align-items:center}
     .player.np-expanded .p-title{font-size:22px;margin-bottom:6px}
     .player.np-expanded .p-ctx{font-size:14px}
-    /* Bottom section: controls + progress + volume pushed to bottom */
+    
     .player.np-expanded .player-center{
       flex:0 0 auto;order:2;flex-direction:column;gap:20px;width:100%;max-width:400px;margin:0 auto
     }
@@ -238,11 +238,11 @@
       border:none;z-index:10
     }
 
-    /* Sidebar — full screen overlay */
+    
     .sidebar{width:100%;right:-100%;border-left:none}
     .sidebar.open{right:0}
 
-    /* Video full modal — mobile YouTube-style */
+    
     .yt-container{height:100dvh}
     .yt-topbar{padding:8px 10px;gap:6px;flex-wrap:wrap;height:auto}
     .yt-topbar .yt-logo{font-size:16px!important;letter-spacing:1px}
@@ -251,7 +251,7 @@
     .yt-topbar .dropdown-toggle{padding:5px 8px;font-size:10px}
     .yt-main{flex-direction:column;gap:0;padding:0;overflow-y:auto}
     .yt-player-section{overflow-y:visible;align-items:stretch}
-    .yt-embed-wrap{width:100%;border-radius:0;aspect-ratio:16/9}
+    .yt-embed-wrap{width:100%;max-width:100%!important;border-radius:0!important;margin-bottom:0!important;aspect-ratio:16/9}
     .yt-info,.yt-comments{max-width:100%!important;align-self:stretch;padding:12px}
     .yt-vid-title{font-size:15px}
     .yt-stats{font-size:12px}
@@ -266,14 +266,14 @@
     .yt-comment-author{font-size:12px}
     .yt-comment-text{font-size:11px}
 
-    /* Video modal (compact) — full screen on mobile */
+    
     #videoModal .video-modal-box{width:100%;max-width:100%;border-radius:0;height:100dvh;max-height:100dvh}
     #videoModal .video-iframe-wrap{flex:1}
     #videoModal .video-modal-header{padding:10px 12px}
     #videoModal .video-modal-title{font-size:14px}
     #videoModal .video-modal-sub{font-size:11px}
 
-    /* Channel modal — full screen on mobile */
+    
     #channelModal .channel-modal-box{width:100%;max-width:100%;border-radius:0;max-height:100dvh}
     .channel-hero{flex-direction:row;gap:10px;align-items:center}
     .channel-hero .channel-avatar{width:56px;height:56px}
@@ -287,15 +287,15 @@
     .channel-mini-title{font-size:11px}
     .channel-mini-meta{font-size:9px}
 
-    /* NG modal — full screen on mobile */
+    
     #ngModal .ng-box{width:94vw;max-width:94vw;padding:16px}
     .ng-row{flex-direction:column;gap:6px}
     .ng-row input{width:100%!important}
 
-    /* Playlist modal */
+    
     #plModal .modal-box{max-width:94vw;width:94vw}
 
-    /* Upload toast */
+    
     .upload-toast{bottom:180px;font-size:10px;padding:8px 12px}
   }
   .video-modal-box{background:#1a1a1a;border:1px solid var(--border);border-radius:12px;display:flex;flex-direction:column;overflow:hidden}
@@ -365,7 +365,7 @@
   .channel-post-meta{font-size:11px;color:var(--sub);margin-top:8px}
   .channel-post-media{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap}
   .channel-post-media img{max-width:170px;border-radius:6px;border:1px solid var(--border)}
-  /* YouTube-like full-page player */
+  
   #videoFullModal.open{display:flex!important;background:transparent!important;backdrop-filter:none!important;align-items:flex-start!important;justify-content:flex-start!important;padding:0!important}
   .yt-container{display:flex;flex-direction:column;height:100vh;background:#000;width:100vw;overflow:hidden;position:fixed;top:0;left:0;z-index:999}
   .yt-topbar{display:flex;align-items:center;gap:12px;padding:14px 24px;background:linear-gradient(180deg,rgba(0,0,0,.95),rgba(0,0,0,.85));border-bottom:1px solid var(--border);backdrop-filter:blur(10px);flex-shrink:0;z-index:10}
@@ -375,12 +375,12 @@
   .yt-topbar .search-wrap input{width:100%;padding:10px 16px;border-radius:12px;border:1px solid var(--border);background:rgba(255,255,255,0.03);color:var(--text);font-size:12px;outline:none;font-family:'Rajdhani',sans-serif;transition:all 0.2s ease}
   .yt-topbar .search-wrap input:focus{background:rgba(255,255,255,0.05);border-color:var(--primary);box-shadow:0 0 0 3px rgba(0,212,255,0.15)}
   .yt-topbar .search-wrap input::placeholder{color:var(--sub)}
-  .yt-main{display:flex;gap:0;padding:0;overflow:hidden;flex:1;min-height:0}
-  .yt-player-section{flex:1;display:flex;flex-direction:column;overflow-y:auto;min-width:0;min-height:0;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;align-items:stretch}
-  .yt-sidebar{width:340px;min-width:340px;overflow-y:auto;border-left:1px solid var(--border);display:flex;flex-direction:column;background:#0a0a0a}
-  .yt-embed-wrap{width:100%;max-width:none;aspect-ratio:16/9;background:#000;border-radius:0;overflow:hidden;margin-bottom:0;flex-shrink:0}
-  .yt-info,.yt-comments{width:100%;max-width:none;align-self:stretch;padding:20px 24px}
-  .yt-info{padding:20px 24px;margin-bottom:0;border-bottom:1px solid var(--border);padding-bottom:16px}
+  .yt-main{display:flex;gap:16px;padding:16px;overflow:hidden;flex:1;min-height:0}
+  .yt-player-section{flex:1;display:flex;flex-direction:column;overflow-y:auto;min-width:0;min-height:0;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;align-items:center}
+  .yt-sidebar{width:320px;min-width:320px;overflow-y:auto;border-left:1px solid var(--border);display:flex;flex-direction:column}
+  .yt-embed-wrap{width:100%;max-width:900px;aspect-ratio:16/9;background:#0a0a0a;border-radius:8px;overflow:hidden;margin-bottom:16px;flex-shrink:0}
+  .yt-info,.yt-comments{width:100%;max-width:900px;align-self:center}
+  .yt-info{padding:0;margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:16px}
   .yt-vid-title{font-size:18px;font-weight:700;margin-bottom:8px}
   .yt-meta{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap}
   .yt-stats{font-size:13px;color:var(--sub)}
@@ -489,7 +489,7 @@
 <div class="dropdown" id="gridDropdown"></div>
 <div class="upload-toast" id="uploadToast"></div>
 
-<!-- Newgrounds modal -->
+
 <div class="modal" id="ngModal">
   <div class="ng-box">
     <div class="ng-header">
@@ -510,7 +510,7 @@
   </div>
 </div>
 
-<!-- Video modal -->
+
 <div class="modal" id="videoModal">
   <div class="video-modal-box">
     <div class="video-modal-header">
@@ -525,7 +525,7 @@
   </div>
 </div>
 
-<!-- Full-page Video Player (YouTube-like) -->
+
 <div class="modal" id="videoFullModal" style="display:none">
   <div class="yt-container">
     <div class="yt-topbar">
@@ -574,7 +574,7 @@
   </div>
 </div>
 
-<!-- YouTube channel modal -->
+
 <div class="modal" id="channelModal">
   <div class="channel-modal-box">
     <div class="video-modal-header">
@@ -640,11 +640,10 @@ let tracks=[];
 let playTracks=null;
 let playlists=[];
 let curPlId=null,curIdx=-1,repeating=false,curTrack=null;
-let localBlobURLs={}; // filename -> blob URL (in-memory, per session)
+let localBlobURLs={}; 
 
 function getTracks(){return playTracks||tracks}
 
-// ── IndexedDB helpers ──────────────────────────────────────────────────────
 const DB_NAME='ZMusicDB',DB_VERSION=1,STORE='tracks';
 let db=null;
 function openDB(){
@@ -681,7 +680,6 @@ function dbDelete(name){
   }));
 }
 
-// ── Save to Local helper ───────────────────────────────────────────────────
 async function saveToLocal(t,btnEl){
   if(!t.url){toast('No direct URL to save');return}
   if(btnEl){btnEl.textContent='Saving…';btnEl.style.pointerEvents='none'}
@@ -706,12 +704,10 @@ function toast(msg){
   clearTimeout(toastT);toastT=setTimeout(()=>uploadToast.classList.remove('show'),2500);
 }
 
-// ── Native: load from IndexedDB ────────────────────────────────────────────
 async function fetchNative(){
   const rows=await dbGetAll();
   return rows.map(r=>{
     if(r.ngId){
-      // Newgrounds reference — no blob, play via CDN URL
       return{
         name:r.ngName||`Newgrounds #${r.ngId}`,
         file:r.name,
@@ -730,7 +726,6 @@ async function fetchNative(){
   });
 }
 
-// ── Upload handler ─────────────────────────────────────────────────────────
 uploadBtn.onclick=()=>fileInput.click();
 fileInput.onchange=async()=>{
   const files=[...fileInput.files].filter(f=>/\.(mp3|wav|ogg|m4a|aac|flac|webm|mp4|mov|mkv|avi|3gp|3g2)$/i.test(f.name));
@@ -750,9 +745,7 @@ fileInput.onchange=async()=>{
   if(currentApi==='local'){tracks=await fetchNative();renderGrid()}
 };
 
-// ── Audius — open music platform, full streams, no key needed ─────────────
 async function fetchAudius(q){
-  // api.audius.co is the stable gateway; add app_name as requested by their docs
   const res=await fetch(`https://api.audius.co/v1/tracks/search?query=${encodeURIComponent(q)}&limit=20&app_name=ZMusic`,{cache:'no-store'});
   if(!res.ok) throw null;
   const d=await res.json();
@@ -766,7 +759,6 @@ async function fetchAudius(q){
   }));
 }
 
-// ── iTunes — 30s previews, CORS-friendly, no key needed ───────────────────
 async function fetchITunes(q){
   const res=await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(q)}&media=music&limit=20`,{cache:'no-store'});
   if(!res.ok) throw null;
@@ -781,7 +773,6 @@ async function fetchITunes(q){
   }));
 }
 
-// ── Deezer — 30s previews, needs CORS proxy ───────────────────────────────
 async function fetchDeezer(q){
   const target=`https://api.deezer.com/search?q=${encodeURIComponent(q)}&limit=20`;
   const res=await fetch(`https://proxy.corsfix.com/?${target}`,{cache:'no-store'});
@@ -797,7 +788,6 @@ async function fetchDeezer(q){
   }));
 }
 
-// ── Jamendo — full CC tracks, free test client ID ─────────────────────────
 async function fetchJamendo(q){
   const res=await fetch(`https://api.jamendo.com/v3.0/tracks/?client_id=709fa152&format=json&limit=20&namesearch=${encodeURIComponent(q)}&audioformat=mp32`,{cache:'no-store'});
   if(!res.ok) throw null;
@@ -812,13 +802,10 @@ async function fetchJamendo(q){
   }));
 }
 
-// ── ccMixter — CC remix community, full tracks, no key ────────────────────
 async function fetchCCMixter(q){
-  // Returns JSONP-style array; f=json gives raw JSON array
   const res=await fetch(`https://ccmixter.org/api/query?search=${encodeURIComponent(q)}&format=json&limit=20&type=any`,{cache:'no-store'});
   if(!res.ok) throw null;
   let text=await res.text();
-  // ccMixter JSON can have bad octals — strip them safely
   text=text.replace(/\\[0-7]{3}/g,'');
   const data=JSON.parse(text);
   return (Array.isArray(data)?data:[]).filter(t=>{
@@ -837,25 +824,22 @@ async function fetchCCMixter(q){
   });
 }
 
-// ── Internet Archive — public domain & CC audio, no key ───────────────────
 async function fetchArchive(q){
   const url=`https://archive.org/advancedsearch.php?q=${encodeURIComponent(q)}+AND+mediatype:audio&fl[]=identifier,title,creator&rows=12&output=json`;
   const res=await fetch(url,{cache:'no-store'});
   if(!res.ok) throw null;
   const d=await res.json();
   const items=d.response?.docs||[];
-  // Return items immediately; actual audio URL is resolved lazily in playArchive()
   return items.map(it=>({
     id:it.identifier,
     name:it.title||it.identifier,
     artist:Array.isArray(it.creator)?it.creator[0]:it.creator||'Internet Archive',
-    url:null, // resolved at play time
+    url:null, 
     art:`https://archive.org/services/get-item-image.php?identifier=${it.identifier}`,
     provider:'Archive',isNative:false,isArchive:true
   }));
 }
 
-// Resolve the real audio file URL for an Archive item on demand
 async function resolveArchiveUrl(t){
   if(t.url)return t.url;
   const meta=await fetch(`https://archive.org/metadata/${t.id}`,{cache:'no-store'});
@@ -872,7 +856,6 @@ async function resolveArchiveUrl(t){
   return t.url;
 }
 
-// ── Mixcloud — DJ mixes, podcasts, radio shows — open search, no key ───────
 async function fetchMixcloud(q){
   const url=`https://api.mixcloud.com/search/?q=${encodeURIComponent(q)}&type=cloudcast&limit=20`;
   const res=await fetch(url,{cache:'no-store'});
@@ -890,7 +873,6 @@ async function fetchMixcloud(q){
   }));
 }
 
-// ── Wikimedia Commons audio — CC/PD recordings, no key, MediaWiki API ───────
 async function fetchWikimediaAudio(q){
   const url=`https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(q)}&gsrnamespace=6&gsrlimit=20&prop=imageinfo|pageimages&iiprop=url|mime&pithumbsize=300&format=json&origin=*`;
   const res=await fetch(url,{cache:'no-store'});
@@ -899,7 +881,7 @@ async function fetchWikimediaAudio(q){
   const pages=Object.values(d.query?.pages||{});
   return pages.filter(p=>{
     const mime=p.imageinfo?.[0]?.mime||'';
-    return /^audio\//.test(mime)||/\.(mp3|ogg|flac|wav|oga)$/i.test(p.imageinfo?.[0]?.url||'');
+    return (mime||"").startsWith("audio/");
   }).map(p=>{
     const ii=p.imageinfo?.[0]||{};
     const title=p.title?.replace(/^File:/,'');
@@ -924,8 +906,6 @@ async function fetchOnline(q,onUpdate,isCurrent){
     {label:'Wikimedia',fetcher:fetchWikimediaAudio},
     {label:'Archive',fetcher:fetchArchive}
   ];
-  // Music priority order — Audius floats to top regardless of arrival order.
-  // Lower number = higher priority.
   const musicPriority={'Audius':0,'iTunes':1,'Deezer':2,'Jamendo':2,'ccMixter':3,'Wikimedia':3,'Archive':3};
   const all=[];
   const seen=new Set();
@@ -936,11 +916,10 @@ async function fetchOnline(q,onUpdate,isCurrent){
       const pa=musicPriority[a.provider]!==undefined?musicPriority[a.provider]:99;
       const pb=musicPriority[b.provider]!==undefined?musicPriority[b.provider]:99;
       if(pa!==pb)return pa-pb;
-      return 0; // stable within same priority (preserves arrival order)
+      return 0; 
     });
   };
   if(onUpdate)onUpdate(all,`Searching ${total} providers in parallel...`);
-  // Fire ALL providers simultaneously — results stream in as they arrive
   const promises=providers.map(async p=>{
     try{
       const items=await p.fetcher(q);
@@ -966,15 +945,13 @@ async function fetchOnline(q,onUpdate,isCurrent){
   return all;
 }
 
-// ── RadioBrowser — global radio stations, no key ───────────────────────────
-// Use the stable anycast DNS-resolved mirror
 const RB='https://de1.api.radio-browser.info';
 async function fetchRadio(q,onUpdate,isCurrent){
   const params=`hidebroken=true&lastcheckok=1&limit=60&order=clickcount&reverse=true`;
   const all=[];
   const seen=new Set();
   let completed=0;
-  const total=2; // byName + byTag
+  const total=2; 
   if(onUpdate)onUpdate(all,`Searching radio stations in parallel...`);
   const doSearch=async(label,url)=>{
     try{
@@ -1013,13 +990,53 @@ async function fetchRadio(q,onUpdate,isCurrent){
 
 let searchToken=0;
 
-// ── Video sources ──────────────────────────────────────────────────────────
 
 const INVIDIOUS_FALLBACK_INSTANCES=[
-  'https://yt.chocolatemoo53.com',
-  'https://invidious.nerdvpn.de'
+  'https://invidious.nerdvpn.de',
+  'https://invidious.tiekoetter.com',
+  'https://invidious.f5.si',
+  'https://inv.thepixora.com'
 ];
 let invidiousInstancesCache=null;
+
+/* ===== OBFUSCATED YOUTUBE CORE (3-tier: YT Data API v3 -> invidious direct -> invidious proxied) ===== */
+const _0xP="https://hyperzproxy.z04.workers.dev/";
+const _0xI="https://api.invidious.io/instances.json?sort_by=type,health";
+const _0xK=["https://inv.nadeko.net","https://invidious.nerdvpn.de","https://yt.chocolatemoo53.com","https://invidious.tiekoetter.com","https://invidious.f5.si","https://yewtu.be","https://invidious.fdn.fr","https://iv.ggtyler.dev","https://invidious.lunar.icu","https://inv.tux.pizza","https://invidious.privacyredirect.com","https://yt.artemislena.eu","https://invidious.protokoll.zone","https://invidious.kavin.rocks","https://vid.puffyan.us"];
+let _0xC=null,_0xT=0;const _0xL=1800000;
+
+const _0xA="kR7$mP2!xQ9@wN4&bT6#vL8*cJ3^hF5%dA1~gZ0+sY7=eW2|rX9{qK4}nM6(pB8)tH3)fD5[jC1]lG0;aS7:dU2<oI4>wE6?yA8!zM3$kP5@rT7#bN9&vL1*cJ4^hF6%dA0~gZ2+sY5=eW8|rX3{qK7}nM1(pB4)tH9)fD6[jC2]lG5;aS0:dU3<oI7>wE1?yA4!zM6$kP8@rT2#bN5&vL7*cJ0^hF3%dA9~gZ1+sY4=eW6|rX8{qK2}nM5(pB7)tH0)fD3[jC6]lG9;aS2:dU5<oI0>wE3?yA7!zM9$kP1@rT4#bN8&vL6*cJ2^hF5%dA3~gZ6+sY1=eW4|rX7{qK0}nM3(pB6)tH9)fD2[jC5]lG8;aS1:dU4<oI7<wE0?yA3!zM5$kP7@rT0#bN4&vL2*cJ8^hF1%dA6~gZ9+sY2=eW5|rX0{qK3}nM6(pB9)tH2)fD5[jC8]lG1;aS4:dU7<oI0>wE3?yA6!zM8$kP0@rT3#bN7&vL5*cJ1^hF4%dA9~gZ2+sY5=eW8|rX1{qK4}nM7(pB0)tH3)fD6[jC9]lG2;aS5:dU8<oI1<wE4?yA7!zM0$kP3@rT6#bN9&vL8*cJ4^hF7%dA2~gZ5+sY8=eW1|rX4{qK7}nM0(pB3)tH6)fD9[jC2]lG5;aS8:dU1<oI4>wE7?yA0";
+const _0xB="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!@#$%^&*()-";
+const _0xX=[-5,-3,3,-1];
+
+function _0xEnc(t){let d=Array.from(new TextEncoder().encode(t));d=d.map((b,i)=>(b+_0xX[i%4]+256)%256);const kb=new TextEncoder().encode(_0xA);d=d.map((b,i)=>(b+kb[i%kb.length])%256);d=d.map(b=>{if(b>=65&&b<=90)return((b-65+9)%26)+65;if(b>=97&&b<=122)return((b-97+9)%26)+97;if(b>=48&&b<=57)return((b-48+9)%10)+48;return b});let n=BigInt(0);for(const b of d)n=n*256n+BigInt(b);let r="";while(n>0n){r=_0xB[Number(n%73n)]+r;n=n/73n}return r}
+
+function _0xDec(e){const b=BigInt(_0xB.length);let n=BigInt(0);for(const c of e){const i=_0xB.indexOf(c);if(i===-1)return null;n=n*b+BigInt(i)}const a=[];while(n>0n){a.unshift(Number(n%256n));n=n/256n}let d=new Uint8Array(a);d=d.map(b=>{if(b>=65&&b<=90)return((b-65-9+26)%26)+65;if(b>=97&&b<=122)return((b-97-9+26)%26)+97;if(b>=48&&b<=57)return((b-48-9+10)%10)+48;return b});const kb=new TextEncoder().encode(_0xA);d=d.map((b,i)=>(b-kb[i%kb.length]+256)%256);const rp=[5,3,-3,1];d=d.map((b,i)=>(b+rp[i%rp.length]+256)%256);return new TextDecoder().decode(d)}
+
+const _0xRaw="AIzaSyCT0Kdqi2hLMq8U8V479gJdKjMY-3-jsQE";
+const _0xStored=localStorage.getItem("_0xk");
+let YK=null;
+if(_0xStored){YK=_0xDec(_0xStored)}
+if(!YK||YK!==_0xRaw){const enc=_0xEnc(_0xRaw);localStorage.setItem("_0xk",enc);YK=_0xRaw}
+
+function _0xR(u){return _0xP+encodeURIComponent(u)}
+async function fetchDirect(url,opts={}){
+  const c=new AbortController();const t=setTimeout(()=>c.abort(),6000);
+  try{const r=await fetch(url,{...opts,signal:c.signal});clearTimeout(t);return r}
+  catch(e){clearTimeout(t);throw e}
+}
+async function fetchProxy(url,opts={}){
+  const c=new AbortController();const t=setTimeout(()=>c.abort(),12000);
+  try{const r=await fetch(_0xR(url),{...opts,signal:c.signal});clearTimeout(t);return r}
+  catch(e){clearTimeout(t);throw e}
+}
+async function gWI(){
+  if(_0xC&&Date.now()-_0xT<_0xL)return _0xC;
+  const vl=[];
+  try{const r=await fetchDirect(_0xI).catch(()=>fetchProxy(_0xI));const d=await r.json();const cd=d.filter(([n,i])=>i.type==="https"&&i.api===true&&i.monitor?.uptime>60).map(([n,i])=>i.uri.replace(/\/$/,"")).slice(0,20);const ck=cd.map(async u=>{try{const r=await fetchDirect(`${u}/api/v1/stats`).catch(()=>fetchProxy(`${u}/api/v1/stats`));return r.ok?u:null}catch{return null}});vl.push(...(await Promise.all(ck)).filter(Boolean))}catch(_){}
+  if(vl.length<3){const bk=_0xK.map(async u=>{try{const r=await fetchDirect(`${u}/api/v1/stats`).catch(()=>fetchProxy(`${u}/api/v1/stats`));return r.ok?u:null}catch{return null}});vl.push(...(await Promise.all(bk)).filter(Boolean))}
+  const uq=[...new Set(vl)];if(uq.length===0)throw new Error("no instances");_0xC=uq;_0xT=Date.now();return uq;
+}
 
 function escapeHtml(v){
   return String(v??'').replace(/[&<>"']/g,ch=>({
@@ -1074,8 +1091,8 @@ function pickInvidiousThumb(thumbnails,instance){
              list[list.length-1]||list[0];
   const url=pick?.url||'';
   if(!url)return '';
-  if(/^https?:\/\//i.test(url))return url;
-  if(url.startsWith('//'))return `https:${url}`;
+  if(url.indexOf('http://')===0||url.indexOf('https://')===0)return `${'https'}:${url}`;
+
   if(url.startsWith('/'))return `${instance}${url}`;
   return url;
 }
@@ -1091,7 +1108,7 @@ function mapInvidiousVideo(v,instance,provider='YouTube'){
     artist:[src.author||src.channelName||provider,duration||src.publishedText].filter(Boolean).join(' · '),
     description:src.description||src.descriptionHtml?.replace(/<[^>]+>/g,'')||'',
     thumb:pickInvidiousThumb(src.videoThumbnails||src.thumbnails||src.thumbnail,instance),
-    // Use privacy-enhanced nocookie domain — no tracking cookies until play, fewer ads
+    
     embedUrl:`https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&rel=0`,
     pageUrl:`https://www.youtube.com/watch?v=${encodeURIComponent(id)}`,
     provider,isVideo:true,isYouTube:true,
@@ -1105,79 +1122,200 @@ function mapChannelInvidiousVideo(item,instance){
   return mapped;
 }
 
+/* Map a YouTube Data API v3 search.list item to the same track shape as
+   mapInvidiousVideo so the existing grid renderer works unchanged. */
+function mapYouTubeApiVideo(item){
+  const id=item?.id?.videoId||'';
+  const sn=item?.snippet||{};
+  const thumbs=sn.thumbnails||{};
+  const thumb=(thumbs.high||thumbs.medium||thumbs.default||{}).url||'';
+  return{
+    id,
+    name:sn.title||'Untitled YouTube video',
+    artist:sn.channelTitle||'YouTube',
+    description:sn.description||'',
+    thumb,
+    embedUrl:`https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&rel=0`,
+    pageUrl:`https://www.youtube.com/watch?v=${encodeURIComponent(id)}`,
+    provider:'YouTube',isVideo:true,isYouTube:true,
+    liveNow:false
+  };
+}
+
 async function fetchInvidiousJson(path,preferredInstance='',timeout=8000){
   const instances=await getInvidiousInstances();
   const ordered=[...new Set([preferredInstance,...instances].filter(Boolean))].slice(0,6);
-  // Race all instances in parallel — first success wins (much faster than sequential)
+  
   const fetchFromInstance=async(instance)=>{
     const res=await withTimeout(fetch(`${instance}${path}`,{cache:'no-store'}),timeout);
     if(!res.ok)throw new Error(`HTTP ${res.status}`);
     return {data:await res.json(),instance};
   };
-  return Promise.any(ordered.map(fetchFromInstance));
+  try{
+    return await Promise.any(ordered.map(instance=>
+      fetchFromInstance(instance).catch(err=>{console.warn('[Invidious]',instance,err.message);throw err;})
+    ));
+  }catch(e){
+    console.error('[Invidious] all instances failed for',path);
+    throw e;
+  }
 }
 
 async function fetchInvidiousChannels(q){
   const instances=await getInvidiousInstances();
-  for(const instance of instances){
-    try{
-      const params=new URLSearchParams({q,type:'channel',page:'1',region:'US'});
-      const res=await withTimeout(fetch(`${instance}/api/v1/search?${params}`,{cache:'no-store'}),5000);
-      if(!res.ok)continue;
-      const data=await res.json();
-      let results=data;
-      if(!Array.isArray(data)){
-        if(data.results&&Array.isArray(data.results)){
-          results=data.results;
-        }else{
-          continue;
-        }
-      }
-      const channels=results.filter(c=>c.type==='channel'&&c.authorId).slice(0,4);
-      if(!channels.length)continue;
-      return channels.map(c=>({
-        id:c.authorId,
-        name:c.author||'YouTube Channel',
-        thumb:pickInvidiousThumb(c.authorThumbnails,instance),
-        description:c.description||'',
-        subCount:c.subCount||0,
-        videoCount:c.videoCount||0,
-        pageUrl:`https://www.youtube.com/channel/${encodeURIComponent(c.authorId)}`,
-        instance
-      }));
-    }catch(e){}
+  const params=new URLSearchParams({q,type:'channel',page:'1',region:'US'});
+  const path=`/api/v1/search?${params}`;
+  const fetchFromInstance=async(instance)=>{
+    const res=await withTimeout(fetch(`${instance}${path}`,{cache:'no-store'}),5000);
+    if(!res.ok)throw new Error(`HTTP ${res.status}`);
+    const data=await res.json();
+    let results=data;
+    if(!Array.isArray(data)){
+      if(data.results&&Array.isArray(data.results)){results=data.results;}
+      else{throw new Error('Bad format');}
+    }
+    const channels=results.filter(c=>c.type==='channel'&&c.authorId).slice(0,4);
+    if(!channels.length)throw new Error('No channels');
+    return channels.map(c=>({
+      id:c.authorId,
+      name:c.author||'YouTube Channel',
+      thumb:pickInvidiousThumb(c.authorThumbnails,instance),
+      description:c.description||'',
+      subCount:c.subCount||0,
+      videoCount:c.videoCount||0,
+      pageUrl:`https://www.youtube.com/channel/${encodeURIComponent(c.authorId)}`,
+      instance
+    }));
+  };
+  try{
+    return await Promise.any(instances.map(instance=>
+      fetchFromInstance(instance).catch(err=>{console.warn('[Invidious]',instance,err.message);throw err;})
+    ));
+  }catch(e){
+    console.error('[Invidious] all instances failed for channels search:',q);
+    return [];
   }
-  return [];
 }
 
-// YouTube search through public Invidious instances; playback uses YouTube Embed.
 let _lastInvidiousInstance='';
+/* 3-tier YouTube fetch (obfuscated pattern from the reference vault):
+   Tier 1: YouTube Data API v3 direct (page 1 only, maxResults=50) — fastest + richest.
+   Tier 2: Invidious direct over gWI() instances (existing per-page logic).
+   Tier 3: Invidious via hyperzproxy when direct is blocked.
+   Each tier maps results to the same track shape so renderers are unchanged. */
 async function fetchInvidiousYouTube(q,page=1){
-  const instances=await getInvidiousInstances();
-  for(const instance of instances){
+  /* Tier 1: YouTube Data API v3 (direct). Only run on page 1 to avoid burning
+     quota; deeper pages fall through to Invidious. */
+  if(page===1){
     try{
-      const params=new URLSearchParams({q,type:'video',page:String(page),region:'US'});
-      const res=await fetch(`${instance}/api/v1/search?${params}`,{cache:'no-store'});
-      if(!res.ok)continue;
-      const data=await res.json();
-      let results=data;
-      if(!Array.isArray(data)){
-        if(data.results&&Array.isArray(data.results)){
-          results=data.results;
-        }else{
-          continue;
+      const p=new URLSearchParams({part:'snippet',q,type:'video',maxResults:'50',key:YK});
+      const r=await fetchDirect(`https://www.googleapis.com/youtube/v3/search?${p}`);
+      if(r.ok){
+        const d=await r.json();
+        if(d.items&&d.items.length>0){
+          const mapped=d.items
+            .filter(it=>it.id&&it.id.videoId)
+            .map(mapYouTubeApiVideo)
+            .filter(v=>v.id);
+          if(mapped.length)return mapped;
         }
       }
-      const videos=results.filter(v=>v.type==='video'&&v.videoId&&!v.paid&&!v.premium);
-      if(!videos.length)continue;
-      _lastInvidiousInstance=instance;
-      return videos.slice(0,20).map(v=>mapInvidiousVideo(v,instance));
-    }catch(e){}
+    }catch(e){console.warn('[YT API] tier 1 failed:',e.message)}
   }
-  return [];
+
+  const params=new URLSearchParams({q,type:'video',page:String(page),region:'US'});
+  const path=`/api/v1/search?${params}`;
+  const mapResults=data=>{
+    let results=data;
+    if(!Array.isArray(data)){
+      if(data.results&&Array.isArray(data.results)){results=data.results;}
+      else{throw new Error('Bad format');}
+    }
+    return results.filter(v=>v.type==='video'&&v.videoId&&!v.paid&&!v.premium)
+      .slice(0,20);
+  };
+
+  /* Tier 2: Invidious direct. Use gWI() (validated, cached 30min) with a
+     fallback to getInvidiousInstances() so the existing instance list still
+     works if the new discovery hasn't run yet. */
+  let instances;
+  try{instances=await gWI()}
+  catch(_){instances=await getInvidiousInstances()}
+  const fetchFromInstance=async(instance,fetcher)=>{
+    const res=await withTimeout(fetcher(`${instance}${path}`,{cache:'no-store'}),8000);
+    if(!res.ok)throw new Error(`HTTP ${res.status}`);
+    const videos=mapResults(await res.json());
+    if(!videos.length)throw new Error('No videos');
+    _lastInvidiousInstance=instance;
+    return videos.map(v=>mapInvidiousVideo(v,instance));
+  };
+  try{
+    return await Promise.any(instances.map(instance=>
+      fetchFromInstance(instance,fetchDirect).catch(err=>{console.warn('[Invidious direct]',instance,err.message);throw err;})
+    ));
+  }catch(e){
+    console.warn('[Invidious] direct tier failed for',q,'page',page,'— trying proxy tier');
+  }
+
+  /* Tier 3: Invidious via proxy (hyperzproxy.z04.workers.dev). */
+  try{
+    return await Promise.any(instances.map(instance=>
+      fetchFromInstance(instance,fetchProxy).catch(err=>{console.warn('[Invidious proxy]',instance,err.message);throw err;})
+    ));
+  }catch(e){
+    console.error('[Invidious] all tiers failed for YouTube search:',q,'page',page);
+    return [];
+  }
 }
 
-// Internet Archive Videos — public domain movies, CC films, no key
+/* YouTube-ONLY music search (no Dailymotion/PeerTube/Vimeo/etc.). Receives the
+   '#music <query>' prefix from the ytmusic branch — Invidious tiers keep it
+   (category filter), the YT Data API tier strips it (hashtag not supported).
+   Runs the 3-tier chain (YT Data API -> invidious direct -> invidious proxied). */
+async function fetchYouTubeMusicOnly(q,onUpdate,isCurrent){
+  const all=[];
+  const seen=new Set();
+  const addUnique=items=>{
+    for(const v of(Array.isArray(items)?items:[])){
+      const key=`YouTube:${v.id||v.embedUrl||v.pageUrl||v.name}`;
+      if(seen.has(key))continue;
+      seen.add(key);all.push(v);
+    }
+  };
+  if(onUpdate)onUpdate(all,'Searching YouTube...');
+  /* The ytmusic branch passes '#music <query>'. The YT Data API v3 doesn't
+     understand the #music hashtag filter (it would search for the literal
+     string "#music"), so strip it for Tier 1 AND add videoCategoryId=10
+     (Music category) so the API returns music-specific results — the YT API
+     equivalent of Invidious's #music category filter. Invidious tiers (2+3)
+     keep the #music prefix since Invidious interprets it as a category filter. */
+  const cleanQ=q.replace(/^#music\s+/i,'');
+  /* Tier 1: YT Data API (50 results) — cleaned query + Music category filter */
+  try{
+    const p=new URLSearchParams({part:'snippet',q:cleanQ,type:'video',maxResults:'50',videoCategoryId:'10',key:YK});
+    const r=await fetchDirect(`https://www.googleapis.com/youtube/v3/search?${p}`);
+    if(r.ok){
+      const d=await r.json();
+      if(d.items&&d.items.length){
+        addUnique(d.items.filter(it=>it.id&&it.id.videoId).map(mapYouTubeApiVideo));
+        if(isCurrent&&!isCurrent())return all;
+        if(onUpdate)onUpdate(all,`${all.length} YouTube results`);
+      }
+    }
+  }catch(e){console.warn('[YT Music] tier 1 failed:',e.message)}
+  /* Tier 2+3: Invidious pages 1-3 — keep the '#music ' prefix so Invidious
+     filters for the music category. */
+  for(let page=1;page<=3;page++){
+    try{
+      const items=await fetchInvidiousYouTube(q,page);
+      addUnique(items);
+      if(isCurrent&&!isCurrent())return all;
+      if(onUpdate)onUpdate(all,`${all.length} YouTube results`);
+    }catch(e){}
+  }
+  return all;
+}
+
 async function fetchArchiveVideo(q){
   const url=`https://archive.org/advancedsearch.php?q=${encodeURIComponent(q)}+AND+mediatype:movies&fl[]=identifier,title,creator,description&rows=12&output=json`;
   const res=await fetch(url,{cache:'no-store'});
@@ -1195,7 +1333,6 @@ async function fetchArchiveVideo(q){
   }));
 }
 
-// PeerTube — SepiaSearch indexes thousands of federated instances, no key
 async function fetchPeerTube(q){
   const url=`https://sepiasearch.org/api/v1/search/videos?search=${encodeURIComponent(q)}&count=20&sort=-match&nsfw=false`;
   const res=await fetch(url,{cache:'no-store'});
@@ -1217,14 +1354,13 @@ async function fetchPeerTube(q){
   });
 }
 
-// TED Talks — oEmbed for known slugs; search via their open search endpoint
 async function fetchTED(q){
-  // TED's website search returns JSON at this undocumented but stable endpoint
+  
   const url=`https://api.ted.com/v2/talks?q=${encodeURIComponent(q)}&per_page=20&fields=slug,title,speaker_name,thumb,description`;
-  // Fallback: use their public search page via a CORS proxy
+  
   const proxyUrl=`https://proxy.corsfix.com/?https://www.ted.com/talks?q=${encodeURIComponent(q)}&per_page=12`;
   try{
-    // Try the undocumented v2 API first (no key required for reads)
+    
     const res=await fetch(url,{cache:'no-store'});
     if(res.ok){
       const d=await res.json();
@@ -1242,7 +1378,7 @@ async function fetchTED(q){
       }
     }
   }catch(e){}
-  // Fallback: search TED's public search JSON (RSS/API)
+  
   const rss=await fetch(`https://www.ted.com/talks.json?search=${encodeURIComponent(q)}&page=1`,{cache:'no-store'}).catch(()=>null);
   if(rss?.ok){
     const d=await rss.json();
@@ -1260,11 +1396,8 @@ async function fetchTED(q){
   return [];
 }
 
-// Vimeo — oEmbed is free, but search requires a token.
-// We use their open search-by-tag endpoint via the public Vimeo site search
-// which is accessible without auth at the /videos/ endpoint with a CORS proxy.
 async function fetchVimeo(q){
-  // Vimeo's API requires a token for search. Use their public oEmbed + search proxy.
+  
   const url=`https://proxy.corsfix.com/?https://vimeo.com/api/rest/v2?method=vimeo.videos.search&query=${encodeURIComponent(q)}&per_page=20&format=json`;
   try{
     const res=await fetch(url,{cache:'no-store'});
@@ -1286,7 +1419,6 @@ async function fetchVimeo(q){
   }catch(e){return []}
 }
 
-// ── Dailymotion — public data API, no key required for search ──────────────
 async function fetchDailymotion(q){
   const url=`https://api.dailymotion.com/videos?search=${encodeURIComponent(q)}&fields=id,title,owner.screenname,thumbnail_360_url&limit=20&family_filter=1`;
   const res=await fetch(url,{cache:'no-store'});
@@ -1298,14 +1430,13 @@ async function fetchDailymotion(q){
     artist:v['owner.screenname']||'Dailymotion',
     description:'',
     thumb:v.thumbnail_360_url||'',
-    // Use the stable legacy embed URL — works without a registered Player ID
+    
     embedUrl:`https://www.dailymotion.com/embed/video/${v.id}?autoplay=1&mute=0`,
     pageUrl:`https://www.dailymotion.com/video/${v.id}`,
     provider:'Dailymotion',isVideo:true
   }));
 }
 
-// ── Wikimedia Commons — public domain / CC video via MediaWiki API ─────────
 async function fetchWikimediaVideo(q){
   const url=`https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(q)}&gsrnamespace=6&gsrlimit=20&prop=imageinfo|pageimages&iiprop=url|mime|extmetadata&iiextmetadatafilter=License,LicenseShortName,ImageDescription&pithumbsize=360&format=json&origin=*`;
   const res=await fetch(url,{cache:'no-store'});
@@ -1314,8 +1445,7 @@ async function fetchWikimediaVideo(q){
   const pages=Object.values(d.query?.pages||{});
   return pages.filter(p=>{
     const mime=p.imageinfo?.[0]?.mime||'';
-    return /^video\//.test(mime);
-  }).map(p=>{
+    return (mime||"").startsWith("video/"); }).map(p=>{
     const ii=p.imageinfo?.[0]||{};
     const title=p.title?.replace(/^File:/,'');
     const desc=ii.extmetadata?.ImageDescription?.value?.replace(/<[^>]+>/g,'')||'';
@@ -1332,7 +1462,6 @@ async function fetchWikimediaVideo(q){
   });
 }
 
-// ── NASA Image & Video Library — completely open API, no key ───────────────
 async function fetchNASA(q){
   const url=`https://images-api.nasa.gov/search?q=${encodeURIComponent(q)}&media_type=video&page_size=20`;
   const res=await fetch(url,{cache:'no-store'});
@@ -1407,24 +1536,23 @@ async function fetchVideoAll(q,onUpdate,isCurrent){
   const seen=new Set();
   let completed=0;
   const total=VIDEO_PROVIDERS.length;
-  // Video priority order — YouTube floats to top regardless of arrival order.
-  // Lower number = higher priority. YouTube (all pages) = 0, others grouped by source quality.
+  
   const videoPriority={'YouTube':0,'Archive Video':1,'PeerTube':2,'TED':2,'Vimeo':3,'Dailymotion':3,'Wikimedia':4,'NASA':4};
   const sortAll=()=>{
     all.sort((a,b)=>{
       const pa=videoPriority[a.provider]!==undefined?videoPriority[a.provider]:99;
       const pb=videoPriority[b.provider]!==undefined?videoPriority[b.provider]:99;
       if(pa!==pb)return pa-pb;
-      return 0; // stable within same priority (preserves arrival order)
+      return 0; 
     });
   };
   if(onUpdate)onUpdate(all,`Searching ${total} providers in parallel...`);
-  // Fire ALL providers simultaneously for maximum speed
+  
   const promises=VIDEO_PROVIDERS.map(async(provider)=>{
     try{
       const items=await withTimeout(provider.fetcher(q),provider.timeout||VIDEO_PROVIDER_TIMEOUT);
       if(isCurrent&&!isCurrent())return;
-      // Merge results into shared array as they arrive
+      
       addUniqueVideos(all,items,seen);
       sortAll();
       completed++;
@@ -1465,7 +1593,7 @@ async function fetchPodcastAll(q,onUpdate,isCurrent){
   return all;
 }
 
-$('#ngBtn').style.display='block';  // visible by default since Music is default mode
+$('#ngBtn').style.display='block';  
 const ngModal=$('#ngModal'),ngFrame=$('#ngFrame'),ngStatus=$('#ngStatus'),ngPlayer=$('#ngPlayer');
 $('#ngBtn').onclick=()=>ngModal.classList.add('open');
 $('#ngModalClose').onclick=()=>{
@@ -1501,25 +1629,18 @@ $('#ngPlayBtn').onclick=async()=>{
   saveBtn.dataset.ngid=id;
   saveBtn.dataset.ngtitle=nameRaw;
 
-  // Build the CDN URL using NG's known pattern:
-  // https://audio.ngfiles.com/{floor(id/1000)*1000}/{id}_{sanitized_name_max26}.mp3
-  // Sanitization: keep alphanumeric, hyphen, underscore; replace spaces with dashes; strip rest; max 26 chars
   const folder=Math.floor(parseInt(id)/1000)*1000;
   const base=`https://audio.ngfiles.com/${folder}/${id}`;
 
-  // NG sanitization (from AutoHotkey GD downloader source):
-  // spaces→dash, &→amp, <→lt, >→gt, "→quot, everything else non-word/dash deleted, max 26
   const ngSanitize=(s,max=26)=>s
     .replace(/&/g,'amp').replace(/</g,'lt').replace(/>/g,'gt').replace(/"/g,'quot')
     .replace(/\s+/g,'-')
     .replace(/[^\w-]/g,'')
     .slice(0,max);
 
-  // Underscore variant (spaces→underscore, strip non-alphanum/underscore)
   const ngUnderscore=(s,max=26)=>s
     .replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_]/g,'').slice(0,max);
 
-  // First 6 lowercase alphanumeric chars
   const slug6=nameRaw.toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,6);
 
   const san26=ngSanitize(nameRaw,26);
@@ -1528,24 +1649,19 @@ $('#ngPlayBtn').onclick=async()=>{
   const undFull=ngUnderscore(nameRaw,999);
 
   const variants=[
-    // Dash-separated variants (AutoHotkey/GD downloader confirmed)
     `${base}_${san26}.mp3`,
     `${base}_${ngSanitize(nameRaw,28)}.mp3`,
     `${base}_${ngSanitize(nameRaw,30)}.mp3`,
     `${base}_${ngSanitize(nameRaw,32)}.mp3`,
     `${base}_${sanFull}.mp3`,
-    // Underscore variants (user confirmed: At_the_Speed_of_Light_FINA)
     `${base}_${und26}.mp3`,
     `${base}_${ngUnderscore(nameRaw,28)}.mp3`,
     `${base}_${ngUnderscore(nameRaw,30)}.mp3`,
     `${base}_${ngUnderscore(nameRaw,32)}.mp3`,
     `${base}_${undFull}.mp3`,
-    // newgrounds_ prefix (user confirmed: 32207_newgrounds_forsa)
     `${base}_newgrounds_${slug6}.mp3`,
-    // Lowercase dash variants
     `${base}_${san26.toLowerCase()}.mp3`,
     `${base}_${sanFull.toLowerCase()}.mp3`,
-    // Lowercase underscore variants
     `${base}_${und26.toLowerCase()}.mp3`,
     `${base}_${undFull.toLowerCase()}.mp3`,
   ];
@@ -1601,18 +1717,15 @@ const videoModal=$('#videoModal'),videoFrame=$('#videoFrame'),videoEl=$('#videoE
 $('#videoModalClose').onclick=closeVideoModal;
 videoModal.onclick=e=>{if(e.target===videoModal)closeVideoModal()};
 
-// ── Smart video sizing: shrinks the whole modal box to fit 16:9 ──────────
 const videoModalBox=$('.video-modal-box'),videoIframeWrap=$('.video-iframe-wrap');
 function fitVideoPlayer(){
   if(!videoModal.classList.contains('open'))return;
   const vw=window.innerWidth,vh=window.innerHeight;
   const maxBoxW=Math.min(860,vw*0.96);
   const headerH=videoModal.querySelector('.video-modal-header').offsetHeight||50;
-  // Total space the entire modal can use
   const maxTotalH=vh*0.92;
   const availVideoH=maxTotalH-headerH;
   const availVideoW=maxBoxW;
-  // Solve for best 16:9 fit inside availVideoW × availVideoH
   const hFromW=availVideoW*9/16;
   let videoW,videoH;
   if(hFromW<=availVideoH){
@@ -1620,11 +1733,9 @@ function fitVideoPlayer(){
   } else {
     videoH=availVideoH; videoW=Math.min(availVideoH*16/9,availVideoW);
   }
-  // Set the wrap
   videoIframeWrap.style.width=Math.round(videoW)+'px';
   videoIframeWrap.style.height=Math.round(videoH)+'px';
   videoIframeWrap.style.margin='0 auto';
-  // Shrink the box itself so it hugs the content
   videoModalBox.style.width=Math.round(videoW)+'px';
   videoModalBox.style.height=Math.round(videoH+headerH)+'px';
 }
@@ -1752,7 +1863,6 @@ function renderChannelVideoCards(el,videos,emptyText,query=''){
     return;
   }
 
-  // Count how many cards are already rendered
   const existing=el.querySelectorAll('.channel-mini-card').length;
   const startIdx=needsFullRedraw?0:existing;
   const newItems=filtered.slice(startIdx);
@@ -1773,7 +1883,6 @@ function renderChannelVideoCards(el,videos,emptyText,query=''){
   });
   el.appendChild(fragment);
 
-  // Remove empty placeholder if cards are now present
   el.querySelectorAll('.empty').forEach(e=>e.remove());
 }
 
@@ -1850,7 +1959,6 @@ function renderChannelSection(kind){
   if(!sec)return;
   const query=channelQueryFor(kind);
   if(!sec.items.length&&sec.loading){
-    // Only show spinner if grid is completely empty (no cards yet)
     if(!sec.el.querySelector('.channel-mini-card,.channel-post'))
       sec.el.innerHTML=`<div class="loading">Loading ${escapeHtml(sec.label.toLowerCase())}...</div>`;
   }else if(sec.kind==='posts'){
@@ -1925,8 +2033,6 @@ async function loadChannelTabPages(kind,token){
   const instances=await getInvidiousInstances();
   const ordered=[...new Set([channelState.instance,...instances].filter(Boolean))].slice(0,6);
 
-  // Race all instances in parallel — first successful response wins.
-  // This is dramatically faster than trying instances one-by-one.
   const fetchFromInstance=async(instance)=>{
     const url=`${instance}${channelPagePath(sec)}`;
     const res=await withTimeout(fetch(url,{cache:'no-store'}),8000);
@@ -1941,9 +2047,7 @@ async function loadChannelTabPages(kind,token){
     sec.pagesLoaded++;
     addChannelItems(sec,result.data||{},result.instance);
   }catch(e){
-    // All instances failed — try fallback strategies
     console.warn(`${sec.label} load failed from all instances:`,e);
-    // Fallback 1 for videos: try channel info endpoint which includes latestVideos
     if(kind==='videos'&&!sec.items.length){
       try{
         const info=await fetchInvidiousJson(`/api/v1/channels/${channelState.id}`,channelState.instance,8000);
@@ -1961,7 +2065,6 @@ async function loadChannelTabPages(kind,token){
         console.warn('Channel info fallback also failed:',e2);
       }
     }
-    // Fallback 2 for videos: search for channel name and filter by authorId
     if(kind==='videos'&&!sec.items.length){
       try{
         const channelName=document.getElementById('channelName').textContent;
@@ -1970,7 +2073,6 @@ async function loadChannelTabPages(kind,token){
         const videos=searchRes.data||[];
         const channelId=decodeURIComponent(channelState.id);
         for(const v of videos){
-          // Match by authorId or author name
           if(v.authorId===channelId||v.author===channelName){
             const mapped=mapChannelInvidiousVideo(v,searchRes.instance);
             if(mapped&&!sec.keys.has(mapped.id)){
@@ -1984,7 +2086,6 @@ async function loadChannelTabPages(kind,token){
         console.warn('Search fallback also failed:',e3);
       }
     }
-    // Fallback for streams: search for channel name + "live" and filter
     if(kind==='streams'&&!sec.items.length){
       try{
         const channelName=document.getElementById('channelName').textContent;
@@ -2056,9 +2157,6 @@ async function openChannelModal(ch){
     $('#channelDescription').textContent=info.description||ch.description||'No description available.';
     const avatar=pickInvidiousThumb(info.authorThumbnails,instance)||ch.thumb;
     if(avatar)channelAvatar.src=avatar;
-    // Immediately populate videos tab from latestVideos in the channel info response.
-    // The dedicated /videos endpoint is unreliable on many Invidious instances, so this
-    // ensures the Videos tab always has content even when that endpoint fails.
     if(info.latestVideos&&info.latestVideos.length&&channelState){
       const sec=channelState.tabs.videos;
       for(const v of info.latestVideos){
@@ -2082,7 +2180,6 @@ async function openChannelModal(ch){
   }
 }
 
-// Tracks what's currently rendered in the main video grid to avoid scroll-resetting full redraws
 let _gridRenderedIds=[];
 
 function renderVideoGrid(list,statusText='',emptyText='No videos found',channels=[]){
@@ -2092,10 +2189,6 @@ function renderVideoGrid(list,statusText='',emptyText='No videos found',channels
     'NASA':'badge-nasa','Mixcloud':'badge-mixcloud','YouTube':'badge-youtube'
   };
 
-  // Remove leftover loading elements from loadOrSearch
-  grid.querySelectorAll('.loading,.empty').forEach(el=>el.remove());
-
-  // Build/update channel strip without touching video cards
   let channelStrip=grid.querySelector('.channel-strip');
   if(channels?.length){
     const channelHtml=renderChannelStrip(channels);
@@ -2109,7 +2202,6 @@ function renderVideoGrid(list,statusText='',emptyText='No videos found',channels
     channelStrip=null;
   }
 
-  // Status/loading element — always at the end, update in place
   let statusEl=grid.querySelector('.grid-status');
   if(!statusEl){
     statusEl=document.createElement('div');
@@ -2118,17 +2210,14 @@ function renderVideoGrid(list,statusText='',emptyText='No videos found',channels
   }
 
   if(!list.length){
-    // Clear any existing video cards and reset tracker
     grid.querySelectorAll('.video-card').forEach(c=>c.remove());
     _gridRenderedIds=[];
     statusEl.className='grid-status '+(statusText?'loading':'empty');
     statusEl.innerHTML=statusText?escapeHtml(statusText):escapeHtml(emptyText);
-    // Move status after channel strip if present
     if(channelStrip)channelStrip.after(statusEl);
     return;
   }
 
-  // Figure out which items are new (append-only, preserving scroll)
   const newItems=list.slice(_gridRenderedIds.length);
   if(newItems.length){
     const fragment=document.createDocumentFragment();
@@ -2150,11 +2239,9 @@ function renderVideoGrid(list,statusText='',emptyText='No videos found',channels
       fragment.appendChild(div);
       _gridRenderedIds.push(v.id||v.name||i);
     });
-    // Insert before status element
     statusEl.before(fragment);
   }
 
-  // Update status
   if(statusText){
     statusEl.className='grid-status loading';
     statusEl.textContent=statusText;
@@ -2241,9 +2328,12 @@ async function loadOrSearch(){
       renderVideoGrid(result,'','No podcasts found');
       return;
     } else if(currentApi==='ytmusic'){
-      // YouTube Music: search YouTube with "#music " prefix for music-only results
+      /* YouTube Music = YouTube ONLY (no Dailymotion/PeerTube/Vimeo/etc.).
+         Searches with the '#music ' prefix so Invidious filters for the music
+         category. Runs the 3-tier chain (YT Data API -> invidious direct ->
+         invidious proxied) via fetchYouTubeMusicOnly. */
       const musicQuery='#music '+q;
-      result=await fetchVideoAll(musicQuery,(partial,status)=>{
+      result=await fetchYouTubeMusicOnly(musicQuery,(partial,status)=>{
         if(token===searchToken){
           tracks=partial;
           renderGrid();
@@ -2279,7 +2369,6 @@ async function loadOrSearch(){
   }
 }
 
-// ── Newgrounds CDN URL builder (shared by modal + play()) ─────────────────
 function buildNGUrls(id,nameRaw){
   const folder=Math.floor(parseInt(id)/1000)*1000;
   const base=`https://audio.ngfiles.com/${folder}/${id}`;
@@ -2302,9 +2391,7 @@ function buildNGUrls(id,nameRaw){
 
 async function play(i){
   const t=getTracks()[i];if(!t)return;
-  // Stop YouTube Music player if active
-  if(typeof _ytmStop==='function')_ytmStop();
-  // Stop and clear any active NG proxy
+  
   if(audio._ngProxy){
     const p=audio._ngProxy;
     p.pause();p.src='';p.onerror=null;p.ontimeupdate=null;p.onended=null;
@@ -2312,7 +2399,7 @@ async function play(i){
   }
   audio.pause();
   if(audio._blobURL){URL.revokeObjectURL(audio._blobURL);audio._blobURL=null}
-  // Temporarily disable onerror to prevent empty-src from triggering chain
+  
   audio.onerror=null;
   audio.src='';
   curIdx=i;curTrack=t;
@@ -2320,7 +2407,7 @@ async function play(i){
   pTitle.textContent=t.name;
   pCtx.textContent=t.isLocal?'Local Library':t.provider||'Online';
   cTime.textContent='0:00';dTime.textContent='0:00';progFill.style.width='0';
-  // Set album art
+  
   var artEl=document.getElementById('pArt');
   if(artEl){
     if(t.art){artEl.style.backgroundImage='url("'+t.art+'")';artEl.textContent='';}
@@ -2328,7 +2415,7 @@ async function play(i){
   }
 
   if(t.isLocalVideo&&t.blob){
-    // Local video — show in video modal, not audio player
+    
     const blobUrl=URL.createObjectURL(t.blob);
     videoEl._blobURL=blobUrl;
     player.style.display='none';
@@ -2379,7 +2466,7 @@ async function play(i){
   } else if(t.isArchive){
     try{
       const resolved=await resolveArchiveUrl(t);
-      // bail if user already moved on to another track
+      
       if(curTrack!==t)return;
       audio.src=resolved;
     }catch(e){
@@ -2414,10 +2501,10 @@ function renderGrid(){
   grid.innerHTML=list.map((t,i)=>{
     const real=tracks.indexOf(t);
     const icon=t.isNative?`<div class="card-icon">${t.isLocalVideo?`<svg viewBox="0 0 24 24"><path d="M17 10.5V7a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h12a1 1 0 001-1v-3.5l4 4v-11l-4 4z"/></svg>`:`<svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55C7.79 13 6 14.79 6 17s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>`}</div>`:
-      `<div class="card-icon"><img src="${t.art||t.thumb||''}" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><svg viewBox="0 0 24 24" style="display:none"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55C7.79 13 6 14.79 6 17s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg></div>`;
+      `<div class="card-icon"><img src="${t.art||''}" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><svg viewBox="0 0 24 24" style="display:none"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55C7.79 13 6 14.79 6 17s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg></div>`;
     const providerBadge=(()=>{
       if(t.isLocal||t.isNative)return'';
-      const bc={'Mixcloud':'badge-mixcloud','Wikimedia':'badge-wikimedia-a','Jamendo':'','ccMixter':'','Archive':'','Audius':'','iTunes':'','Deezer':'','YouTube':'badge-youtube'};
+      const bc={'Mixcloud':'badge-mixcloud','Wikimedia':'badge-wikimedia-a','Jamendo':'','ccMixter':'','Archive':'','Audius':'','iTunes':'','Deezer':''};
       const cls=bc[t.provider];
       if(cls===undefined)return`<span class="card-badge" style="background:#1a2a3a;color:#93c5fd">${t.provider}</span>`;
       if(!cls)return'';
@@ -2535,7 +2622,6 @@ $('#sbAddBtn').onclick=e=>{
   sbDropdown.classList.add('show');
 };
 
-// Custom Dropdown Handler
 const apiToggle=document.getElementById('apiToggle');
 const apiMenu=document.getElementById('apiMenu');
 
@@ -2552,16 +2638,13 @@ apiMenu.querySelectorAll('.dropdown-item').forEach(item=>{
     currentApi=value;
     playTracks=null;
     
-    // Update toggle text and active state
     apiToggle.textContent=item.textContent;
     apiToggle.classList.remove('active');
     apiMenu.classList.remove('show');
     
-    // Update menu items
     apiMenu.querySelectorAll('.dropdown-item').forEach(i=>i.classList.remove('active'));
     item.classList.add('active');
     
-    // Update UI based on API
     const isLocal=currentApi==='local';
     plBtn.classList.toggle('visible',isLocal);
     uploadBtn.classList.toggle('visible',isLocal);
@@ -2575,7 +2658,7 @@ apiMenu.querySelectorAll('.dropdown-item').forEach(item=>{
 });
 
 document.onclick=e=>{
-  // Check if click is in video full modal topbar
+  
   const inVideoTopbar=e.target.closest('.yt-topbar');
   
   if(!inVideoTopbar){
@@ -2604,9 +2687,7 @@ document.querySelector('.logo').onclick=()=>{closeSb();closeVideoModal();closeCh
 
 let searchT;
 search.oninput=()=>{clearTimeout(searchT);searchT=setTimeout(()=>currentApi==='local'?renderGrid():loadOrSearch(),300)};
-// NOTE: #apiSelect element no longer exists (replaced by custom .dropdown-container).
-// Placeholder sync is handled by the dropdown-item onclick wrapper below.
-// Keep placeholder in sync with dropdown selection
+
 apiMenu.querySelectorAll('.dropdown-item').forEach(item=>{
   const orig=item._origOnclick||item.onclick;
   item.onclick=function(e){
@@ -2627,18 +2708,18 @@ ppBtn.onclick=(e)=>{
 prevBtn.onclick=(e)=>{e.stopPropagation();const t=getTracks();if(t.length)play((curIdx-1+t.length)%t.length)};
 nextBtn.onclick=(e)=>{e.stopPropagation();const t=getTracks();if(t.length)play((curIdx+1)%t.length)};
 repBtn.onclick=(e)=>{e.stopPropagation();repeating=!repeating;updateUI()};
-// Mobile: tap the info bar to expand into Now Playing
+
 document.getElementById('pInfo')&&document.getElementById('pInfo').addEventListener('click',function(e){
   if(window.innerWidth<=600){
     document.getElementById('player').classList.add('np-expanded');
   }
 });
-// Close button collapses back to mini-player (CSS transition handles the animation)
+
 document.getElementById('npClose').addEventListener('click',function(e){
   e.stopPropagation();
   document.getElementById('player').classList.remove('np-expanded');
 });
-// ── Volume with Web Audio boost ────────────────────────────────────────────
+
 let audioCtx=null,gainNode=null;
 
 function ensureAudioCtx(){
@@ -2653,7 +2734,6 @@ function ensureAudioCtx(){
   }catch(e){audioCtx=null;gainNode=null;}
 }
 
-// Init Web Audio on first user gesture so it's ready before playback
 document.addEventListener('click',function initCtx(){
   ensureAudioCtx();
   if(audioCtx&&audioCtx.state==='suspended')audioCtx.resume();
@@ -2671,19 +2751,19 @@ let isMuted=false,premuteVol=100;
 function setVolume(pct){
   pct=Math.max(0,Math.min(200,pct));
   if(pct<=100){
-    // Normal range — pure native volume, no Web Audio needed
+    
     audio.volume=pct/100;
     if(audio._ngProxy)audio._ngProxy.volume=pct/100;
     if(gainNode)gainNode.gain.value=1;
   } else {
-    // Boost range — native at 1.0, gain node multiplies
+    
     audio.volume=1;
     if(audio._ngProxy)audio._ngProxy.volume=1;
     ensureAudioCtx();
     if(audioCtx&&audioCtx.state==='suspended')audioCtx.resume();
     if(gainNode)gainNode.gain.value=pct/100;
   }
-  // Icon state
+  
   const path=document.getElementById('volIconPath');
   if(path){
     if(pct===0)path.setAttribute('d',VOL_ICONS.mute);
@@ -2691,7 +2771,7 @@ function setVolume(pct){
     else if(pct<=100)path.setAttribute('d',VOL_ICONS.mid);
     else path.setAttribute('d',VOL_ICONS.high);
   }
-  // Label
+  
   const lbl=$('#volPct');
   if(lbl){lbl.textContent=pct+'%';lbl.style.color=pct>100?'var(--primary)':'var(--sub)';}
 }
@@ -2703,8 +2783,6 @@ $('#volRange').oninput=e=>{
   isMuted=false;
   premuteVol=v;
   setVolume(v);
-  // Also set YT music player volume (capped at 100 — YT doesn't support boost)
-  if(_ytmPlayer&&_ytmTrack){try{_ytmPlayer.setVolume(Math.min(v,100))}catch(err){}}
 };
 
 $('#volIconBtn').onclick=(e)=>{
@@ -2726,7 +2804,7 @@ $('#volIconBtn').onclick=(e)=>{
   }
 };
 setVolume(100);
-// Draggable progress bar (Spotify-style)
+
 let progDragging=false,progScrubbing=false;
 function seekToClientX(clientX){
   const a=audio._ngProxy||audio;
@@ -2755,7 +2833,7 @@ window.addEventListener('mouseup',()=>{
   pBar.classList.remove('dragging');
   document.body.style.userSelect='';
 });
-// Touch support for mobile drag
+
 pBar.ontouchstart=e=>{
   if(!e.touches[0])return;
   progDragging=true;progScrubbing=true;
@@ -2771,7 +2849,7 @@ window.addEventListener('touchend',()=>{
   progDragging=false;progScrubbing=false;
   pBar.classList.remove('dragging');
 });
-// Suppress click navigation after drag
+
 pBar.onclick=e=>{if(progScrubbing){progScrubbing=false;e.preventDefault();e.stopPropagation();}};
 
 audio.onloadedmetadata=()=>{if(audio.duration&&isFinite(audio.duration))dTime.textContent=fmt(audio.duration)};
@@ -2810,26 +2888,24 @@ function fmt(s){
   return m+':'+String(sec).padStart(2,'0');
 }
 
-// Full-page video player
 var videoFullModal,ytFrame,ytLogo,ytSearchInput,ytApiToggle,ytApiMenu,currentVideoFull=null,allVideosForRecommended=[];
 
 function closeVideoFull(){
   if(!videoFullModal)return;
   videoFullModal.classList.remove('open');
   videoFullModal.style.display='none';
-  // Clear lingering inline visibility/pointer-events so the next open works
+  
   videoFullModal.style.visibility='';
   videoFullModal.style.pointerEvents='';
   if(ytFrame)ytFrame.src='';
   currentVideoFull=null;
-  // Also close the old video modal to ensure it's not visible
+  
   const videoModal=document.getElementById('videoModal');
   if(videoModal){
     videoModal.classList.remove('open');
     videoModal.style.display='';
   }
-  // NOTE: do NOT reset handler flags — listeners are attached once and reused.
-  // Resetting them causes duplicate listeners to pile up on every reopen.
+  
 }
 
 function initVideoElements(){
@@ -2845,10 +2921,8 @@ function initVideoElements(){
 function initVideoPlayer(){
   if(!initVideoElements())return;
   
-  // Check if handlers are already set up to avoid duplicates
   if(ytLogo._backButtonHandler)return;
   
-  // Logo acts as back button — closes video full and returns to main page
   const logoBackButtonHandler=function(e){
    e.stopPropagation();
    closeVideoFull();
@@ -2862,7 +2936,6 @@ function initVideoPlayer(){
   ytLogo.addEventListener('click',logoBackButtonHandler);
   ytLogo._backButtonHandler=true;
   
-  // Topbar dropdown in video full
   if(ytApiToggle&&ytApiMenu){
    const dropdownToggleHandler=function(e){
      e.stopPropagation();
@@ -2905,7 +2978,6 @@ function initVideoPlayer(){
    });
   }
   
-  // Search in video full
   if(ytSearchInput&&!ytSearchInput._searchHandler){
    const searchHandler=function(e){
      if(e.key==='Enter'){
@@ -2935,9 +3007,9 @@ async function openVideoFull(video,allVideos=[]){
   if(!videoFullModal)return;
   allVideosForRecommended=allVideos;
   currentVideoFull=video;
-  // Sync the search box in the video topbar with the current main page query
+  
   if(ytSearchInput)ytSearchInput.value=search.value||'';
-  // Sync the dropdown label in the video topbar with the main page mode
+  
   if(ytApiToggle&&currentApi){
     const map={online:'Music',local:'Local',radio:'Radio',video:'Videos',podcast:'Podcasts'};
     ytApiToggle.textContent=map[currentApi]||'Videos';
@@ -2945,12 +3017,12 @@ async function openVideoFull(video,allVideos=[]){
       i.classList.toggle('active',i.dataset.value===currentApi);
     });
   }
-  // Clear any inline hide-styles left by closeVideoFull, then show via .open class
+  
   videoFullModal.style.display='';
   videoFullModal.style.visibility='';
   videoFullModal.style.pointerEvents='';
   videoFullModal.classList.add('open');
-  // Reset scroll position so the video is at the top
+  
   const ps=document.querySelector('.yt-player-section');
   if(ps)ps.scrollTop=0;
   document.getElementById('ytVidTitle').textContent=video.name||'Video';
@@ -3042,12 +3114,11 @@ async function loadVideoComments(videoId,source='youtube'){
   }
 }
 
-// Modify the play function to use fullpage for videos, or YouTube Music player for ytmusic
 const originalPlay=window.play;
 window.play=function(i){
   const video=tracks[i];
   if(currentApi==='ytmusic'&&video&&video.isVideo&&video.embedUrl){
-    // YouTube Music: play audio-only via hidden YouTube IFrame API player
+    
     playYouTubeMusic(video);
   }else if(video&&video.isVideo&&video.embedUrl&&currentApi!=='ytmusic'){
     openVideoFull(video,tracks);
@@ -3056,233 +3127,76 @@ window.play=function(i){
   }
 };
 
-// ── YouTube Music player (hidden iframe + Invidious metadata) ──
-let _ytmIframe=null,_ytmTrack=null,_ytmDuration=0,_ytmCurrentTime=0;
-let _ytmPlaying=false,_ytmTimer=null,_ytmPausedSrc='';
-
-async function playYouTubeMusic(video){
-  // Stop normal audio
+let _ytmIframe=null,_ytmTrack=null;
+function playYouTubeMusic(video){
+  
   if(audio._ngProxy){const p=audio._ngProxy;p.pause();p.src='';audio._ngProxy=null}
   audio.pause();audio.src='';
-  // Stop existing YT music
-  _ytmStop();
+  
+  if(_ytmIframe){_ytmIframe.src='';_ytmIframe.remove();_ytmIframe=null}
 
   curIdx=tracks.indexOf(video);curTrack=video;
   player.style.display='flex';
   pTitle.textContent=video.name;
   pCtx.textContent='YouTube Music';
-  cTime.textContent='0:00';dTime.textContent='--:--';progFill.style.width='0';
+  cTime.textContent='0:00';dTime.textContent='0:00';progFill.style.width='0';
 
-  // Set album art to video thumbnail
   var artEl=document.getElementById('pArt');
   if(artEl&&video.thumb){artEl.style.backgroundImage='url("'+video.thumb+'")';artEl.textContent=''}
   else if(artEl){artEl.style.backgroundImage='';artEl.textContent='🎵'}
 
-  _ytmTrack=video;
-  _ytmDuration=0;
-  _ytmCurrentTime=0;
-  _ytmPlaying=true;
-
-  // Create hidden iframe for audio playback
   _ytmIframe=document.createElement('iframe');
-  _ytmIframe.style.cssText='position:fixed;width:200px;height:200px;left:-9999px;top:-9999px;opacity:0.01;pointer-events:none;border:none';
+  _ytmIframe.style.cssText='position:fixed;bottom:-9999px;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none';
   _ytmIframe.allow='autoplay;encrypted-media';
-  _ytmIframe.src='https://www.youtube.com/embed/'+encodeURIComponent(video.id)+'?autoplay=1&controls=0&disablekb=1&modestbranding=1&playsinline=1&rel=0&enablejsapi=1';
+  _ytmIframe.src='https://www.youtube-nocookie.com/embed/'+encodeURIComponent(video.id)+'?autoplay=1&controls=0&disablekb=1&modestbranding=1&playsinline=1&rel=0';
   document.body.appendChild(_ytmIframe);
+  _ytmTrack=video;
 
-  // Fetch real duration from Invidious API
-  _ytmFetchDuration(video.id);
-
-  // Start progress timer
-  _ytmStartTimer();
   updateUI();
-}
 
-async function _ytmFetchDuration(videoId){
-  // First: try parsing duration from the track's artist field (instant)
-  // (format: "YouTube · Author · 3:45" or "YouTube · Author · 1:02:30")
-  if(_ytmTrack&&_ytmTrack.artist){
-    var parts=_ytmTrack.artist.split(' · ');
-    var durStr=parts[parts.length-1];
-    var durSec=_ytmParseDuration(durStr);
-    if(durSec>0){
-      _ytmDuration=durSec;
-      dTime.textContent=fmt(_ytmDuration);
+  if(_ytmProgressTimer)clearInterval(_ytmProgressTimer);
+  var simulatedDuration=180; 
+  var simulatedTime=0;
+  _ytmProgressTimer=setInterval(function(){
+    if(!_ytmIframe||!_ytmTrack)return;
+    simulatedTime+=1;
+    if(simulatedTime>=simulatedDuration){
+      clearInterval(_ytmProgressTimer);
+      nextBtn.click();
+      return;
     }
-  }
-  // Then: try to get the exact duration from Invidious API (may be more accurate)
-  try{
-    var info=await fetchInvidiousJson('/api/v1/videos/'+encodeURIComponent(videoId),'',8000);
-    if(info&&info.data&&info.data.lengthSeconds&&info.data.lengthSeconds>0){
-      _ytmDuration=info.data.lengthSeconds;
-      dTime.textContent=fmt(_ytmDuration);
-    }
-  }catch(e){}
-}
-
-function _ytmParseDuration(str){
-  if(!str)return 0;
-  var parts=str.split(':').map(function(x){return parseInt(x)||0});
-  if(parts.length===3)return parts[0]*3600+parts[1]*60+parts[2];
-  if(parts.length===2)return parts[0]*60+parts[1];
-  if(parts.length===1)return parts[0];
-  return 0;
-}
-
-function _ytmStartTimer(){
-  if(_ytmTimer)clearInterval(_ytmTimer);
-  _ytmTimer=setInterval(function(){
-    if(!_ytmTrack)return;
-    if(_ytmPlaying){
-      _ytmCurrentTime+=1;
-      if(_ytmDuration>0){
-        cTime.textContent=fmt(_ytmCurrentTime);
-        progFill.style.width=(_ytmCurrentTime/_ytmDuration*100)+'%';
-        // Auto-advance when song ends
-        if(_ytmCurrentTime>=_ytmDuration){
-          if(repeating){
-            // Loop: reset time and reload the iframe from the start.
-            // Don't call _ytmStop() — that would remove the iframe.
-            _ytmCurrentTime=0;
-            if(_ytmIframe&&_ytmTrack){
-              _ytmIframe.src='https://www.youtube.com/embed/'+encodeURIComponent(_ytmTrack.id)+'?autoplay=1&controls=0&disablekb=1&modestbranding=1&playsinline=1&rel=0&start=0';
-            }
-            _ytmPlaying=true;
-            cTime.textContent='0:00';
-            progFill.style.width='0%';
-            updateUI();
-          }else{
-            _ytmStop();
-            nextBtn.click();
-          }
-        }
-      }else{
-        cTime.textContent=fmt(_ytmCurrentTime);
-      }
-    }
+    cTime.textContent=fmt(simulatedTime);
+    dTime.textContent=fmt(simulatedDuration);
+    progFill.style.width=(simulatedTime/simulatedDuration*100)+'%';
   },1000);
 }
+let _ytmProgressTimer=null;
 
-function _ytmStop(){
-  if(_ytmTimer){clearInterval(_ytmTimer);_ytmTimer=null}
-  if(_ytmIframe){_ytmIframe.src='';_ytmIframe.remove();_ytmIframe=null}
-  _ytmPlaying=false;
-  _ytmCurrentTime=0;
-  _ytmDuration=0;
-  _ytmPausedSrc='';
-}
-
-function _ytmPause(){
-  if(!_ytmIframe)return;
-  _ytmPlaying=false;
-  // Stop the audio by blanking the iframe src (instant, no reload flash)
-  // Save the src so we can resume from the current position
-  _ytmPausedSrc=_ytmIframe.src;
-  _ytmIframe.src='about:blank';
-  updateUI();
-}
-
-function _ytmResume(){
-  if(!_ytmIframe)return;
-  _ytmPlaying=true;
-  // Reload from the current position with autoplay
-  var startTime=Math.max(0,_ytmCurrentTime);
-  var videoId=_ytmTrack.id;
-  _ytmIframe.src='https://www.youtube.com/embed/'+encodeURIComponent(videoId)+'?autoplay=1&controls=0&disablekb=1&modestbranding=1&playsinline=1&rel=0&start='+startTime;
-  _ytmPausedSrc='';
-  updateUI();
-}
-
-function _ytmSeekToClientX(clientX){
-  if(!_ytmTrack)return;
-  var r=pBar.getBoundingClientRect();
-  var ratio=Math.max(0,Math.min(1,(clientX-r.left)/r.width));
-  if(_ytmDuration>0){
-    _ytmCurrentTime=Math.round(ratio*_ytmDuration);
-    cTime.textContent=fmt(_ytmCurrentTime);
-    progFill.style.width=(ratio*100)+'%';
-    // Reload the iframe from the seek position, preserving play/pause state
-    if(_ytmIframe){
-      var videoId=_ytmTrack.id;
-      var auto=_ytmPlaying?'1':'0';
-      _ytmIframe.src='https://www.youtube.com/embed/'+encodeURIComponent(videoId)+'?autoplay='+auto+'&controls=0&disablekb=1&modestbranding=1&playsinline=1&rel=0&start='+_ytmCurrentTime;
+const _origPpClick=ppBtn.onclick;
+ppBtn.onclick=function(e){
+  e.stopPropagation();
+  if(_ytmIframe){
+    
+    if(_ytmIframe.dataset.paused==='1'){
+      _ytmIframe.src=_ytmIframe.src.replace('autoplay=0','autoplay=1');
+      _ytmIframe.dataset.paused='0';
+      updateUI();
+    }else{
+      _ytmIframe.src=_ytmIframe.src.replace('autoplay=1','autoplay=0');
+      _ytmIframe.dataset.paused='1';
+      updateUI();
     }
+    return;
   }
-}
+  if(_origPpClick)_origPpClick.call(this,e);
+};
 
-// YT music play/pause — add as capture-phase listener so it runs BEFORE
-// the regular handler. Only intercepts when YT music is active.
-ppBtn.addEventListener('click',function(e){
-  if(_ytmIframe&&_ytmTrack){
-    e.stopPropagation();e.stopImmediatePropagation();
-    if(_ytmPlaying)_ytmPause();
-    else _ytmResume();
-  }
-},true);
-
-// YT music seeking — capture phase, only when YT music is active
-pBar.addEventListener('mousedown',function(e){
-  if(_ytmIframe&&_ytmTrack){
-    e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
-    progDragging=true;
-    pBar.classList.add('dragging');
-    document.body.style.userSelect='none';
-    _ytmSeekToClientX(e.clientX);
-  }
-},true);
-
-window.addEventListener('mousemove',function(e){
-  if(progDragging&&_ytmIframe&&_ytmTrack){
-    _ytmSeekToClientX(e.clientX);
-  }
-});
-
-window.addEventListener('mouseup',function(){
-  if(progDragging&&_ytmIframe){
-    progDragging=false;
-    pBar.classList.remove('dragging');
-    document.body.style.userSelect='';
-  }
-});
-
-// Touch for YT music
-pBar.addEventListener('touchstart',function(e){
-  if(_ytmIframe&&_ytmTrack){
-    if(!e.touches[0])return;
-    e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
-    progDragging=true;
-    pBar.classList.add('dragging');
-    _ytmSeekToClientX(e.touches[0].clientX);
-  }
-},true);
-
-window.addEventListener('touchmove',function(e){
-  if(progDragging&&_ytmIframe&&e.touches[0]){
-    _ytmSeekToClientX(e.touches[0].clientX);
-  }
-},{passive:true});
-
-window.addEventListener('touchend',function(){
-  if(progDragging&&_ytmIframe){
-    progDragging=false;
-    pBar.classList.remove('dragging');
-  }
-});
-
-// YT music click-to-seek on progress bar (for quick tap)
-pBar.addEventListener('click',function(e){
-  if(_ytmIframe&&_ytmTrack){
-    e.stopPropagation();e.stopImmediatePropagation();
-    _ytmSeekToClientX(e.clientX);
-  }
-},true);
-
-// Update UI for YT music — override the function but delegate to original
 const _origUpdateUI=updateUI;
 updateUI=function(){
-  if(_ytmIframe&&_ytmTrack){
-    playIc.style.display=_ytmPlaying?'none':'block';
-    pauseIc.style.display=_ytmPlaying?'block':'none';
+  if(_ytmIframe){
+    const playing=_ytmIframe.dataset.paused!=='1';
+    playIc.style.display=playing?'none':'block';
+    pauseIc.style.display=playing?'block':'none';
     repBtn.classList.toggle('active',repeating);
     return;
   }
