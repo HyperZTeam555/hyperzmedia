@@ -2501,7 +2501,7 @@ function renderGrid(){
   grid.innerHTML=list.map((t,i)=>{
     const real=tracks.indexOf(t);
     const icon=t.isNative?`<div class="card-icon">${t.isLocalVideo?`<svg viewBox="0 0 24 24"><path d="M17 10.5V7a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h12a1 1 0 001-1v-3.5l4 4v-11l-4 4z"/></svg>`:`<svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55C7.79 13 6 14.79 6 17s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>`}</div>`:
-      `<div class="card-icon"><img src="${t.art||''}" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><svg viewBox="0 0 24 24" style="display:none"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55C7.79 13 6 14.79 6 17s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg></div>`;
+      `<div class="card-icon"><img src="${t.art||t.thumb||''}" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><svg viewBox="0 0 24 24" style="display:none"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55C7.79 13 6 14.79 6 17s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg></div>`;
     const providerBadge=(()=>{
       if(t.isLocal||t.isNative)return'';
       const bc={'Mixcloud':'badge-mixcloud','Wikimedia':'badge-wikimedia-a','Jamendo':'','ccMixter':'','Archive':'','Audius':'','iTunes':'','Deezer':''};
