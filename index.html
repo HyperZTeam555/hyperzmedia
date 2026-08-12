@@ -1109,7 +1109,7 @@ function mapInvidiousVideo(v,instance,provider='YouTube'){
     description:src.description||src.descriptionHtml?.replace(/<[^>]+>/g,'')||'',
     thumb:pickInvidiousThumb(src.videoThumbnails||src.thumbnails||src.thumbnail,instance),
     
-    embedUrl:`https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&rel=0`,
+    embedUrl:`https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&rel=0&controls=1`,
     pageUrl:`https://www.youtube.com/watch?v=${encodeURIComponent(id)}`,
     provider,isVideo:true,isYouTube:true,
     liveNow:!!src.liveNow
@@ -1135,7 +1135,7 @@ function mapYouTubeApiVideo(item){
     artist:sn.channelTitle||'YouTube',
     description:sn.description||'',
     thumb,
-    embedUrl:`https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&rel=0`,
+    embedUrl:`https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&rel=0&controls=1`,
     pageUrl:`https://www.youtube.com/watch?v=${encodeURIComponent(id)}`,
     provider:'YouTube',isVideo:true,isYouTube:true,
     liveNow:false
@@ -1745,7 +1745,7 @@ window.addEventListener('orientationchange',()=>setTimeout(fitVideoPlayer,120));
 let _currentVideoObj=null;
 
 function buildNativeYouTubeUrl(id){
-  return `https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&rel=0&modestbranding=1`;
+  return `https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&rel=0&modestbranding=1&controls=1`;
 }
 
 function loadVideoSrc(v){
@@ -3117,90 +3117,15 @@ async function loadVideoComments(videoId,source='youtube'){
 const originalPlay=window.play;
 window.play=function(i){
   const video=tracks[i];
-  if(currentApi==='ytmusic'&&video&&video.isVideo&&video.embedUrl){
-    
-    playYouTubeMusic(video);
-  }else if(video&&video.isVideo&&video.embedUrl&&currentApi!=='ytmusic'){
+  if(video&&video.isVideo&&video.embedUrl){
+    // Both Videos and YouTube Music use the full video modal — native YouTube
+    // embed with controls=1 so seek / pause / unpause all work natively.
+    // (The old playYouTubeMusic hidden-iframe + simulated progress hack broke
+    // seeking and pause/unpause, so it was reverted to this original behavior.)
     openVideoFull(video,tracks);
   }else if(originalPlay){
     originalPlay.call(this,i);
   }
-};
-
-let _ytmIframe=null,_ytmTrack=null;
-function playYouTubeMusic(video){
-  
-  if(audio._ngProxy){const p=audio._ngProxy;p.pause();p.src='';audio._ngProxy=null}
-  audio.pause();audio.src='';
-  
-  if(_ytmIframe){_ytmIframe.src='';_ytmIframe.remove();_ytmIframe=null}
-
-  curIdx=tracks.indexOf(video);curTrack=video;
-  player.style.display='flex';
-  pTitle.textContent=video.name;
-  pCtx.textContent='YouTube Music';
-  cTime.textContent='0:00';dTime.textContent='0:00';progFill.style.width='0';
-
-  var artEl=document.getElementById('pArt');
-  if(artEl&&video.thumb){artEl.style.backgroundImage='url("'+video.thumb+'")';artEl.textContent=''}
-  else if(artEl){artEl.style.backgroundImage='';artEl.textContent='🎵'}
-
-  _ytmIframe=document.createElement('iframe');
-  _ytmIframe.style.cssText='position:fixed;bottom:-9999px;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none';
-  _ytmIframe.allow='autoplay;encrypted-media';
-  _ytmIframe.src='https://www.youtube-nocookie.com/embed/'+encodeURIComponent(video.id)+'?autoplay=1&controls=0&disablekb=1&modestbranding=1&playsinline=1&rel=0';
-  document.body.appendChild(_ytmIframe);
-  _ytmTrack=video;
-
-  updateUI();
-
-  if(_ytmProgressTimer)clearInterval(_ytmProgressTimer);
-  var simulatedDuration=180; 
-  var simulatedTime=0;
-  _ytmProgressTimer=setInterval(function(){
-    if(!_ytmIframe||!_ytmTrack)return;
-    simulatedTime+=1;
-    if(simulatedTime>=simulatedDuration){
-      clearInterval(_ytmProgressTimer);
-      nextBtn.click();
-      return;
-    }
-    cTime.textContent=fmt(simulatedTime);
-    dTime.textContent=fmt(simulatedDuration);
-    progFill.style.width=(simulatedTime/simulatedDuration*100)+'%';
-  },1000);
-}
-let _ytmProgressTimer=null;
-
-const _origPpClick=ppBtn.onclick;
-ppBtn.onclick=function(e){
-  e.stopPropagation();
-  if(_ytmIframe){
-    
-    if(_ytmIframe.dataset.paused==='1'){
-      _ytmIframe.src=_ytmIframe.src.replace('autoplay=0','autoplay=1');
-      _ytmIframe.dataset.paused='0';
-      updateUI();
-    }else{
-      _ytmIframe.src=_ytmIframe.src.replace('autoplay=1','autoplay=0');
-      _ytmIframe.dataset.paused='1';
-      updateUI();
-    }
-    return;
-  }
-  if(_origPpClick)_origPpClick.call(this,e);
-};
-
-const _origUpdateUI=updateUI;
-updateUI=function(){
-  if(_ytmIframe){
-    const playing=_ytmIframe.dataset.paused!=='1';
-    playIc.style.display=playing?'none':'block';
-    pauseIc.style.display=playing?'block':'none';
-    repBtn.classList.toggle('active',repeating);
-    return;
-  }
-  _origUpdateUI();
 };
 
 loadOrSearch();
