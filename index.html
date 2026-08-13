@@ -999,7 +999,6 @@ const INVIDIOUS_FALLBACK_INSTANCES=[
 ];
 let invidiousInstancesCache=null;
 
-/* ===== OBFUSCATED YOUTUBE CORE (3-tier: YT Data API v3 -> invidious direct -> invidious proxied) ===== */
 const _0xP="https://hyperzproxy.z04.workers.dev/";
 const _0xI="https://api.invidious.io/instances.json?sort_by=type,health";
 const _0xK=["https://inv.nadeko.net","https://invidious.nerdvpn.de","https://yt.chocolatemoo53.com","https://invidious.tiekoetter.com","https://invidious.f5.si","https://yewtu.be","https://invidious.fdn.fr","https://iv.ggtyler.dev","https://invidious.lunar.icu","https://inv.tux.pizza","https://invidious.privacyredirect.com","https://yt.artemislena.eu","https://invidious.protokoll.zone","https://invidious.kavin.rocks","https://vid.puffyan.us"];
@@ -1122,8 +1121,6 @@ function mapChannelInvidiousVideo(item,instance){
   return mapped;
 }
 
-/* Map a YouTube Data API v3 search.list item to the same track shape as
-   mapInvidiousVideo so the existing grid renderer works unchanged. */
 function mapYouTubeApiVideo(item){
   const id=item?.id?.videoId||'';
   const sn=item?.snippet||{};
@@ -1198,14 +1195,7 @@ async function fetchInvidiousChannels(q){
 }
 
 let _lastInvidiousInstance='';
-/* 3-tier YouTube fetch (obfuscated pattern from the reference vault):
-   Tier 1: YouTube Data API v3 direct (page 1 only, maxResults=50) — fastest + richest.
-   Tier 2: Invidious direct over gWI() instances (existing per-page logic).
-   Tier 3: Invidious via hyperzproxy when direct is blocked.
-   Each tier maps results to the same track shape so renderers are unchanged. */
 async function fetchInvidiousYouTube(q,page=1){
-  /* Tier 1: YouTube Data API v3 (direct). Only run on page 1 to avoid burning
-     quota; deeper pages fall through to Invidious. */
   if(page===1){
     try{
       const p=new URLSearchParams({part:'snippet',q,type:'video',maxResults:'50',key:YK});
@@ -1235,9 +1225,6 @@ async function fetchInvidiousYouTube(q,page=1){
       .slice(0,20);
   };
 
-  /* Tier 2: Invidious direct. Use gWI() (validated, cached 30min) with a
-     fallback to getInvidiousInstances() so the existing instance list still
-     works if the new discovery hasn't run yet. */
   let instances;
   try{instances=await gWI()}
   catch(_){instances=await getInvidiousInstances()}
@@ -1257,7 +1244,6 @@ async function fetchInvidiousYouTube(q,page=1){
     console.warn('[Invidious] direct tier failed for',q,'page',page,'— trying proxy tier');
   }
 
-  /* Tier 3: Invidious via proxy (hyperzproxy.z04.workers.dev). */
   try{
     return await Promise.any(instances.map(instance=>
       fetchFromInstance(instance,fetchProxy).catch(err=>{console.warn('[Invidious proxy]',instance,err.message);throw err;})
@@ -1268,10 +1254,6 @@ async function fetchInvidiousYouTube(q,page=1){
   }
 }
 
-/* YouTube-ONLY music search (no Dailymotion/PeerTube/Vimeo/etc.). Receives the
-   '#music <query>' prefix from the ytmusic branch — Invidious tiers keep it
-   (category filter), the YT Data API tier strips it (hashtag not supported).
-   Runs the 3-tier chain (YT Data API -> invidious direct -> invidious proxied). */
 async function fetchYouTubeMusicOnly(q,onUpdate,isCurrent){
   const all=[];
   const seen=new Set();
@@ -1283,14 +1265,7 @@ async function fetchYouTubeMusicOnly(q,onUpdate,isCurrent){
     }
   };
   if(onUpdate)onUpdate(all,'Searching YouTube...');
-  /* The ytmusic branch passes '#music <query>'. The YT Data API v3 doesn't
-     understand the #music hashtag filter (it would search for the literal
-     string "#music"), so strip it for Tier 1 AND add videoCategoryId=10
-     (Music category) so the API returns music-specific results — the YT API
-     equivalent of Invidious's #music category filter. Invidious tiers (2+3)
-     keep the #music prefix since Invidious interprets it as a category filter. */
   const cleanQ=q.replace(/^#music\s+/i,'');
-  /* Tier 1: YT Data API (50 results) — cleaned query + Music category filter */
   try{
     const p=new URLSearchParams({part:'snippet',q:cleanQ,type:'video',maxResults:'50',videoCategoryId:'10',key:YK});
     const r=await fetchDirect(`https://www.googleapis.com/youtube/v3/search?${p}`);
@@ -1303,8 +1278,6 @@ async function fetchYouTubeMusicOnly(q,onUpdate,isCurrent){
       }
     }
   }catch(e){console.warn('[YT Music] tier 1 failed:',e.message)}
-  /* Tier 2+3: Invidious pages 1-3 — keep the '#music ' prefix so Invidious
-     filters for the music category. */
   for(let page=1;page<=3;page++){
     try{
       const items=await fetchInvidiousYouTube(q,page);
@@ -2328,10 +2301,6 @@ async function loadOrSearch(){
       renderVideoGrid(result,'','No podcasts found');
       return;
     } else if(currentApi==='ytmusic'){
-      /* YouTube Music = YouTube ONLY (no Dailymotion/PeerTube/Vimeo/etc.).
-         Searches with the '#music ' prefix so Invidious filters for the music
-         category. Runs the 3-tier chain (YT Data API -> invidious direct ->
-         invidious proxied) via fetchYouTubeMusicOnly. */
       const musicQuery='#music '+q;
       result=await fetchYouTubeMusicOnly(musicQuery,(partial,status)=>{
         if(token===searchToken){
@@ -2651,6 +2620,11 @@ apiMenu.querySelectorAll('.dropdown-item').forEach(item=>{
     if(!isLocal)closeSb();
     closeVideoModal();
     closeChannelModal();
+    if(currentApi!=='ytmusic'){
+      if(_ytPlayer&&_ytCurrentVideoId){try{_ytPlayer.stopVideo()}catch(e){}}
+      _ytCurrentVideoId=null;
+      if(_ytProgressTimer){clearInterval(_ytProgressTimer);_ytProgressTimer=null}
+    }
     $('#ngBtn').style.display=currentApi==='online'?'block':'none';
     
     loadOrSearch();
@@ -3117,15 +3091,147 @@ async function loadVideoComments(videoId,source='youtube'){
 const originalPlay=window.play;
 window.play=function(i){
   const video=tracks[i];
-  if(video&&video.isVideo&&video.embedUrl){
-    // Both Videos and YouTube Music use the full video modal — native YouTube
-    // embed with controls=1 so seek / pause / unpause all work natively.
-    // (The old playYouTubeMusic hidden-iframe + simulated progress hack broke
-    // seeking and pause/unpause, so it was reverted to this original behavior.)
+  if(currentApi==='ytmusic'&&video&&video.isVideo&&video.id){
+    playYouTubeMusic(video);
+  }else if(video&&video.isVideo&&video.embedUrl&&currentApi!=='ytmusic'){
     openVideoFull(video,tracks);
   }else if(originalPlay){
     originalPlay.call(this,i);
   }
+};
+
+let _ytPlayer=null,_ytReady=false,_ytCurrentVideoId=null,_ytProgressTimer=null;
+function ensureYTApi(){
+  if(window.YT&&window.YT.Player){_ytReady=true;return}
+  if(!document.getElementById('yt-iframe-api')){
+    var tag=document.createElement('script');
+    tag.id='yt-iframe-api';
+    tag.src='https://www.youtube.com/iframe_api';
+    document.head.appendChild(tag);
+  }
+}
+window.onYouTubeIframeAPIReady=function(){_ytReady=true};
+function ensureYTPlayer(videoId, cb){
+  if(_ytPlayer&&_ytPlayer.getCurrentTime){cb(_ytPlayer);return}
+  ensureYTApi();
+  function wait(){if(window.YT&&window.YT.Player){createPlayer(videoId,cb)}else{setTimeout(wait,100)}}
+  wait();
+}
+function createPlayer(videoId, cb){
+  var holder=document.getElementById('yt-music-holder');
+  if(!holder){
+    holder=document.createElement('div');
+    holder.id='yt-music-holder';
+    holder.style.cssText='position:fixed;bottom:-9999px;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none';
+    holder.innerHTML='<div id="yt-music-div"></div>';
+    document.body.appendChild(holder);
+  }
+  _ytPlayer=new YT.Player('yt-music-div',{
+    height:'1',width:'1',
+    videoId:videoId,
+    playerVars:{autoplay:1,controls:0,disablekb:1,modestbranding:1,playsinline:1,rel:0},
+    events:{
+      onReady:function(){
+        window._ytPlayer=_ytPlayer;
+        if(cb)cb(_ytPlayer);
+      },
+      onStateChange:function(e){
+        if(e.data===YT.PlayerState.ENDED){
+          if(repeating&&_ytCurrentVideoId){_ytPlayer.seekTo(0,true);_ytPlayer.playVideo()}
+          else{nextBtn.click()}
+        }
+        updateUI();
+      },
+      onError:function(e){
+        console.warn('[YT Music] player error:',e.data);
+      }
+    }
+  });
+}
+function playYouTubeMusic(video){
+  if(audio._ngProxy){const p=audio._ngProxy;p.pause();p.src='';audio._ngProxy=null}
+  audio.pause();audio.src='';
+  curIdx=tracks.indexOf(video);curTrack=video;
+  player.style.display='flex';
+  pTitle.textContent=video.name;
+  pCtx.textContent='YouTube Music';
+  cTime.textContent='0:00';dTime.textContent='0:00';progFill.style.width='0';
+  var artEl=document.getElementById('pArt');
+  if(artEl&&video.thumb){artEl.style.backgroundImage='url("'+video.thumb+'")';artEl.textContent=''}
+  else if(artEl){artEl.style.backgroundImage='';artEl.textContent='🎵'}
+  _ytCurrentVideoId=video.id;
+  ensureYTPlayer(video.id, function(p){
+    if(p.getVideoData&&p.getVideoData()&&p.getVideoData().video_id===video.id){
+      try{p.playVideo()}catch(e){}
+    }else{
+      try{p.loadVideoById(video.id)}catch(e){}
+    }
+    if(_ytProgressTimer)clearInterval(_ytProgressTimer);
+    _ytProgressTimer=setInterval(function(){
+      if(!_ytPlayer)return;
+      try{
+        var cur=_ytPlayer.getCurrentTime()||0;
+        var dur=_ytPlayer.getDuration()||0;
+        if(dur>0){
+          cTime.textContent=fmt(cur);
+          dTime.textContent=fmt(dur);
+          progFill.style.width=(cur/dur*100)+'%';
+        }
+      }catch(e){}
+    },500);
+  });
+  updateUI();
+}
+const _origPpClick=ppBtn.onclick;
+ppBtn.onclick=function(e){
+  e.stopPropagation();
+  if(_ytPlayer&&_ytCurrentVideoId&&currentApi==='ytmusic'){
+    try{
+      var state=_ytPlayer.getPlayerState();
+      if(state===YT.PlayerState.PLAYING){_ytPlayer.pauseVideo()}
+      else{_ytPlayer.playVideo()}
+    }catch(err){}
+    updateUI();
+    return;
+  }
+  if(_origPpClick)_origPpClick.call(this,e);
+};
+const _origSeekToClientX=seekToClientX;
+seekToClientX=function(clientX){
+  if(_ytPlayer&&_ytCurrentVideoId&&currentApi==='ytmusic'){
+    try{
+      var dur=_ytPlayer.getDuration()||0;
+      if(dur>0){
+        var r=pBar.getBoundingClientRect();
+        var ratio=Math.max(0,Math.min(1,(clientX-r.left)/r.width));
+        _ytPlayer.seekTo(ratio*dur,true);
+        cTime.textContent=fmt(ratio*dur);
+        progFill.style.width=(ratio*100)+'%';
+      }
+    }catch(e){console.warn('[YT Music] seek error:',e.message)}
+    return;
+  }
+  if(_origSeekToClientX)_origSeekToClientX(clientX);
+};
+const _origSetVolume=setVolume;
+setVolume=function(pct){
+  if(_origSetVolume)_origSetVolume(pct);
+  if(_ytPlayer&&_ytCurrentVideoId){
+    try{_ytPlayer.setVolume(Math.max(0,Math.min(100,pct)))}catch(e){}
+  }
+};
+const _origUpdateUI=updateUI;
+updateUI=function(){
+  if(_ytPlayer&&_ytCurrentVideoId&&currentApi==='ytmusic'){
+    var playing=false;
+    try{playing=_ytPlayer.getPlayerState()===YT.PlayerState.PLAYING}catch(e){}
+    playIc.style.display=playing?'none':'block';
+    pauseIc.style.display=playing?'block':'none';
+    repBtn.classList.toggle('active',repeating);
+    $$('.card').forEach(c=>c.classList.toggle('playing-card',+c.dataset.idx===curIdx));
+    return;
+  }
+  if(_origUpdateUI)_origUpdateUI();
 };
 
 loadOrSearch();
