@@ -816,11 +816,8 @@ async function clearAllCachedSearches(){
   }catch(e){return false}
 }
 async function updateCachedSearchesBar(){
-  try{
-    const all=await getAllCachedSearches();
-    const bar=document.getElementById('cachedSearchesBar');
-    if(bar)bar.style.display=all.length>0?'flex':'none';
-  }catch(e){}
+  const bar=document.getElementById('cachedSearchesBar');
+  if(bar)bar.style.display='flex';
 }
 function fmtCacheTime(ts){
   const diff=Date.now()-ts;
@@ -1382,11 +1379,73 @@ async function fetchInvidiousJson(path,preferredInstance='',timeout=8000){
 }
 
 async function fetchInvidiousChannels(q){
-  const instances=await getInvidiousInstances();
+  // Tier 1: YouTube Data API v3 (search channels)
+  try{
+    const p=new URLSearchParams({part:'snippet',q,type:'channel',maxResults:'8',key:YK});
+    const r=await fetchDirect(`https://www.googleapis.com/youtube/v3/search?${p}`);
+    if(r.ok){
+      const d=await r.json();
+      if(d.items&&d.items.length){
+        const channelIds=d.items.filter(it=>it.id&&it.id.channelId).map(it=>it.id.channelId);
+        // Fetch channel details (stats, contentDetails) in one batch
+        if(channelIds.length){
+          try{
+            const dp=new URLSearchParams({part:'snippet,statistics,contentDetails',id:channelIds.join(','),key:YK});
+            const dr=await fetchDirect(`https://www.googleapis.com/youtube/v3/channels?${dp}`);
+            if(dr.ok){
+              const dd=await dr.json();
+              const chMap={};
+              (dd.items||[]).forEach(ch=>{chMap[ch.id]=ch});
+              const channels=d.items.filter(it=>it.id&&it.id.channelId&&chMap[it.id.channelId]).map(it=>{
+                const ch=chMap[it.id.channelId];
+                const sn=ch.snippet||{};
+                const st=ch.statistics||{};
+                const thumb=sn.thumbnails?(sn.thumbnails.medium||sn.thumbnails.default||{}).url:'';
+                return{
+                  id:ch.id,
+                  name:sn.title||it.snippet?.title||'YouTube Channel',
+                  thumb,
+                  description:sn.description||'',
+                  subCount:parseInt(st.subscriberCount)||0,
+                  videoCount:parseInt(st.videoCount)||0,
+                  pageUrl:`https://www.youtube.com/channel/${ch.id}`,
+                  instance:'',
+                  uploadsPlaylist:ch.contentDetails?.relatedPlaylists?.uploads||''
+                };
+              });
+              if(channels.length)return channels;
+            }
+          }catch(e){}
+        }
+        // Fallback: use search results without detailed stats
+        const channels=d.items.filter(it=>it.id&&it.id.channelId).map(it=>{
+          const sn=it.snippet||{};
+          const thumb=sn.thumbnails?(sn.thumbnails.medium||sn.thumbnails.default||{}).url:'';
+          return{
+            id:it.id.channelId,
+            name:sn.title||'YouTube Channel',
+            thumb,
+            description:sn.description||'',
+            subCount:0,
+            videoCount:0,
+            pageUrl:`https://www.youtube.com/channel/${it.id.channelId}`,
+            instance:'',
+            uploadsPlaylist:''
+          };
+        });
+        if(channels.length)return channels;
+      }
+    }
+  }catch(e){console.warn('[YT API] channel search failed:',e.message)}
+
+  // Tier 2: Invidious fallback
+  let instances;
+  try{instances=await gWI()}
+  catch(_){instances=await getInvidiousInstances()}
   const params=new URLSearchParams({q,type:'channel',page:'1',region:'US'});
   const path=`/api/v1/search?${params}`;
-  const fetchFromInstance=async(instance)=>{
-    const res=await withTimeout(fetch(`${instance}${path}`,{cache:'no-store'}),5000);
+  const fetchFromInstance=async(instance,fetcher)=>{
+    const res=await withTimeout(fetcher(`${instance}${path}`,{cache:'no-store'}),8000);
     if(!res.ok)throw new Error(`HTTP ${res.status}`);
     const data=await res.json();
     let results=data;
@@ -1394,7 +1453,7 @@ async function fetchInvidiousChannels(q){
       if(data.results&&Array.isArray(data.results)){results=data.results;}
       else{throw new Error('Bad format');}
     }
-    const channels=results.filter(c=>c.type==='channel'&&c.authorId).slice(0,4);
+    const channels=results.filter(c=>c.type==='channel'&&c.authorId).slice(0,8);
     if(!channels.length)throw new Error('No channels');
     return channels.map(c=>({
       id:c.authorId,
@@ -1407,12 +1466,21 @@ async function fetchInvidiousChannels(q){
       instance
     }));
   };
+  // Tier 2: direct
   try{
     return await Promise.any(instances.map(instance=>
-      fetchFromInstance(instance).catch(err=>{console.warn('[Invidious]',instance,err.message);throw err;})
+      fetchFromInstance(instance,fetchDirect).catch(err=>{console.warn('[Invidious direct channels]',instance,err.message);throw err;})
     ));
   }catch(e){
-    console.error('[Invidious] all instances failed for channels search:',q);
+    console.warn('[Invidious] direct channel search failed, trying proxy');
+  }
+  // Tier 3: proxy
+  try{
+    return await Promise.any(instances.map(instance=>
+      fetchFromInstance(instance,fetchProxy).catch(err=>{console.warn('[Invidious proxy channels]',instance,err.message);throw err;})
+    ));
+  }catch(e){
+    console.error('[Invidious] all tiers failed for channels search:',q);
     return [];
   }
 }
@@ -1497,7 +1565,7 @@ async function fetchYouTubeMusicOnly(q,onUpdate,isCurrent){
       if(d.items&&d.items.length){
         addUnique(d.items.filter(it=>it.id&&it.id.videoId).map(mapYouTubeApiVideo));
         if(isCurrent&&!isCurrent())return all;
-        if(onUpdate)onUpdate(all,`${all.length} YouTube results`);
+        if(onUpdate)onUpdate(all,'');
       }
     }
   }catch(e){console.warn('[YT Music] tier 1 failed:',e.message)}
@@ -1506,7 +1574,7 @@ async function fetchYouTubeMusicOnly(q,onUpdate,isCurrent){
       const items=await fetchInvidiousYouTube(q,page);
       addUnique(items);
       if(isCurrent&&!isCurrent())return all;
-      if(onUpdate)onUpdate(all,`${all.length} YouTube results`);
+      if(onUpdate)onUpdate(all,'');
     }catch(e){}
   }
   return all;
@@ -2416,42 +2484,67 @@ async function loadChannelTabPages(kind,token){
   sec.loading=true;
   sec.started=true;
   renderChannelSection(kind);
-  const instances=await getInvidiousInstances();
+  let instances;
+  try{instances=await gWI()}
+  catch(_){instances=await getInvidiousInstances()}
   const ordered=[...new Set([channelState.instance,...instances].filter(Boolean))].slice(0,6);
 
-  const fetchFromInstance=async(instance)=>{
+  const fetchFromInstance=async(instance,fetcher)=>{
     const url=`${instance}${channelPagePath(sec)}`;
-    const res=await withTimeout(fetch(url,{cache:'no-store'}),8000);
+    const res=await withTimeout(fetcher(url,{cache:'no-store'}),8000);
     if(!res.ok)throw new Error(`HTTP ${res.status}`);
     return {data:await res.json(),instance};
   };
 
+  // Tier 1: direct fetch
   try{
-    const result=await Promise.any(ordered.map(fetchFromInstance));
+    const result=await Promise.any(ordered.map(instance=>fetchFromInstance(instance,fetchDirect)));
     if(token!==channelModalToken)return;
     channelState.instance=result.instance;
     sec.pagesLoaded++;
     addChannelItems(sec,result.data||{},result.instance);
+    sec.loading=false;
+    sec.done=!sec.continuation;
+    renderChannelSection(kind);
+    return;
   }catch(e){
-    console.warn(`${sec.label} load failed from all instances:`,e);
-    if(kind==='videos'&&!sec.items.length){
-      try{
-        const info=await fetchInvidiousJson(`/api/v1/channels/${channelState.id}`,channelState.instance,8000);
-        if(token!==channelModalToken)return;
-        const latest=info.data?.latestVideos||[];
-        for(const v of latest){
-          const mapped=mapChannelInvidiousVideo(v,info.instance);
-          if(mapped&&!sec.keys.has(mapped.id)){
-            sec.keys.add(mapped.id);
-            sec.items.push(mapped);
-          }
+    console.warn(`${sec.label} direct load failed, trying proxy:`,e.message);
+  }
+
+  // Tier 2: proxy fetch
+  try{
+    const result=await Promise.any(ordered.map(instance=>fetchFromInstance(instance,fetchProxy)));
+    if(token!==channelModalToken)return;
+    channelState.instance=result.instance;
+    sec.pagesLoaded++;
+    addChannelItems(sec,result.data||{},result.instance);
+    sec.loading=false;
+    sec.done=!sec.continuation;
+    renderChannelSection(kind);
+    return;
+  }catch(e){
+    console.warn(`${sec.label} proxy load failed:`,e.message);
+  }
+
+  // Tier 3: fallback to channel info (latestVideos)
+  if(kind==='videos'&&!sec.items.length){
+    try{
+      const info=await fetchInvidiousJson(`/api/v1/channels/${channelState.id}`,channelState.instance,8000);
+      if(token!==channelModalToken)return;
+      const latest=info.data?.latestVideos||[];
+      for(const v of latest){
+        const mapped=mapChannelInvidiousVideo(v,info.instance);
+        if(mapped&&!sec.keys.has(mapped.id)){
+          sec.keys.add(mapped.id);
+          sec.items.push(mapped);
         }
-        if(info.instance)channelState.instance=info.instance;
-      }catch(e2){
-        console.warn('Channel info fallback also failed:',e2);
       }
+      if(info.instance)channelState.instance=info.instance;
+    }catch(e2){
+      console.warn('Channel info fallback also failed:',e2);
     }
-    if(kind==='videos'&&!sec.items.length){
+  }
+  if(kind==='videos'&&!sec.items.length){
       try{
         const channelName=document.getElementById('channelName').textContent;
         const searchRes=await fetchInvidiousJson(`/api/v1/search?q=${encodeURIComponent(channelName)}&type=video&page=1`,channelState.instance,8000);
@@ -2493,7 +2586,6 @@ async function loadChannelTabPages(kind,token){
         console.warn('Streams search fallback failed:',e4);
       }
     }
-  }
 
   sec.done=true;
   sec.loading=false;
@@ -3050,13 +3142,9 @@ apiMenu.querySelectorAll('.dropdown-item').forEach(item=>{
     if(!isLocal)closeSb();
     closeVideoModal();
     closeChannelModal();
-    if(currentApi!=='ytmusic'){
-      if(_ytPlayer&&_ytCurrentVideoId){try{_ytPlayer.stopVideo()}catch(e){}}
-      _ytCurrentVideoId=null;
-      if(_ytProgressTimer){clearInterval(_ytProgressTimer);_ytProgressTimer=null}
-    }
     $('#ngBtn').style.display=currentApi==='online'?'block':'none';
     $('#shortsBtn').style.display=currentApi==='video'?'block':'none';
+    updateCachedSearchesBar();
     loadOrSearch();
   };
 });
@@ -3373,6 +3461,7 @@ function initVideoPlayer(){
        if(!isLocal)closeSb();
        $('#ngBtn').style.display=currentApi==='online'?'block':'none';
        $('#shortsBtn').style.display=currentApi==='video'?'block':'none';
+       updateCachedSearchesBar();
        var placeholders={online:'Search tracks...',ytmusic:'Search YouTube Music...',radio:'Search stations...',video:'Search videos...',podcast:'Search podcasts...',local:'Filter local tracks...'};
        search.placeholder=placeholders[currentApi]||'Search...';
        var q=ytSearchInput.value.trim();
