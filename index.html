@@ -348,6 +348,18 @@
   .cached-search-item .cs-count{font-size:11px;font-weight:700;color:var(--primary);background:rgba(0,212,255,0.1);padding:3px 8px;border-radius:6px;flex-shrink:0}
   .cached-search-item .cs-delete{background:none;border:0;color:var(--sub);cursor:pointer;font-size:14px;padding:4px 6px;border-radius:6px;flex-shrink:0;transition:all 0.2s ease}
   .cached-search-item .cs-delete:hover{color:#ff4488;background:rgba(255,68,136,0.1)}
+  #confirmDialog{position:fixed;inset:0;background:rgba(0,0,0,0.8);backdrop-filter:blur(12px);z-index:300;display:none;align-items:center;justify-content:center}
+  #confirmDialog.open{display:flex}
+  #confirmDialog .confirm-box{background:rgba(15,15,20,0.95);border:1px solid rgba(255,68,136,0.3);border-radius:16px;padding:24px;max-width:360px;width:90%;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,0.6),0 0 20px rgba(255,68,136,0.1)}
+  #confirmDialog .confirm-icon{font-size:36px;margin-bottom:12px}
+  #confirmDialog .confirm-title{font-size:16px;font-weight:700;color:#ff4488;font-family:'Orbitron',monospace;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px}
+  #confirmDialog .confirm-msg{font-size:13px;color:var(--sub);line-height:1.5;margin-bottom:20px}
+  #confirmDialog .confirm-btns{display:flex;gap:10px;justify-content:center}
+  #confirmDialog .confirm-btn{padding:10px 24px;border-radius:12px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Rajdhani',sans-serif;text-transform:uppercase;letter-spacing:1px;transition:all 0.2s ease;border:1px solid}
+  #confirmDialog .confirm-btn.cancel{background:rgba(255,255,255,0.05);border-color:var(--border);color:var(--sub)}
+  #confirmDialog .confirm-btn.cancel:hover{border-color:var(--primary);color:var(--primary);background:rgba(0,212,255,0.08)}
+  #confirmDialog .confirm-btn.confirm{background:rgba(255,68,136,0.12);border-color:rgba(255,68,136,0.4);color:#ff4488}
+  #confirmDialog .confirm-btn.confirm:hover{background:rgba(255,68,136,0.2);box-shadow:0 0 16px rgba(255,68,136,0.3)}
   .video-modal-box{background:#1a1a1a;border:1px solid var(--border);border-radius:12px;display:flex;flex-direction:column;overflow:hidden}
   .video-modal-header{padding:12px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);flex-shrink:0}
   .video-modal-title{font-size:14px;font-weight:700;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -492,6 +504,18 @@
       <button class="btn-search" id="clearAllCachedBtn" style="background:rgba(255,68,136,0.12);border-color:rgba(255,68,136,0.4);color:#ff4488;box-shadow:0 0 10px rgba(255,68,136,0.2)">Clear All</button>
     </div>
     <div class="cached-searches-list" id="cachedSearchesList"></div>
+  </div>
+</div>
+
+<div id="confirmDialog">
+  <div class="confirm-box">
+    <div class="confirm-icon">⚠️</div>
+    <div class="confirm-title" id="confirmTitle">Delete Cached Search?</div>
+    <div class="confirm-msg" id="confirmMsg">This will permanently remove this cached search. Are you sure?</div>
+    <div class="confirm-btns">
+      <button class="confirm-btn cancel" id="confirmCancel">Cancel</button>
+      <button class="confirm-btn confirm" id="confirmYes">Delete</button>
+    </div>
   </div>
 </div>
 
@@ -727,7 +751,7 @@ let tracks=[];
 
 const SEARCH_CACHE_DB='hzmedia_search_cache';
 const SEARCH_CACHE_STORE='searches';
-const SEARCH_CACHE_TTL=24*60*60*1000;
+const SEARCH_CACHE_TTL=Infinity;
 let _searchCacheDb=null;
 function openSearchCache(){
   return new Promise((resolve,reject)=>{
@@ -755,7 +779,7 @@ async function getCachedSearch(api,q){
       const req=store.get(key);
       req.onsuccess=()=>{
         const rec=req.result;
-        if(rec&&rec.timestamp&&(Date.now()-rec.timestamp<SEARCH_CACHE_TTL)){resolve(rec.results||[])}
+        if(rec&&rec.results){resolve(rec.results||[])}
         else{resolve(null)}
       };
       req.onerror=()=>resolve(null);
@@ -785,7 +809,7 @@ async function getAllCachedSearches(){
       req.onsuccess=()=>{
         const all=req.result||[];
         const now=Date.now();
-        resolve(all.filter(r=>r.timestamp&&(now-r.timestamp<SEARCH_CACHE_TTL)).sort((a,b)=>b.timestamp-a.timestamp));
+        resolve(all.sort((a,b)=>b.timestamp-a.timestamp));
       };
       req.onerror=()=>resolve([]);
     });
@@ -818,6 +842,18 @@ async function clearAllCachedSearches(){
 async function updateCachedSearchesBar(){
   const bar=document.getElementById('cachedSearchesBar');
   if(bar)bar.style.display='flex';
+}
+function showConfirmDialog(title,msg,onConfirm){
+  const dlg=document.getElementById('confirmDialog');
+  document.getElementById('confirmTitle').textContent=title;
+  document.getElementById('confirmMsg').textContent=msg;
+  const yesBtn=document.getElementById('confirmYes');
+  const cancelBtn=document.getElementById('confirmCancel');
+  const closeFn=function(){dlg.classList.remove('open');yesBtn.onclick=null;cancelBtn.onclick=null;dlg.onclick=null};
+  yesBtn.onclick=function(){closeFn();if(onConfirm)onConfirm()};
+  cancelBtn.onclick=closeFn;
+  dlg.onclick=function(e){if(e.target===dlg)closeFn()};
+  dlg.classList.add('open');
 }
 function fmtCacheTime(ts){
   const diff=Date.now()-ts;
@@ -852,7 +888,9 @@ async function renderCachedSearchesList(filter){
     };
     item.querySelector('.cs-delete').onclick=(e)=>{
       e.stopPropagation();
-      deleteCachedSearch(r.key).then(()=>renderCachedSearchesList(document.getElementById('cachedSearchesFilter').value));
+      showConfirmDialog('Delete Cached Search?','This will permanently remove "'+escapeHtml(r.q||'')+'" from your cached searches. Are you sure?',function(){
+        deleteCachedSearch(r.key).then(()=>renderCachedSearchesList(document.getElementById('cachedSearchesFilter').value));
+      });
     };
     list.appendChild(item);
   });
@@ -1892,7 +1930,11 @@ $('#cachedSearchesClose').onclick=()=>cachedSearchesModal.classList.remove('open
 cachedSearchesModal.onclick=e=>{if(e.target===cachedSearchesModal)cachedSearchesModal.classList.remove('open')};
 let _cachedFilterT;
 cachedSearchesFilter.oninput=()=>{clearTimeout(_cachedFilterT);_cachedFilterT=setTimeout(()=>renderCachedSearchesList(cachedSearchesFilter.value),200)};
-$('#clearAllCachedBtn').onclick=()=>{clearAllCachedSearches().then(()=>renderCachedSearchesList(''))};
+$('#clearAllCachedBtn').onclick=()=>{
+  showConfirmDialog('Clear All Cached Searches?','This will permanently remove ALL cached searches. This cannot be undone.',function(){
+    clearAllCachedSearches().then(()=>renderCachedSearchesList(''));
+  });
+};
 updateCachedSearchesBar();
 async function loadShorts(){
   const q=shortsSearchInput.value.trim();
@@ -2803,7 +2845,7 @@ async function loadOrSearch(){
       }).catch(()=>[]);
       result=await fetchVideoAll(q,(partial,status)=>{
         partialVideos=partial;
-        if(token===searchToken)renderVideoGrid(partial,status,'No videos found',channelResults);
+        if(token===searchToken){if(q&&partial.length)setCachedSearch(currentApi,q,partial);renderVideoGrid(partial,status,'No videos found',channelResults)}
       },()=>token===searchToken);
       await channelLoad;
       if(token!==searchToken)return;
@@ -2812,7 +2854,7 @@ async function loadOrSearch(){
       return;
     } else if(currentApi==='podcast'){
       result=await fetchPodcastAll(q,(partial,status)=>{
-        if(token===searchToken)renderVideoGrid(partial,status,'No podcasts found');
+        if(token===searchToken){if(q&&partial.length)setCachedSearch(currentApi,q,partial);renderVideoGrid(partial,status,'No podcasts found')}
       },()=>token===searchToken);
       if(token!==searchToken)return;
       if(q)setCachedSearch(currentApi,q,result);
@@ -2823,6 +2865,7 @@ async function loadOrSearch(){
       result=await fetchYouTubeMusicOnly(musicQuery,(partial,status)=>{
         if(token===searchToken){
           tracks=partial;
+          if(q&&partial.length)setCachedSearch(currentApi,q,partial);
           renderGrid();
           let s=grid.querySelector('.grid-status');
           if(!s){s=document.createElement('div');s.className='grid-status loading';grid.appendChild(s)}
@@ -2838,6 +2881,7 @@ async function loadOrSearch(){
       result=await fetchOnline(q,(partial,status)=>{
         if(token===searchToken){
           tracks=partial;
+          if(q&&partial.length)setCachedSearch(currentApi,q,partial);
           renderGrid();
           let s=grid.querySelector('.grid-status');
           if(!s){s=document.createElement('div');s.className='grid-status loading';grid.appendChild(s)}
