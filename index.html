@@ -61,6 +61,27 @@
   .card-save{position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,.75);border:1px solid var(--border);border-radius:12px;padding:3px 8px;font-size:10px;color:var(--sub);cursor:pointer;display:none;align-items:center;gap:4px;transition:all .2s;white-space:nowrap}
   .card:hover .card-save{display:flex}
   .card-save:hover{background:var(--primary);color:#000;border-color:var(--primary)}
+  .video-card .card-save{bottom:44px}
+  #likeBtn svg{width:16px;height:16px;fill:var(--sub);transition:fill .2s,transform .15s}
+  #likeBtn:hover svg{transform:scale(1.18)}
+  #likeBtn.active svg{fill:#ff4d6d}
+  .yt-like-btn{display:inline-flex;align-items:center;background:none;border:1px solid var(--border);color:var(--sub);border-radius:20px;padding:8px 12px;cursor:pointer;transition:all .2s;font-family:'Rajdhani',sans-serif}
+  .yt-like-btn svg{width:16px;height:16px;fill:currentColor;transition:fill .2s}
+  .yt-like-btn:hover{border-color:var(--primary);color:var(--primary)}
+  .yt-like-btn.active{border-color:#ff4d6d;color:#ff4d6d}
+  .rec-like{position:absolute;top:8px;right:8px;width:26px;height:26px;border-radius:50%;background:rgba(0,0,0,.75);border:1px solid var(--border);color:var(--sub);cursor:pointer;display:none;align-items:center;justify-content:center;transition:all .2s;z-index:2}
+  .rec-like svg{width:14px;height:14px;fill:currentColor}
+  .card:hover .rec-like{display:flex}
+  .rec-like:hover{color:#ff4d6d;border-color:#ff4d6d}
+  .rec-like.active{display:flex;color:#ff4d6d;border-color:#ff4d6d}
+  .rec-like.active svg{fill:#ff4d6d}
+  .sb-shuffle{margin-left:auto;background:none;border:1px solid var(--border);border-radius:8px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;color:var(--sub);cursor:pointer;transition:all .2s;flex-shrink:0}
+  .sb-shuffle svg{width:15px;height:15px;fill:currentColor}
+  .sb-shuffle:hover{color:var(--primary);border-color:var(--primary)}
+  .sb-shuffle.active{color:#000;background:var(--primary);border-color:var(--primary)}
+  .sb-upnext{font-size:11px;color:var(--sub);padding:8px 16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-bottom:1px solid var(--border)}
+  .sb-upnext b{color:var(--primary);font-weight:600}
+  .sb-upnext:empty{display:none}
 
     #recommendedSection{display:none;margin-top:26px}
   .rec-header{font-family:'Orbitron',monospace;font-size:10px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--accent3);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border)}
@@ -482,10 +503,11 @@
 <header>
   <div class="logo">HyperZMedia</div>
   <div class="dropdown-container">
-    <button class="dropdown-toggle" id="apiToggle">Music</button>
+    <button class="dropdown-toggle" id="apiToggle">Saved</button>
     <div class="dropdown-menu" id="apiMenu">
-      <div class="dropdown-item active" data-value="online">Music</div>
-      <div class="dropdown-item" data-value="local">Local</div>
+      <div class="dropdown-item active" data-value="local">Saved</div>
+      <div class="dropdown-item" data-value="liked">Liked</div>
+      <div class="dropdown-item" data-value="online">Music</div>
       <div class="dropdown-item" data-value="radio">Radio</div>
       <div class="dropdown-item" data-value="video">Videos</div>
       <div class="dropdown-item" data-value="podcast">Podcasts</div>
@@ -530,7 +552,9 @@
   <div class="sb-header">
     <button class="sb-close" id="sbClose"><svg width="18" height="18" viewBox="0 0 24 24" fill="var(--sub)"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>
     <div class="sb-title" id="sbTitle">Playlist</div>
+    <button class="sb-shuffle" id="sbShuffle" title="Shuffle"><svg viewBox="0 0 24 24"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg></button>
   </div>
+  <div class="sb-upnext" id="sbUpNext"></div>
   <div class="sb-list" id="sbList"></div>
   <div class="sb-footer">
     <button class="sb-add-btn" id="sbAddBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="#000"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Add Song</button>
@@ -557,6 +581,7 @@
   </div>
   <div class="player-center">
     <div class="controls">
+      <button class="btn" id="likeBtn" title="Like"><svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></button>
       <button class="btn" id="prevBtn"><svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg></button>
       <button class="btn btn-play" id="ppBtn"><svg id="playIc" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><svg id="pauseIc" viewBox="0 0 24 24" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg></button>
       <button class="btn" id="nextBtn"><svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg></button>
@@ -601,7 +626,7 @@
     <div id="ngStatus" style="font-size:12px;color:var(--sub);margin-top:8px;min-height:16px"></div>
     <div id="ngPlayer" style="display:none;margin-top:12px">
       <iframe id="ngFrame" scrolling="no" frameborder="0" style="display:none"></iframe>
-      <button class="inline-btn" id="ngSaveBtn" style="margin-top:10px;width:100%;justify-content:center">⬇ Save to Local</button>
+      <button class="inline-btn" id="ngSaveBtn" style="margin-top:10px;width:100%;justify-content:center">⬇ Save</button>
     </div>
   </div>
 </div>
@@ -648,11 +673,12 @@
       <div class="dropdown-container" id="ytDropdownContainer">
         <button class="dropdown-toggle" id="ytApiToggle">Videos</button>
         <div class="dropdown-menu" id="ytApiMenu">
-          <div class="dropdown-item active" data-value="video">Videos</div>
+          <div class="dropdown-item active" data-value="local">Saved</div>
+          <div class="dropdown-item" data-value="liked">Liked</div>
           <div class="dropdown-item" data-value="online">Music</div>
           <div class="dropdown-item" data-value="radio">Radio</div>
+          <div class="dropdown-item" data-value="video">Videos</div>
           <div class="dropdown-item" data-value="podcast">Podcasts</div>
-          <div class="dropdown-item" data-value="local">Local</div>
         </div>
       </div>
       <div class="search-wrap"><input type="text" id="ytSearchInput" placeholder="Search videos..."><button class="btn-search" id="ytSearchBtn">Search</button></div>
@@ -668,8 +694,11 @@
           <div class="yt-vid-title" id="ytVidTitle"></div>
           <div class="yt-meta">
             <div class="yt-stats" id="ytStats"></div>
-            <div class="yt-channel-btn">
-              <a href="#" id="ytChannelLink" target="_blank" rel="noopener">View Channel</a>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <button class="yt-like-btn" id="ytLikeBtn" title="Like"><svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></button>
+              <div class="yt-channel-btn">
+                <a href="#" id="ytChannelLink" target="_blank" rel="noopener">View Channel</a>
+              </div>
             </div>
           </div>
           <div class="yt-description" id="ytDescription"></div>
@@ -748,7 +777,7 @@ const search=$('#searchInput'),plBtn=$('#plBtn'),plModal=$('#plModal'),plList=$(
 const sbDropdown=$('#sbDropdown'),gridDropdown=$('#gridDropdown');
 const uploadBtn=$('#uploadBtn'),fileInput=$('#fileInput'),uploadToast=$('#uploadToast');
 
-let currentApi='online';
+let currentApi='local';
 let tracks=[];
 
 const SEARCH_CACHE_DB='hzmedia_search_cache';
@@ -883,7 +912,7 @@ async function renderCachedSearchesList(filter){
   filtered.forEach(r=>{
     const item=document.createElement('div');
     item.className='cached-search-item';
-    const apiLabels={online:'Music',ytmusic:'YouTube Music',radio:'Radio',video:'Videos',podcast:'Podcasts',local:'Local'};
+    const apiLabels={online:'Music',ytmusic:'YouTube Music',radio:'Radio',video:'Videos',podcast:'Podcasts',local:'Saved',liked:'Liked'};
     const apiLabel=apiLabels[r.api]||r.api;
     item.innerHTML='<div class="cs-icon">'+(r.api==='ytmusic'||r.api==='video'?'🎬':'🎵')+'</div><div class="cs-info"><div class="cs-query">'+escapeHtml(r.q||'')+'</div><div class="cs-meta">'+apiLabel+' · '+fmtCacheTime(r.timestamp)+'</div></div><div class="cs-count">'+(r.results||[]).length+'</div><button class="cs-delete" title="Delete">✕</button>';
     item.querySelector('.cs-info').onclick=()=>{
@@ -907,6 +936,118 @@ let curPlId=null,curIdx=-1,repeating=false,curTrack=null;
 let localBlobURLs={}; 
 
 function getTracks(){return playTracks||tracks}
+
+let likes=[];
+try{const _l=JSON.parse(localStorage.getItem('hz_media_likes')||'[]');if(Array.isArray(_l))likes=_l}catch(e){}
+let plShuffle=false;
+function saveLikes(){try{localStorage.setItem('hz_media_likes',JSON.stringify(likes))}catch(e){}}
+function likeKeyOf(t){return t&&t._likeKey?t._likeKey:(((t&&t.provider)||'')+'|'+trackKey(t))}
+function isLiked(t){if(!t)return false;const k=likeKeyOf(t);return likes.some(l=>l.key===k)}
+function snapshotRef(t){
+  return{name:t.name||'',artist:t.artist||'',id:(t.id!==undefined&&t.id!==null&&typeof t.id!=='object')?t.id:null,thumb:t.thumb||'',art:t.art||'',url:t.url||'',embedUrl:t.embedUrl||'',pageUrl:t.pageUrl||'',isVideo:!!t.isVideo,isYouTube:!!t.isYouTube,isArchive:!!t.isArchive,provider:t.provider||''};
+}
+function refToTrack(r){return{name:r.name,artist:r.artist||'',id:r.id||undefined,thumb:r.thumb||r.art||'',url:r.url||undefined,embedUrl:r.embedUrl||undefined,pageUrl:r.pageUrl||undefined,isVideo:r.isVideo,isYouTube:r.isYouTube,isArchive:r.isArchive,provider:r.provider||'Saved',isSavedRef:true,file:'ref:'+((r.provider||'')+'|'+trackKey(r))}}
+function nativeFromRow(r){
+  if(r.ngId){return{name:r.ngName||`Newgrounds #${r.ngId}`,file:r.name,isNative:true,isLocal:true,isNGRef:true,ngId:r.ngId,ngName:r.ngName,blob:null}}
+  return{name:r.name.replace(/\.[^.]+$/,''),file:r.name,isNative:true,isLocal:true,isLocalVideo:/\.(mp4|webm|mov|mkv|avi)$/i.test(r.name),blob:r.blob};
+}
+function addToLiked(t,savedName){
+  if(!t)return;const k=likeKeyOf(t);
+  if(likes.some(l=>l.key===k))return;
+  likes.push({key:k,savedName:savedName||null,ref:snapshotRef(t)});
+  saveLikes();refreshLikedUI();updateAllHearts();updateUpNext();
+}
+function removeFromLiked(t){
+  if(!t)return;const k=likeKeyOf(t);
+  likes=likes.filter(l=>l.key!==k);
+  saveLikes();refreshLikedUI();updateAllHearts();updateUpNext();
+}
+function toggleLiked(t){if(isLiked(t))removeFromLiked(t);else addToLiked(t)}
+async function likedToTracks(){
+  let rows=[];try{rows=await dbGetAll()}catch(e){}
+  const byName={};(rows||[]).forEach(r=>{byName[r.name]=r});
+  const out=[];
+  for(const l of likes){
+    if(l.savedName&&byName[l.savedName]){
+      const nt=nativeFromRow(byName[l.savedName]);nt._likeKey=l.key;out.push(nt);
+    }else if(l.ref&&l.ref.name){
+      const tt=refToTrack(l.ref);tt._likeKey=l.key;delete tt.isSavedRef;tt.file='liked:'+l.key;out.push(tt);
+    }
+  }
+  return out;
+}
+async function refreshLikedUI(){
+  if(currentApi!=='liked')return;
+  const token=++searchToken;
+  tracks=await likedToTracks();_gridRenderedIds=[];
+  if(token!==searchToken)return;
+  if(!tracks.length){grid.innerHTML='<div class="empty">No liked tracks yet — tap the ♥ on any track or save one</div>';const w=document.getElementById('recommendedSection');if(w){w.style.display='none';w.innerHTML=''}return}
+  renderGrid();
+}
+function updateAllHearts(){
+  const ab=document.getElementById('likeBtn');if(ab)ab.classList.toggle('active',isLiked(curTrack));
+  const yb=document.getElementById('ytLikeBtn');if(yb)yb.classList.toggle('active',isLiked(currentVideoFull));
+  document.querySelectorAll('.rec-like[data-lk]').forEach(b=>b.classList.toggle('active',likes.some(l=>l.key===b.dataset.lk)));
+}
+function updateUpNext(){
+  const el=document.getElementById('sbUpNext');if(!el)return;
+  const list=playTracks;
+  if(!list||list.length<2||curIdx<0){el.innerHTML='';return}
+  const nxt=list[(curIdx+1)%list.length];
+  if(!nxt){el.innerHTML='';return}
+  el.innerHTML='Up Next: <b>'+escapeHtml(nxt.name||'')+'</b>';
+}
+function plShuffledQueue(p,startIdx){
+  const rest=p.tracks.filter((_,j)=>j!==startIdx);
+  for(let i=rest.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));const tmp=rest[i];rest[i]=rest[j];rest[j]=tmp}
+  return[p.tracks[startIdx]].concat(rest);
+}
+function plHas(p,t){return p.tracks.some(x=>(x.file&&t.file&&x.file===t.file)||likeKeyOf(x)===likeKeyOf(t))}
+async function saveCard(t,btn){
+  if(!t||t.isNative||t.isLocal||t.isSavedRef)return;
+  if(currentApi==='radio'||currentApi==='podcast'||t.isVideo||t.isYouTube||t.isArchive||!t.url){
+    if(btn){btn.textContent='Saving…';btn.style.pointerEvents='none'}
+    try{
+      await dbPut({name:'ref:'+likeKeyOf(t),ref:snapshotRef(t)});
+      toast(`Saved "${t.name}"`);
+      if(btn){btn.textContent='✓ Saved';btn.style.color='var(--primary)'}
+      addToLiked(t);
+      if(currentApi==='local'){tracks=await fetchNative();renderGrid()}
+    }catch(e){
+      toast('Could not save');
+      if(btn){btn.textContent='Save';btn.style.pointerEvents=''}
+    }
+    return;
+  }
+  await saveToLocal(t,btn);
+}
+function _ytJsapiUrl(u){
+  if(!u||!/youtube(-nocookie)?\.com\/embed\//.test(u))return u;
+  return u+(u.indexOf('?')>-1?'&':'?')+'enablejsapi=1';
+}
+function _ytEmbedListen(){
+  try{if(ytFrame&&ytFrame.contentWindow)ytFrame.contentWindow.postMessage('{"event":"listening"}','*')}catch(e){}
+}
+function handleEmbedEnded(){
+  if(repeating&&currentVideoFull){const s=_ytJsapiUrl(currentVideoFull.embedUrl);ytFrame.src='';ytFrame.src=s;return}
+  const list=playTracks;
+  if(list&&list.length>1&&curIdx>=0){
+    const nxt=list[(curIdx+1)%list.length];
+    const nxtIsVideo=!!(nxt&&(nxt.isVideo||nxt.isLocalVideo));
+    if(!nxtIsVideo)closeVideoFull();
+    nextBtn.click();
+  }else{
+    closeVideoFull();
+  }
+}
+function _ytEmbedMsg(ev){
+  try{
+    if(!ytFrame||!ytFrame.contentWindow||ev.source!==ytFrame.contentWindow)return;
+    const d=typeof ev.data==='string'?JSON.parse(ev.data):ev.data;
+    if(!d||d.event!=='infoDelivery'||!d.info)return;
+    if(d.info.playerState===0&&currentVideoFull)handleEmbedEnded();
+  }catch(e){}
+}
 
 const DB_NAME='ZMusicDB',DB_VERSION=1,STORE='tracks';
 let db=null;
@@ -955,11 +1096,13 @@ async function saveToLocal(t,btnEl){
     const safeName=(t.name||'track').replace(/[/\\:*?"<>|]/g,'_').slice(0,80)+ext;
     const blob=new Blob([buf],{type:res.headers.get('content-type')||'audio/mpeg'});
     await dbPut({name:safeName,blob});
-    toast(`Saved "${t.name}" to Local`);
+    addToLiked(t,safeName);
+    toast(`Saved "${t.name}"`);
     if(btnEl){btnEl.textContent='✓ Saved';btnEl.style.color='var(--primary)'}
+    if(currentApi==='local'){tracks=await fetchNative();renderGrid()}
   }catch(e){
     toast('Could not save — track may be protected');
-    if(btnEl){btnEl.textContent='Save to Local';btnEl.style.pointerEvents=''}
+    if(btnEl){btnEl.textContent='Save';btnEl.style.pointerEvents=''}
   }
 }
 let toastT;
@@ -971,22 +1114,8 @@ function toast(msg){
 async function fetchNative(){
   const rows=await dbGetAll();
   return rows.map(r=>{
-    if(r.ngId){
-      return{
-        name:r.ngName||`Newgrounds #${r.ngId}`,
-        file:r.name,
-        isNative:true,isLocal:true,isNGRef:true,
-        ngId:r.ngId,ngName:r.ngName,
-        blob:null
-      };
-    }
-    return{
-      name:r.name.replace(/\.[^.]+$/,''),
-      file:r.name,
-      isNative:true,isLocal:true,
-      isLocalVideo:/\.(mp4|webm|mov|mkv|avi)$/i.test(r.name),
-      blob:r.blob
-    };
+    if(r.ref)return refToTrack(r.ref);
+    return nativeFromRow(r);
   });
 }
 
@@ -2166,7 +2295,7 @@ $('#ngPlayBtn').onclick=async()=>{
   if(!nameRaw){ngStatus.textContent='Please enter the song name too.';return}
 
   const saveBtn=$('#ngSaveBtn');
-  saveBtn.textContent='⬇ Save to Local';
+  saveBtn.textContent='⬇ Save';
   saveBtn.style.color='';
   saveBtn.style.pointerEvents='';
   saveBtn.dataset.ngid=id;
@@ -2249,11 +2378,13 @@ $('#ngSaveBtn').onclick=async function(){
   this.textContent='Saving…';this.style.pointerEvents='none';
   try{
     await dbPut({name:`ng_${id}`,ngId:id,ngName:title,blob:null});
-    toast(`Saved "${title}" to Local`);
+    addToLiked({name:title,provider:'Newgrounds'},`ng_${id}`);
+    toast(`Saved "${title}"`);
     this.textContent='✓ Saved';this.style.color='var(--primary)';
+    if(currentApi==='local'){tracks=await fetchNative();renderGrid()}
   }catch(e){
     toast('Could not save');
-    this.textContent='⬇ Save to Local';this.style.pointerEvents='';
+    this.textContent='⬇ Save';this.style.pointerEvents='';
   }
 };
 const videoModal=$('#videoModal'),videoFrame=$('#videoFrame'),videoEl=$('#videoEl');
@@ -2321,7 +2452,7 @@ function loadVideoSrc(v){
 function openVideoModal(v){
   _currentVideoObj=v;
   $('#videoModalTitle').textContent=v.name;
-  $('#videoModalSub').textContent=v.artist?(v.artist+' · '+(v.provider||'Local')):v.provider||'Local';
+  $('#videoModalSub').textContent=v.artist?(v.artist+' · '+(v.provider||'Saved')):v.provider||'Saved';
   loadVideoSrc(v);
   videoModal.classList.add('open');
   requestAnimationFrame(fitVideoPlayer);
@@ -2801,12 +2932,16 @@ function renderVideoGrid(list,statusText='',emptyText='No videos found',channels
       const div=document.createElement('div');
       div.className='card video-card';
       div.style.cursor='pointer';
-      div.innerHTML=`<div class="card-icon" style="width:100%;height:90px;border-radius:6px;margin-bottom:10px">${thumb}</div>
+      div.innerHTML=`<button class="card-add"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></button><button class="card-save">Save</button><div class="card-icon" style="width:100%;height:90px;border-radius:6px;margin-bottom:10px">${thumb}</div>
         <div class="card-title">${escapeHtml(v.name)}</div>
         <div class="card-sub">${escapeHtml(v.artist||'')}</div>
         <span class="card-badge ${bc}">${escapeHtml(v.provider)}</span>`;
       div._videoObj=v;
-      div.onclick=()=>openVideoFull(div._videoObj,list);
+      div.onclick=e=>{
+        if(e.target.closest('.card-add')){showTrackDD(v,div.querySelector('.card-add'));return}
+        if(e.target.closest('.card-save')){saveCard(v,div.querySelector('.card-save'));return}
+        openVideoFull(div._videoObj,list);
+      };
       fragment.appendChild(div);
       _gridRenderedIds.push(v.id||v.name||i);
     });
@@ -2998,9 +3133,14 @@ function buildRecCard(t,i,recTracks,cardApi){
   const icon=thumb
     ?'<img src="'+thumb+'" onerror="this.remove()" style="width:100%;height:100%;object-fit:cover">'
     :'<svg viewBox="0 0 24 24" style="width:26px;height:26px;fill:var(--primary)"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55C7.79 13 6 14.79 6 17s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>';
-  card.innerHTML='<div class="card-icon">'+icon+'</div>'
+  const _lk=likeKeyOf(t);
+  card.innerHTML='<button class="rec-like" data-lk="'+escapeHtml(_lk)+'" title="Like"><svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></button>'
+    +'<div class="card-icon">'+icon+'</div>'
     +'<div class="card-title">'+escapeHtml(t.name)+'</div>'
     +'<div class="card-sub">'+escapeHtml(t.artist||t.provider||'Recommended')+'</div>';
+  const _rl=card.querySelector('.rec-like');
+  if(isLiked(t))_rl.classList.add('active');
+  _rl.onclick=e=>{e.stopPropagation();toggleLiked(t);_rl.classList.toggle('active',isLiked(t))};
   card.onclick=()=>{
     
     
@@ -3010,10 +3150,12 @@ function buildRecCard(t,i,recTracks,cardApi){
       return;
     }
     if(t.isVideo&&!t.isYouTube&&t.embedUrl&&currentApi!=='ytmusic'){
+      playTracks=recTracks;
       openVideoFull(t,recTracks);
       return;
     }
     if(t.isVideo&&t.embedUrl&&currentApi==='ytmusic'&&!t.isYouTube){
+      playTracks=recTracks;
       openVideoFull(t,recTracks);
       return;
     }
@@ -3073,7 +3215,7 @@ async function loadOrSearch(){
   const token=++searchToken;
   playTracks=null;
   const q=search.value.trim();
-  if(q&&currentApi!=='local'){
+  if(q&&currentApi!=='local'&&currentApi!=='liked'){
     let cached=null;
     if(currentApi==='online'){
       const ca=await getCachedSearch('online',q),cb=await getCachedSearch('ytmusic',q);
@@ -3121,7 +3263,16 @@ async function loadOrSearch(){
       if(token!==searchToken)return;
       tracks=result;
       if(!tracks.length){
-        grid.innerHTML='<div class="empty">No tracks yet — click <strong>Upload</strong> to add your music</div>';
+        grid.innerHTML='<div class="empty">No tracks yet, click Upload to add your music or save a video/music</div>';
+        return;
+      }
+    } else if(currentApi==='liked'){
+      result=await likedToTracks();
+      if(token!==searchToken)return;
+      tracks=result;
+      if(!tracks.length){
+        grid.innerHTML='<div class="empty">No liked tracks yet — tap the ♥ on any track or save one</div>';
+        const _w=document.getElementById('recommendedSection');if(_w){_w.style.display='none';_w.innerHTML=''}
         return;
       }
     } else if(currentApi==='radio'){
@@ -3236,10 +3387,11 @@ function buildNGUrls(id,nameRaw){
 
 async function play(i){
   const t=getTracks()[i];if(!t)return;
+  if(_ytPlayer&&_ytCurrentVideoId){try{_ytPlayer.stopVideo()}catch(e){}}
   recordTrackClick(t);
   try{if(!(t.isVideo&&t.isYouTube&&t.id&&(currentApi==='online'||currentApi==='ytmusic'))){const _sc=currentApi==='radio'?'radio':currentApi==='video'?'video':currentApi==='podcast'?'podcast':'music';if(t.provider&&!t.isNative&&!t.isLocal)_0xRL.hit(_sc,t.isYouTube&&_sc==='music'?'YouTubeMusic':t.provider)}}catch(_e){}
   _ytCurrentVideoId=null;
-  if(t.isVideo&&t.isYouTube&&t.id&&(currentApi==='online'||currentApi==='ytmusic')){playYouTubeMusic(t);return}
+  if(t.isVideo&&t.isYouTube&&t.id&&currentApi!=='video'){playYouTubeMusic(t);return}
   if(t.isVideo&&t.embedUrl&&currentApi!=='ytmusic'){openVideoFull(t,tracks);return}
 
   if(audio._ngProxy){
@@ -3255,7 +3407,7 @@ async function play(i){
   curIdx=i;curTrack=t;
   player.style.display='flex';
   pTitle.textContent=t.name;
-  pCtx.textContent=t.isLocal?'Local Library':t.provider||'Online';
+  pCtx.textContent=t.isLocal?'Saved':t.provider||'Online';
   cTime.textContent='0:00';dTime.textContent='0:00';progFill.style.width='0';
   
   var artEl=document.getElementById('pArt');
@@ -3269,7 +3421,7 @@ async function play(i){
     const blobUrl=URL.createObjectURL(t.blob);
     videoEl._blobURL=blobUrl;
     player.style.display='none';
-    openVideoModal({name:t.name,artist:'Local Library',blobUrl});
+    openVideoModal({name:t.name,artist:'Saved',blobUrl});
     return;
   } else if(t.isNGRef){
     const urls=buildNGUrls(t.ngId,t.ngName);
@@ -3342,6 +3494,7 @@ function updateUI(){
   repBtn.classList.toggle('active',repeating);
   $$('.card').forEach(c=>c.classList.toggle('playing-card',+c.dataset.idx===curIdx));
   $$('.sb-item').forEach(c=>c.classList.toggle('active',+c.dataset.idx===curIdx));
+  updateAllHearts();updateUpNext();
 }
 
 function renderGrid(){
@@ -3361,13 +3514,13 @@ function renderGrid(){
       if(!cls)return'';
       return`<span class="card-badge ${cls}">${t.provider}</span>`;
     })();
-    const saveBtn=(!t.isNative&&!t.isLocal&&t.url&&!t.isArchive)?
-      `<button class="card-save" data-sidx="${real}">⬇ Save to Local</button>`:'';
+    const saveBtn=(!t.isNative&&!t.isLocal&&!t.isSavedRef)?
+      `<button class="card-save" data-sidx="${real}">Save</button>`:'';
     return`<div class="card" data-idx="${real}">
-      ${t.isNative?`<button class="card-add"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></button>`:''}
+      ${`<button class="card-add"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></button>`}
       ${icon}
       <div class="card-title">${t.name}</div>
-      <div class="card-sub">${t.isLocalVideo?'Local Video':t.isNGRef?'Newgrounds':t.isLocal?'Local':t.provider?(t.artist?`${t.provider} · ${t.artist}`:t.provider):'Online'}</div>
+      <div class="card-sub">${t.isLocalVideo?'Saved Video':t.isNGRef?'Newgrounds':t.isLocal?'Saved':t.provider?(t.artist?`${t.provider} · ${t.artist}`:t.provider):'Online'}</div>
       ${providerBadge}
       ${saveBtn}
     </div>`;
@@ -3377,7 +3530,7 @@ function renderGrid(){
     const add=c.querySelector('.card-add');
     if(add) add.onclick=e=>{e.stopPropagation();showGridDD(+c.dataset.idx,add)};
     const save=c.querySelector('.card-save');
-    if(save) save.onclick=e=>{e.stopPropagation();saveToLocal(tracks[+save.dataset.sidx],save)};
+    if(save) save.onclick=e=>{e.stopPropagation();saveCard(tracks[+save.dataset.sidx],save)};
   });
   updateUI();
 }
@@ -3420,32 +3573,33 @@ function renderSb(){
   sbList.innerHTML=p.tracks.map((t,i)=>`
     <div class="sb-item" data-idx="${i}">
       <span class="sb-num">${i+1}</span>
-      <div class="sb-info"><div class="sb-name">${t.name}</div><div class="sb-ext">${t.file.split('.').pop().toUpperCase()}</div></div>
+      <div class="sb-info"><div class="sb-name">${t.name}</div><div class="sb-ext">${(((t.file||'').includes('.')?t.file.split('.').pop():'')||(t.provider||(t.isVideo?'VIDEO':'MUSIC'))).toString().toUpperCase()}</div></div>
       <button class="sb-del">✕</button>
     </div>`).join('');
   $$('.sb-item').forEach(el=>{
     el.onclick=e=>{if(!e.target.closest('.sb-del')){
-      playTracks=p.tracks;curPlId=p.id;play(+el.dataset.idx);
+      if(plShuffle){playTracks=plShuffledQueue(p,+el.dataset.idx);curPlId=p.id;play(0)}
+      else{playTracks=p.tracks;curPlId=p.id;play(+el.dataset.idx)}
     }};
     el.querySelector('.sb-del').onclick=()=>{p.tracks.splice(+el.dataset.idx,1);renderSb()};
   });
   updateUI();
 }
 
-function showGridDD(idx,btn){
-  const t=tracks[idx];
+function showGridDD(idx,btn){showTrackDD(tracks[idx],btn)}
+function showTrackDD(t,btn){
   const plItems=playlists.map(p=>{
-    const inPl=p.tracks.some(x=>x.file===t.file);
+    const inPl=plHas(p,t);
     return`<div class="dd-item ${inPl?'disabled':''}" data-id="${p.id}">${inPl?'✓':'+ '}${p.name}</div>`;
   }).join('');
-  const delItem=t?.isLocal?`<div class="dd-item dd-del" style="color:#f55;margin-top:4px;border-top:1px solid var(--border)">🗑 Remove from library</div>`:'';
+  const delItem=t&&t.isLocal?`<div class="dd-item dd-del" style="color:#f55;margin-top:4px;border-top:1px solid var(--border)">🗑 Remove from library</div>`:'';
   gridDropdown.innerHTML=plItems+(playlists.length?'':`<div class="dd-item disabled">No playlists</div>`)+delItem;
   const r=btn.getBoundingClientRect();
   gridDropdown.style.top=`${r.bottom+6}px`;gridDropdown.style.left=`${Math.min(r.left,innerWidth-180)}px`;
   gridDropdown.classList.add('show');
   gridDropdown.querySelectorAll('.dd-item:not(.disabled):not(.dd-del)').forEach(d=>d.onclick=()=>{
     const p=playlists.find(x=>x.id===+d.dataset.id);
-    if(p&&tracks[idx]){p.tracks.push({...tracks[idx]})}
+    if(p&&t){p.tracks.push({...t})}
     gridDropdown.classList.remove('show');
   });
   const delBtn=gridDropdown.querySelector('.dd-del');
@@ -3464,7 +3618,7 @@ $('#sbAddBtn').onclick=e=>{
   const p=playlists.find(x=>x.id===curPlId);if(!p)return;
   const q=search.value.toLowerCase();
   const avail=q?tracks.filter(t=>t.name.toLowerCase().includes(q)):tracks;
-  const list=avail.filter(t=>!p.tracks.some(x=>x.file===t.file));
+  const list=avail.filter(t=>!plHas(p,t));
   sbDropdown.innerHTML=list.length?list.map(t=>`<div class="sb-dd-item" data-file="${t.file}">${t.name}</div>`).join(''):'<div class="sb-dd-item disabled">All added</div>';
   sbDropdown.querySelectorAll('.sb-dd-item:not(.disabled)').forEach(d=>d.onclick=()=>{
     const t=tracks.find(x=>x.file===d.dataset.file);
@@ -3496,10 +3650,11 @@ apiMenu.querySelectorAll('.dropdown-item').forEach(item=>{
     apiMenu.querySelectorAll('.dropdown-item').forEach(i=>i.classList.remove('active'));
     item.classList.add('active');
     
-    const isLocal=currentApi==='local';
-    plBtn.classList.toggle('visible',isLocal);
-    uploadBtn.classList.toggle('visible',isLocal);
-    if(!isLocal)closeSb();
+    const isLib=currentApi==='local'||currentApi==='liked';
+    plBtn.classList.toggle('visible',isLib);
+    uploadBtn.classList.toggle('visible',currentApi==='local');
+    search.placeholder=({online:'Search tracks...',radio:'Search stations...',video:'Search videos...',podcast:'Search podcasts...',local:'Filter saved tracks...',liked:'Filter liked tracks...'})[currentApi]||'Search...';
+    if(!isLib)closeSb();
     closeVideoModal();
     closeChannelModal();
     $('#ngBtn').style.display=currentApi==='online'?'block':'none';
@@ -3541,9 +3696,9 @@ $('#sbClose').onclick=closeSb;
 document.querySelector('.logo').onclick=()=>{closeSb();closeVideoModal();closeChannelModal();try{closeVideoFull()}catch(e){}search.value='';search.focus();loadOrSearch()};
 
 let searchT;
-search.oninput=()=>{if(currentApi==='local'){clearTimeout(searchT);searchT=setTimeout(renderGrid,300)}};
-search.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();clearTimeout(searchT);if(currentApi!=='local')loadOrSearch();else renderGrid()}});
-$('#searchBtn').onclick=()=>{clearTimeout(searchT);if(currentApi!=='local')loadOrSearch();else renderGrid()};
+search.oninput=()=>{if(currentApi==='local'||currentApi==='liked'){clearTimeout(searchT);searchT=setTimeout(renderGrid,300)}};
+search.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();clearTimeout(searchT);if(currentApi!=='local'&&currentApi!=='liked')loadOrSearch();else renderGrid()}});
+$('#searchBtn').onclick=()=>{clearTimeout(searchT);if(currentApi!=='local'&&currentApi!=='liked')loadOrSearch();else renderGrid()};
 
 apiMenu.querySelectorAll('.dropdown-item').forEach(item=>{
   const orig=item._origOnclick||item.onclick;
@@ -3821,14 +3976,14 @@ function initVideoPlayer(){
        apiToggle.classList.remove('active');
        ytApiMenu.classList.remove('show');
        ytApiToggle.classList.remove('active');
-       var isLocal=currentApi==='local';
-       plBtn.classList.toggle('visible',isLocal);
-       uploadBtn.classList.toggle('visible',isLocal);
-       if(!isLocal)closeSb();
+       var isLib=currentApi==='local'||currentApi==='liked';
+       plBtn.classList.toggle('visible',isLib);
+       uploadBtn.classList.toggle('visible',currentApi==='local');
+       if(!isLib)closeSb();
        $('#ngBtn').style.display=currentApi==='online'?'block':'none';
        $('#shortsBtn').style.display=currentApi==='video'?'block':'none';
        updateCachedSearchesBar();
-       var placeholders={online:'Search tracks...',radio:'Search stations...',video:'Search videos...',podcast:'Search podcasts...',local:'Filter local tracks...'};
+       var placeholders={online:'Search tracks...',radio:'Search stations...',video:'Search videos...',podcast:'Search podcasts...',local:'Filter saved tracks...',liked:'Filter liked tracks...'};
        search.placeholder=placeholders[currentApi]||'Search...';
        search.value='';
        if(ytSearchInput)ytSearchInput.value='';
@@ -3881,6 +4036,10 @@ if(document.readyState!=='loading')initVideoPlayer();
 
 async function openVideoFull(video,allVideos=[]){
   if(!video||!video.embedUrl)return;
+  if(_ytPlayer&&_ytCurrentVideoId){try{_ytPlayer.stopVideo()}catch(e){}}
+  _ytCurrentVideoId=null;
+  if(audio._ngProxy){const p=audio._ngProxy;p.pause();p.src='';audio._ngProxy=null}
+  try{audio.pause()}catch(e){}
   recordTrackClick(video);
   try{if(video.provider&&!video.isNative)_0xRL.hit('video',video.provider.indexOf('YouTube')===0?'YouTube':video.provider)}catch(_e){}
   initVideoElements();
@@ -3888,11 +4047,14 @@ async function openVideoFull(video,allVideos=[]){
   if(!videoFullModal)return;
   allVideosForRecommended=allVideos;
   currentVideoFull=video;
+  curTrack=video;
+  curIdx=(allVideos&&allVideos.length?allVideos.indexOf(video):-1);
+  if(allVideos&&allVideos.length)playTracks=allVideos;
   
   if(ytSearchInput)ytSearchInput.value=search.value||'';
   
   if(ytApiToggle&&currentApi){
-    const map={online:'Music',local:'Local',radio:'Radio',video:'Videos',podcast:'Podcasts'};
+    const map={online:'Music',local:'Saved',liked:'Liked',radio:'Radio',video:'Videos',podcast:'Podcasts'};
     ytApiToggle.textContent=map[currentApi]||'Videos';
     if(ytApiMenu)ytApiMenu.querySelectorAll('.dropdown-item').forEach(function(i){
       i.classList.toggle('active',i.dataset.value===currentApi);
@@ -3907,7 +4069,8 @@ async function openVideoFull(video,allVideos=[]){
   const ps=document.querySelector('.yt-player-section');
   if(ps)ps.scrollTop=0;
   document.getElementById('ytVidTitle').textContent=video.name||'Video';
-  ytFrame.src=video.embedUrl;
+  ytFrame.src=_ytJsapiUrl(video.embedUrl);
+  [400,1200,2600].forEach(ms=>setTimeout(_ytEmbedListen,ms));
   
   const statusEl=document.getElementById('ytCommentsStatus');
   statusEl.textContent='Loading metadata...';
@@ -4048,7 +4211,8 @@ function playYouTubeMusic(video){
   try{_0xRL.hit('music','YouTubeMusic')}catch(_e){}
   if(audio._ngProxy){const p=audio._ngProxy;p.pause();p.src='';audio._ngProxy=null}
   audio.pause();audio.src='';
-  curIdx=tracks.indexOf(video);curTrack=video;
+  if(_ytPlayer){try{_ytPlayer.stopVideo()}catch(e){}}
+  curIdx=(playTracks||tracks).indexOf(video);if(curIdx<0)curIdx=tracks.indexOf(video);curTrack=video;
   player.style.display='flex';
   pTitle.textContent=video.name;
   pCtx.textContent='YouTube Music';
@@ -4082,7 +4246,7 @@ function playYouTubeMusic(video){
 const _origPpClick=ppBtn.onclick;
 ppBtn.onclick=function(e){
   e.stopPropagation();
-  if(_ytPlayer&&_ytCurrentVideoId&&(currentApi==='online'||currentApi==='ytmusic')){
+  if(_ytPlayer&&_ytCurrentVideoId){
     try{
       var state=_ytPlayer.getPlayerState();
       if(state===YT.PlayerState.PLAYING){_ytPlayer.pauseVideo()}
@@ -4095,7 +4259,7 @@ ppBtn.onclick=function(e){
 };
 const _origSeekToClientX=seekToClientX;
 seekToClientX=function(clientX){
-  if(_ytPlayer&&_ytCurrentVideoId&&(currentApi==='online'||currentApi==='ytmusic')){
+  if(_ytPlayer&&_ytCurrentVideoId){
     try{
       var dur=_ytPlayer.getDuration()||0;
       if(dur>0){
@@ -4119,18 +4283,39 @@ setVolume=function(pct){
 };
 const _origUpdateUI=updateUI;
 updateUI=function(){
-  if(_ytPlayer&&_ytCurrentVideoId&&(currentApi==='online'||currentApi==='ytmusic')){
+  if(_ytPlayer&&_ytCurrentVideoId){
     var playing=false;
     try{playing=_ytPlayer.getPlayerState()===YT.PlayerState.PLAYING}catch(e){}
     playIc.style.display=playing?'none':'block';
     pauseIc.style.display=playing?'block':'none';
     repBtn.classList.toggle('active',repeating);
     $$('.card').forEach(c=>c.classList.toggle('playing-card',+c.dataset.idx===curIdx));
+    updateAllHearts();updateUpNext();
     return;
   }
   if(_origUpdateUI)_origUpdateUI();
 };
 
+const likeBtn=$('#likeBtn');
+likeBtn.onclick=e=>{e.stopPropagation();if(curTrack)toggleLiked(curTrack)};
+const ytLikeBtn=$('#ytLikeBtn');
+ytLikeBtn.onclick=e=>{e.stopPropagation();if(currentVideoFull)toggleLiked(currentVideoFull)};
+$('#sbShuffle').onclick=e=>{e.stopPropagation();plShuffle=!plShuffle;$('#sbShuffle').classList.toggle('active',plShuffle);toast(plShuffle?'Shuffle on':'Shuffle off')};
+videoEl.addEventListener('ended',()=>{
+  if(repeating){videoEl.currentTime=0;videoEl.play().catch(()=>{});return}
+  const list=playTracks;
+  if(list&&list.length>1&&curIdx>=0){
+    const nxt=list[(curIdx+1)%list.length];
+    const nxtIsVideo=!!(nxt&&(nxt.isVideo||nxt.isLocalVideo));
+    if(!nxtIsVideo)closeVideoModal();
+    nextBtn.click();
+  }else if(curTrack&&curTrack.isLocalVideo){closeVideoModal()}
+});
+window.addEventListener('message',_ytEmbedMsg);
+plBtn.classList.add('visible');
+uploadBtn.classList.add('visible');
+search.placeholder='Filter saved tracks...';
+updateAllHearts();
 loadOrSearch();
 </script>
 </body>
