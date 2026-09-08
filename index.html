@@ -506,7 +506,6 @@
     <button class="dropdown-toggle" id="apiToggle">Saved</button>
     <div class="dropdown-menu" id="apiMenu">
       <div class="dropdown-item active" data-value="local">Saved</div>
-      <div class="dropdown-item" data-value="liked">Liked</div>
       <div class="dropdown-item" data-value="online">Music</div>
       <div class="dropdown-item" data-value="radio">Radio</div>
       <div class="dropdown-item" data-value="video">Videos</div>
@@ -674,7 +673,6 @@
         <button class="dropdown-toggle" id="ytApiToggle">Videos</button>
         <div class="dropdown-menu" id="ytApiMenu">
           <div class="dropdown-item active" data-value="local">Saved</div>
-          <div class="dropdown-item" data-value="liked">Liked</div>
           <div class="dropdown-item" data-value="online">Music</div>
           <div class="dropdown-item" data-value="radio">Radio</div>
           <div class="dropdown-item" data-value="video">Videos</div>
@@ -912,7 +910,7 @@ async function renderCachedSearchesList(filter){
   filtered.forEach(r=>{
     const item=document.createElement('div');
     item.className='cached-search-item';
-    const apiLabels={online:'Music',ytmusic:'YouTube Music',radio:'Radio',video:'Videos',podcast:'Podcasts',local:'Saved',liked:'Liked'};
+    const apiLabels={online:'Music',ytmusic:'YouTube Music',radio:'Radio',video:'Videos',podcast:'Podcasts',local:'Saved'};
     const apiLabel=apiLabels[r.api]||r.api;
     item.innerHTML='<div class="cs-icon">'+(r.api==='ytmusic'||r.api==='video'?'🎬':'🎵')+'</div><div class="cs-info"><div class="cs-query">'+escapeHtml(r.q||'')+'</div><div class="cs-meta">'+apiLabel+' · '+fmtCacheTime(r.timestamp)+'</div></div><div class="cs-count">'+(r.results||[]).length+'</div><button class="cs-delete" title="Delete">✕</button>';
     item.querySelector('.cs-info').onclick=()=>{
@@ -941,6 +939,8 @@ let likes=[];
 try{const _l=JSON.parse(localStorage.getItem('hz_media_likes')||'[]');if(Array.isArray(_l))likes=_l}catch(e){}
 let plShuffle=false;
 function saveLikes(){try{localStorage.setItem('hz_media_likes',JSON.stringify(likes))}catch(e){}}
+let _savedNames=new Set();
+function isTrackSaved(t){if(!t)return false;if(t.isNative||t.isLocal||t.isSavedRef)return true;try{return _savedNames.has('ref:'+likeKeyOf(t))}catch(e){return false}}
 function likeKeyOf(t){return t&&t._likeKey?t._likeKey:(((t&&t.provider)||'')+'|'+trackKey(t))}
 function isLiked(t){if(!t)return false;const k=likeKeyOf(t);return likes.some(l=>l.key===k)}
 function snapshotRef(t){
@@ -953,7 +953,8 @@ function nativeFromRow(r){
 }
 function addToLiked(t,savedName){
   if(!t)return;const k=likeKeyOf(t);
-  if(likes.some(l=>l.key===k))return;
+  const ex=likes.find(l=>l.key===k);
+  if(ex){if(savedName&&!ex.savedName){ex.savedName=savedName;saveLikes()}return}
   likes.push({key:k,savedName:savedName||null,ref:snapshotRef(t)});
   saveLikes();refreshLikedUI();updateAllHearts();updateUpNext();
 }
@@ -965,24 +966,29 @@ function removeFromLiked(t){
 function toggleLiked(t){if(isLiked(t))removeFromLiked(t);else addToLiked(t)}
 async function likedToTracks(){
   let rows=[];try{rows=await dbGetAll()}catch(e){}
+  try{_savedNames=new Set((rows||[]).map(r=>r.name))}catch(e){}
   const byName={};(rows||[]).forEach(r=>{byName[r.name]=r});
   const out=[];
   for(const l of likes){
-    if(l.savedName&&byName[l.savedName]){
-      const nt=nativeFromRow(byName[l.savedName]);nt._likeKey=l.key;out.push(nt);
-    }else if(l.ref&&l.ref.name){
-      const tt=refToTrack(l.ref);tt._likeKey=l.key;delete tt.isSavedRef;tt.file='liked:'+l.key;out.push(tt);
-    }
+    if(l.savedName&&byName[l.savedName])continue;
+    if(!l.ref||!l.ref.name)continue;
+    if(byName['ref:'+l.key])continue;
+    const tt=refToTrack(l.ref);tt._likeKey=l.key;delete tt.isSavedRef;tt.file='liked:'+l.key;out.push(tt);
   }
   return out;
 }
 async function refreshLikedUI(){
-  if(currentApi!=='liked')return;
+  if(currentApi!=='local')return;
   const token=++searchToken;
-  tracks=await likedToTracks();_gridRenderedIds=[];
+  tracks=await fetchNative();_gridRenderedIds=[];
   if(token!==searchToken)return;
-  if(!tracks.length){grid.innerHTML='<div class="empty">No liked tracks yet — tap the ♥ on any track or save one</div>';const w=document.getElementById('recommendedSection');if(w){w.style.display='none';w.innerHTML=''}return}
+  if(!tracks.length){
+    grid.innerHTML='<div class="empty">No tracks yet, click Upload to add your music or save a video/music</div>';
+    renderLikedSection();
+    return;
+  }
   renderGrid();
+  renderLikedSection();
 }
 function updateAllHearts(){
   const ab=document.getElementById('likeBtn');if(ab)ab.classList.toggle('active',isLiked(curTrack));
@@ -1009,10 +1015,10 @@ async function saveCard(t,btn){
     if(btn){btn.textContent='Saving…';btn.style.pointerEvents='none'}
     try{
       await dbPut({name:'ref:'+likeKeyOf(t),ref:snapshotRef(t)});
+      try{_savedNames.add('ref:'+likeKeyOf(t))}catch(e){}
       toast(`Saved "${t.name}"`);
-      if(btn){btn.textContent='✓ Saved';btn.style.color='var(--primary)'}
       addToLiked(t);
-      if(currentApi==='local'){tracks=await fetchNative();renderGrid()}
+      await refreshLibraryView();
     }catch(e){
       toast('Could not save');
       if(btn){btn.textContent='Save';btn.style.pointerEvents=''}
@@ -1020,6 +1026,23 @@ async function saveCard(t,btn){
     return;
   }
   await saveToLocal(t,btn);
+}
+async function refreshLibraryView(){
+  if(currentApi==='local')return refreshLikedUI();
+  if(currentApi==='video'||currentApi==='podcast')return renderVideoGrid(tracks,'','');
+  renderGrid();
+}
+async function removeSaved(t){
+  if(!t)return;
+  const key=(t.isNative||t.isLocal||t.isSavedRef)?t.file:('ref:'+likeKeyOf(t));
+  if(!key)return;
+  try{
+    await dbDelete(key);
+    try{_savedNames.delete(key)}catch(e){}
+    if(curTrack&&curTrack.file===key){try{audio.pause()}catch(eP){}try{audio.src=''}catch(eP2){}player.style.display='none'}
+    toast(`Removed "${t.name}" from Saved`);
+    await refreshLibraryView();
+  }catch(e){toast('Could not remove')}
 }
 function _ytJsapiUrl(u){
   if(!u||!/youtube(-nocookie)?\.com\/embed\//.test(u))return u;
@@ -1096,10 +1119,11 @@ async function saveToLocal(t,btnEl){
     const safeName=(t.name||'track').replace(/[/\\:*?"<>|]/g,'_').slice(0,80)+ext;
     const blob=new Blob([buf],{type:res.headers.get('content-type')||'audio/mpeg'});
     await dbPut({name:safeName,blob});
+    try{_savedNames.add(safeName)}catch(e){}
     addToLiked(t,safeName);
     toast(`Saved "${t.name}"`);
     if(btnEl){btnEl.textContent='✓ Saved';btnEl.style.color='var(--primary)'}
-    if(currentApi==='local'){tracks=await fetchNative();renderGrid()}
+    await refreshLibraryView();
   }catch(e){
     toast('Could not save — track may be protected');
     if(btnEl){btnEl.textContent='Save';btnEl.style.pointerEvents=''}
@@ -1113,6 +1137,7 @@ function toast(msg){
 
 async function fetchNative(){
   const rows=await dbGetAll();
+  try{_savedNames=new Set(rows.map(r=>r.name))}catch(e){}
   return rows.map(r=>{
     if(r.ref)return refToTrack(r.ref);
     return nativeFromRow(r);
@@ -2932,14 +2957,14 @@ function renderVideoGrid(list,statusText='',emptyText='No videos found',channels
       const div=document.createElement('div');
       div.className='card video-card';
       div.style.cursor='pointer';
-      div.innerHTML=`<button class="card-add"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></button><button class="card-save">Save</button><div class="card-icon" style="width:100%;height:90px;border-radius:6px;margin-bottom:10px">${thumb}</div>
+      div.innerHTML=`<button class="card-add"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></button>${isTrackSaved(v)?'<button class="card-save" data-mode="remove">Remove</button>':'<button class="card-save" data-mode="save">Save</button>'}<div class="card-icon" style="width:100%;height:90px;border-radius:6px;margin-bottom:10px">${thumb}</div>
         <div class="card-title">${escapeHtml(v.name)}</div>
         <div class="card-sub">${escapeHtml(v.artist||'')}</div>
         <span class="card-badge ${bc}">${escapeHtml(v.provider)}</span>`;
       div._videoObj=v;
       div.onclick=e=>{
         if(e.target.closest('.card-add')){showTrackDD(v,div.querySelector('.card-add'));return}
-        if(e.target.closest('.card-save')){saveCard(v,div.querySelector('.card-save'));return}
+        if(e.target.closest('.card-save')){const _vb=div.querySelector('.card-save');if(_vb&&_vb.dataset.mode==='remove'){removeSaved(v)}else{saveCard(v,_vb)};return}
         openVideoFull(div._videoObj,list);
       };
       fragment.appendChild(div);
@@ -3175,6 +3200,7 @@ function recHeaderLabel(api){
 }
 
 async function renderRecommendations(){
+  if(currentApi==='local')return renderLikedSection();
   
   
   const wrap=document.getElementById('recommendedSection');
@@ -3188,6 +3214,38 @@ async function renderRecommendations(){
   recs.forEach((t,i)=>g.appendChild(buildRecCard(t,i,recs,currentApi)));
 }
 
+function buildLikedCard(t,i,lt){
+  const card=document.createElement('div');
+  card.className='card';
+  const thumb=t.art||t.thumb||'';
+  const icon=thumb
+    ?'<img src="'+thumb+'" onerror="this.remove()" style="width:100%;height:100%;object-fit:cover">'
+    :'<svg viewBox="0 0 24 24" style="width:26px;height:26px;fill:var(--primary)"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55C7.79 13 6 14.79 6 17s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>';
+  const _lk=likeKeyOf(t);
+  card.innerHTML='<button class="rec-like active" data-lk="'+escapeHtml(_lk)+'" title="Liked"><svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></button>'
+    +'<div class="card-icon">'+icon+'</div>'
+    +'<div class="card-title">'+escapeHtml(t.name)+'</div>'
+    +'<div class="card-sub">'+escapeHtml(t.artist||t.provider||'Liked')+'</div>'
+    +'<button class="card-save">Save</button>';
+  const _rl=card.querySelector('.rec-like');
+  _rl.onclick=e=>{e.stopPropagation();removeFromLiked(t)};
+  const _sb=card.querySelector('.card-save');
+  _sb.onclick=e=>{e.stopPropagation();saveCard(t,_sb)};
+  card.onclick=()=>{playTracks=lt;play(i)};
+  return card;
+}
+async function renderLikedSection(){
+  const wrap=document.getElementById('recommendedSection');
+  if(!wrap)return;
+  let lt=[];
+  try{lt=await likedToTracks()}catch(e){}
+  if(currentApi!=='local'||!lt.length){wrap.style.display='none';wrap.innerHTML='';return}
+  wrap.style.display='block';
+  wrap.innerHTML='<div class="rec-header">Liked</div><div class="rec-grid"></div>';
+  const g=wrap.querySelector('.rec-grid');
+  lt.forEach((t,i)=>g.appendChild(buildLikedCard(t,i,lt)));
+  updateAllHearts();
+}
 let _recRefreshTimer=null;
 function scheduleRecommendationRefresh(){
   
@@ -3215,7 +3273,7 @@ async function loadOrSearch(){
   const token=++searchToken;
   playTracks=null;
   const q=search.value.trim();
-  if(q&&currentApi!=='local'&&currentApi!=='liked'){
+  if(q&&currentApi!=='local'){
     let cached=null;
     if(currentApi==='online'){
       const ca=await getCachedSearch('online',q),cb=await getCachedSearch('ytmusic',q);
@@ -3264,15 +3322,7 @@ async function loadOrSearch(){
       tracks=result;
       if(!tracks.length){
         grid.innerHTML='<div class="empty">No tracks yet, click Upload to add your music or save a video/music</div>';
-        return;
-      }
-    } else if(currentApi==='liked'){
-      result=await likedToTracks();
-      if(token!==searchToken)return;
-      tracks=result;
-      if(!tracks.length){
-        grid.innerHTML='<div class="empty">No liked tracks yet — tap the ♥ on any track or save one</div>';
-        const _w=document.getElementById('recommendedSection');if(_w){_w.style.display='none';_w.innerHTML=''}
+        renderLikedSection();
         return;
       }
     } else if(currentApi==='radio'){
@@ -3514,8 +3564,10 @@ function renderGrid(){
       if(!cls)return'';
       return`<span class="card-badge ${cls}">${t.provider}</span>`;
     })();
-    const saveBtn=(!t.isNative&&!t.isLocal&&!t.isSavedRef)?
-      `<button class="card-save" data-sidx="${real}">Save</button>`:'';
+    const _svd=isTrackSaved(t);
+    const saveBtn=_svd?
+      `<button class="card-save" data-sidx="${real}" data-mode="remove">Remove</button>`:
+      `<button class="card-save" data-sidx="${real}" data-mode="save">Save</button>`;
     return`<div class="card" data-idx="${real}">
       ${`<button class="card-add"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></button>`}
       ${icon}
@@ -3530,7 +3582,7 @@ function renderGrid(){
     const add=c.querySelector('.card-add');
     if(add) add.onclick=e=>{e.stopPropagation();showGridDD(+c.dataset.idx,add)};
     const save=c.querySelector('.card-save');
-    if(save) save.onclick=e=>{e.stopPropagation();saveCard(tracks[+save.dataset.sidx],save)};
+    if(save) save.onclick=e=>{e.stopPropagation();const _st=tracks[+save.dataset.sidx];if(save.dataset.mode==='remove'){removeSaved(_st)}else{saveCard(_st,save)}};
   });
   updateUI();
 }
@@ -3592,7 +3644,7 @@ function showTrackDD(t,btn){
     const inPl=plHas(p,t);
     return`<div class="dd-item ${inPl?'disabled':''}" data-id="${p.id}">${inPl?'✓':'+ '}${p.name}</div>`;
   }).join('');
-  const delItem=t&&t.isLocal?`<div class="dd-item dd-del" style="color:#f55;margin-top:4px;border-top:1px solid var(--border)">🗑 Remove from library</div>`:'';
+  const delItem=t&&(t.isLocal||t.isSavedRef)?`<div class="dd-item dd-del" style="color:#f55;margin-top:4px;border-top:1px solid var(--border)">🗑 Remove from library</div>`:'';
   gridDropdown.innerHTML=plItems+(playlists.length?'':`<div class="dd-item disabled">No playlists</div>`)+delItem;
   const r=btn.getBoundingClientRect();
   gridDropdown.style.top=`${r.bottom+6}px`;gridDropdown.style.left=`${Math.min(r.left,innerWidth-180)}px`;
@@ -3607,7 +3659,7 @@ function showTrackDD(t,btn){
     gridDropdown.classList.remove('show');
     await dbDelete(t.file);
     if(curTrack?.file===t.file){audio.pause();audio.src='';player.style.display='none';}
-    tracks=await fetchNative();renderGrid();
+    await refreshLibraryView();
     toast(`Removed "${t.name}"`);
   };
 }
@@ -3650,10 +3702,10 @@ apiMenu.querySelectorAll('.dropdown-item').forEach(item=>{
     apiMenu.querySelectorAll('.dropdown-item').forEach(i=>i.classList.remove('active'));
     item.classList.add('active');
     
-    const isLib=currentApi==='local'||currentApi==='liked';
+    const isLib=currentApi==='local';
     plBtn.classList.toggle('visible',isLib);
     uploadBtn.classList.toggle('visible',currentApi==='local');
-    search.placeholder=({online:'Search tracks...',radio:'Search stations...',video:'Search videos...',podcast:'Search podcasts...',local:'Filter saved tracks...',liked:'Filter liked tracks...'})[currentApi]||'Search...';
+    search.placeholder=({online:'Search tracks...',radio:'Search stations...',video:'Search videos...',podcast:'Search podcasts...',local:'Filter saved tracks...'})[currentApi]||'Search...';
     if(!isLib)closeSb();
     closeVideoModal();
     closeChannelModal();
@@ -3696,9 +3748,9 @@ $('#sbClose').onclick=closeSb;
 document.querySelector('.logo').onclick=()=>{closeSb();closeVideoModal();closeChannelModal();try{closeVideoFull()}catch(e){}search.value='';search.focus();loadOrSearch()};
 
 let searchT;
-search.oninput=()=>{if(currentApi==='local'||currentApi==='liked'){clearTimeout(searchT);searchT=setTimeout(renderGrid,300)}};
-search.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();clearTimeout(searchT);if(currentApi!=='local'&&currentApi!=='liked')loadOrSearch();else renderGrid()}});
-$('#searchBtn').onclick=()=>{clearTimeout(searchT);if(currentApi!=='local'&&currentApi!=='liked')loadOrSearch();else renderGrid()};
+search.oninput=()=>{if(currentApi==='local'){clearTimeout(searchT);searchT=setTimeout(renderGrid,300)}};
+search.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();clearTimeout(searchT);if(currentApi!=='local')loadOrSearch();else renderGrid()}});
+$('#searchBtn').onclick=()=>{clearTimeout(searchT);if(currentApi!=='local')loadOrSearch();else renderGrid()};
 
 apiMenu.querySelectorAll('.dropdown-item').forEach(item=>{
   const orig=item._origOnclick||item.onclick;
@@ -3976,14 +4028,14 @@ function initVideoPlayer(){
        apiToggle.classList.remove('active');
        ytApiMenu.classList.remove('show');
        ytApiToggle.classList.remove('active');
-       var isLib=currentApi==='local'||currentApi==='liked';
+       var isLib=currentApi==='local';
        plBtn.classList.toggle('visible',isLib);
        uploadBtn.classList.toggle('visible',currentApi==='local');
        if(!isLib)closeSb();
        $('#ngBtn').style.display=currentApi==='online'?'block':'none';
        $('#shortsBtn').style.display=currentApi==='video'?'block':'none';
        updateCachedSearchesBar();
-       var placeholders={online:'Search tracks...',radio:'Search stations...',video:'Search videos...',podcast:'Search podcasts...',local:'Filter saved tracks...',liked:'Filter liked tracks...'};
+       var placeholders={online:'Search tracks...',radio:'Search stations...',video:'Search videos...',podcast:'Search podcasts...',local:'Filter saved tracks...'};
        search.placeholder=placeholders[currentApi]||'Search...';
        search.value='';
        if(ytSearchInput)ytSearchInput.value='';
@@ -4054,7 +4106,7 @@ async function openVideoFull(video,allVideos=[]){
   if(ytSearchInput)ytSearchInput.value=search.value||'';
   
   if(ytApiToggle&&currentApi){
-    const map={online:'Music',local:'Saved',liked:'Liked',radio:'Radio',video:'Videos',podcast:'Podcasts'};
+    const map={online:'Music',local:'Saved',radio:'Radio',video:'Videos',podcast:'Podcasts'};
     ytApiToggle.textContent=map[currentApi]||'Videos';
     if(ytApiMenu)ytApiMenu.querySelectorAll('.dropdown-item').forEach(function(i){
       i.classList.toggle('active',i.dataset.value===currentApi);
