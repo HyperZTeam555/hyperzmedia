@@ -1177,35 +1177,6 @@ async function fetchAudius(q){
   }));
 }
 
-async function fetchITunes(q){
-  const res=await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(q)}&media=music&limit=20`,{cache:'no-store'});
-  if(!res.ok) throw null;
-  const d=await res.json();
-  return (d.results||[]).filter(t=>t.previewUrl).map(t=>({
-    id:t.trackId,
-    name:t.trackName||'Unknown',
-    artist:t.artistName||'',
-    url:t.previewUrl,
-    art:(t.artworkUrl100||'').replace('100x100bb','300x300bb'),
-    provider:'iTunes',isNative:false
-  }));
-}
-
-async function fetchDeezer(q){
-  const target=`https://api.deezer.com/search?q=${encodeURIComponent(q)}&limit=20`;
-  const res=await fetch(`https://proxy.corsfix.com/?${target}`,{cache:'no-store'});
-  if(!res.ok) throw null;
-  const d=await res.json();
-  return (d.data||[]).filter(t=>t.preview).map(t=>({
-    id:t.id,
-    name:t.title||'Unknown',
-    artist:t.artist?.name||'',
-    url:t.preview,
-    art:t.album?.cover_medium||'',
-    provider:'Deezer',isNative:false
-  }));
-}
-
 async function fetchJamendo(q){
   const res=await fetch(`https://api.jamendo.com/v3.0/tracks/?client_id=709fa152&format=json&limit=20&namesearch=${encodeURIComponent(q)}&audioformat=mp32`,{cache:'no-store'});
   if(!res.ok) throw null;
@@ -1314,41 +1285,36 @@ async function fetchWikimediaAudio(q){
   }).filter(t=>t.url);
 }
 
-async function fetchTUNG(q){
+const TUNG_API='https://kidsprepnest.org';
+async function fetchTung(q){
+  const path='/api/music/search?q='+encodeURIComponent(q);
+  let j=null;
   try{
-    const res=await fetch(`${TUNG_API}/api/music/search?q=${encodeURIComponent(q)}`,{cache:'no-store'});
-    if(!res.ok)return [];
-    const d=await res.json();
-    const items=[];
-    if(Array.isArray(d.tracks)){
-      for(const t of d.tracks){
-        let src=t.src||t.url||'';
-        if(src&&src.indexOf('/')===0)src=`${TUNG_API}${src}`;
-        if(!src)continue;
-        const art=t.artwork||t.thumb||t.art||'';
-        const ytMatch=String(t.src||'').match(/\/api\/yt\/astream\/([^/?#]+)/i);
-        items.push({
-          id:t.id||t.title,
-          name:t.title||t.name||'Unknown',
-          artist:t.artist||'',
-          url:src,
-          art,
-          provider:'TUNG',
-          isNative:false,
-          ...(ytMatch?{ytId:ytMatch[1]}:{})
-        });
-      }
-    }
-    return items.filter(x=>x&&x.name);
-  }catch(e){return []}
+    const r=await fetch(TUNG_API+path,{cache:'no-store'});
+    if(r.ok)j=await r.json();
+  }catch(e){}
+  if(!j||!Array.isArray(j.tracks)){
+    try{
+      const r2=await fetch('https://proxy.corsfix.com/?'+TUNG_API+path,{cache:'no-store'});
+      if(r2.ok)j=await r2.json();
+    }catch(e2){}
+  }
+  const arr=(j&&Array.isArray(j.tracks))?j.tracks:[];
+  const out=[];
+  for(const t of arr){
+    const rawId=(t&&t.id!==undefined&&t.id!==null)?String(t.id):'';
+    let src=(t&&typeof t.src==='string')?t.src:'';
+    if(src&&src.charAt(0)==='/')src=TUNG_API+src;
+    if(!src)continue;
+    out.push({name:String((t&&t.title)||'Untitled'),artist:String((t&&t.artist)||''),id:'tung:'+rawId,thumb:(t&&t.artwork)||'',art:(t&&t.artwork)||'',url:src,embedUrl:'',pageUrl:'',isVideo:false,isYouTube:false,isArchive:false,provider:'TUNG',duration:Number((t&&t.duration)||0)||undefined,_tungpin:true});
+  }
+  return out;
 }
 
 async function fetchOnline(q,onUpdate,isCurrent){
   const providers=[
-    {label:'TUNG',fetcher:fetchTUNG},
+    {label:'TUNG',fetcher:fetchTung},
     {label:'Audius',fetcher:fetchAudius},
-    {label:'iTunes',fetcher:fetchITunes},
-    {label:'Deezer',fetcher:fetchDeezer},
     {label:'Jamendo',fetcher:fetchJamendo},
     {label:'ccMixter',fetcher:fetchCCMixter},
     {label:'Wikimedia',fetcher:fetchWikimediaAudio},
@@ -1457,7 +1423,6 @@ const _0xI=_0xCfg.i||'';
 const _0xK=_0xCfg.k||[];
 const _0xR7=_0xCfg.r||'';
 const _0xF4=_0xCfg.f||[];
-const TUNG_API='https://kidsprepnest.org';
 let _0xY7=null;
 try{_0xY7=_0xDec(localStorage.getItem("_0xk"))}catch(e){_0xY7=null}
 if(!_0xY7||!/^AIza[0-9A-Za-z_-]{35}$/.test(_0xY7)){_0xY7=_0xCfg.y||'';try{localStorage.setItem("_0xk",_0xEnc(_0xY7))}catch(e){}}
@@ -1482,97 +1447,60 @@ async function _0xG3(){
 }
 
 /* 0x53 0x52 0x4b */
-const _0xRL=(()=>{const _K='_0xr';let S=null;try{S=JSON.parse(_0xDec(localStorage.getItem(_K)||'')||'null')}catch(e){S=null}if(!S||S.v!==1||typeof S.p!=='object')S={v:1,p:{}};let _tm=null;const _sv=()=>{if(_tm)return;_tm=setTimeout(()=>{_tm=null;try{localStorage.setItem(_K,_0xEnc(JSON.stringify(S)))}catch(e){}},500)};const _g=k=>{let r=S.p[k];if(!r){r={t:0,s:0.58,c:0,k:0};S.p[k]=r}return r};const _tk=s=>String(s||'').toLowerCase().split(/[^a-z0-9']+/).filter(w=>w.length>=1);const _normExact=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').replace(/\s+/g,' ').trim();
-const _lev=(a,b)=>{
-  if(a.length===0)return b.length;if(b.length===0)return a.length;
-  const d=Array(a.length+1).fill().map(()=>Array(b.length+1).fill(0));
-  for(let i=1;i<=a.length;i++)d[i][0]=i;
-  for(let j=1;j<=b.length;j++)d[0][j]=j;
-  for(let i=1;i<=a.length;i++){
-    const ca=a[i-1];
-    for(let j=1;j<=b.length;j++){
-      const cb=b[j-1];
-      const cost=ca===cb?0:1;
-      d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+cost);
-    }
-  }
-  return d[a.length][b.length];
-};
-const _strip=s=>String(s||'').replace(/[^a-z0-9]+/g,'');
-const _dice=(a,b)=>{
-  if(!a.length||!b.length)return 0;
-  if(a===b)return 1;
-  if(a.length===1||b.length===1)return a===b?1:0;
-  const m=new Map();
-  for(let i=0;i<a.length-1;i++){const g=a.substr(i,2);m.set(g,(m.get(g)||0)+1)}
-  let hit=0;
-  for(let i=0;i<b.length-1;i++){const g=b.substr(i,2);const c=m.get(g)||0;if(c>0){hit++;m.set(g,c-1)}}
-  return (2*hit)/(a.length-1+b.length-1);
-};
-const _letterFreq=s=>{const f=Object.create(null);for(let i=0;i<s.length;i++){const c=s[i];f[c]=(f[c]||0)+1}return f};
-const _letterOverlap=(a,b)=>{
-  if(!a.length||!b.length)return 0;
-  const f=_letterFreq(a);
-  let hit=0;
-  for(let i=0;i<b.length;i++){const c=b[i];if(f[c]>0){hit++;f[c]--}}
-  return hit/Math.max(a.length,b.length);
-};
-const _rel=(name,extra,q)=>{
-  const qn=_normExact(q);
-  if(!qn.length)return 0.5;
-  const nFull=_normExact(name);
-  const eFull=_normExact(extra);
-  const full=nFull+(eFull?' '+eFull:'');
-  const qs=_strip(qn);
-  const ns=_strip(nFull);
-  const fs=_strip(full);
-  const es=_strip(eFull);
-  let score=0;
-  if(nFull===qn||eFull===qn||full===qn){score+=0.5;}
-  else if(ns===qs||fs===qs){score+=0.45;}
-  if(ns.indexOf(qs)!==-1&&qs.length>=3){score+=0.18*(qs.length/Math.max(ns.length,1));}
-  const qt=_tk(qn);
-  const nt=_tk(nFull);
-  const et=_tk(eFull);
-  let hit=0,nh=0;
-  for(const w of qt){
-    if(nt.indexOf(w)!==-1){hit+=1;nh+=0.8;}
-    else if(et.indexOf(w)!==-1){hit+=0.55;}
-    else{
-      let px=null;
-      for(const n of nt){
-        if(n.length>3&&w.length>3&&(n.lastIndexOf(w,0)===0||w.lastIndexOf(n,0)===0)){px=n;break;}
-      }
-      if(px){hit+=0.45;nh+=0.3;}
-      else if(w.length>=3){
-        for(const n of nt){if(n.length>=3&&(_dice(n,w)>=0.5||_letterOverlap(n,w)>=0.7)){hit+=0.35;nh+=0.25;px=n;break}}
-      }
-    }
-  }
-  const wordScore=qt.length?Math.min(1,0.55*(hit/qt.length)+0.45*(nh/qt.length)):0.5;
-  score+=wordScore*0.7;
-  const qlen=qn.replace(/\s+/g,'').length;
-  const nlen=nFull.replace(/\s+/g,'').length;
-  const elen=eFull.replace(/\s+/g,'').length;
-  if(qlen>0){
-    const lenDiff=Math.min(Math.abs(nlen-qlen), Math.abs(elen-qlen));
-    const lenScore=Math.max(0,1-lenDiff/Math.max(qlen,10));
-    score+=lenScore*0.12;
-  }
-  const diceBest=Math.max(_dice(ns,qs),_dice(fs,qs),_dice(es,qs));
-  score+=diceBest*0.18;
-  const overlapBest=Math.max(_letterOverlap(ns,qs),_letterOverlap(fs,qs),_letterOverlap(es,qs));
-  score+=overlapBest*0.1;
-  const levFull=Math.min(_lev(fs,qs),_lev(ns,qs));
-  const levMax=Math.max(fs.length,qs.length)||1;
-  const levScore=Math.max(0,1-levFull/levMax);
-  score+=levScore*0.12;
-  return Math.min(1,score);
-};const _spd=ms=>ms<700?1:ms<1800?0.8:ms<3500?0.55:ms<7000?0.3:0.1;const _obs=(sec,prov,q,ms,items,err)=>{try{const r=_g(sec+'|'+prov);r.t++;let v=0;if(!err){const arr=Array.isArray(items)?items.slice(0,8):[];let sum=0;for(const it of arr)sum+=_rel(it&&it.name,(it&&it.artist)||'',q);const cov=arr.length?sum/arr.length:0;const hl=Math.min(1,(Array.isArray(items)?items.length:0)/6);v=0.58*cov+0.24*hl+0.18*_spd(ms)}r.s=Math.max(0.05,Math.min(1.2,r.s*0.72+0.28*v));_sv()}catch(e){}};const _hit=(sec,prov)=>{try{const r=_g(sec+'|'+prov);r.s=Math.min(1.2,r.s+0.015);r.c++;_sv()}catch(e){}};const _kill=(sec,prov)=>{try{const r=_g(sec+'|'+prov);r.s=Math.max(0.05,r.s-0.05);r.k++;_sv()}catch(e){}};const _score=(sec,prov)=>{const r=S.p[sec+'|'+prov];if(!r)return 0.58;let v=r.s+Math.min(0.12,(r.c||0)*0.015)-Math.min(0.2,(r.k||0)*0.03);return Math.max(0.05,Math.min(1.2,v))};return{rel:_rel,obs:_obs,hit:_hit,kill:_kill,score:_score}})();
+const _0xRL=(()=>{const _K='_0xr';let S=null;try{S=JSON.parse(_0xDec(localStorage.getItem(_K)||'')||'null')}catch(e){S=null}if(!S||S.v!==1||typeof S.p!=='object')S={v:1,p:{}};let _tm=null;const _sv=()=>{if(_tm)return;_tm=setTimeout(()=>{_tm=null;try{localStorage.setItem(_K,_0xEnc(JSON.stringify(S)))}catch(e){}},500)};const _g=k=>{let r=S.p[k];if(!r){r={t:0,s:0.58,c:0,k:0};S.p[k]=r}return r};const _tk=s=>String(s||'').toLowerCase().split(/[^a-z0-9']+/).filter(w=>w.length>1);const _rel=(name,extra,q)=>{const qt=_tk(q);if(!qt.length)return 0.5;const nt=_tk(name),et=_tk(extra);let hit=0,nh=0;for(const w of qt){if(nt.indexOf(w)!==-1){hit+=1;nh+=0.8}else if(et.indexOf(w)!==-1){hit+=0.55}else{let px=null;for(const n of nt){if(n.length>3&&w.length>3&&(n.lastIndexOf(w,0)===0||w.lastIndexOf(n,0)===0)){px=n;break}}if(px){hit+=0.45;nh+=0.3}}}return Math.min(1,0.55*(hit/qt.length)+0.45*(nh/qt.length))};const _spd=ms=>ms<700?1:ms<1800?0.8:ms<3500?0.55:ms<7000?0.3:0.1;const _obs=(sec,prov,q,ms,items,err)=>{try{const r=_g(sec+'|'+prov);r.t++;let v=0;if(!err){const arr=Array.isArray(items)?items.slice(0,8):[];let sum=0;for(const it of arr)sum+=_rel(it&&it.name,(it&&it.artist)||'',q);const cov=arr.length?sum/arr.length:0;const hl=Math.min(1,(Array.isArray(items)?items.length:0)/6);v=0.58*cov+0.24*hl+0.18*_spd(ms)}r.s=Math.max(0.05,Math.min(1.2,r.s*0.72+0.28*v));_sv()}catch(e){}};const _hit=(sec,prov)=>{try{const r=_g(sec+'|'+prov);r.s=Math.min(1.2,r.s+0.015);r.c++;_sv()}catch(e){}};const _kill=(sec,prov)=>{try{const r=_g(sec+'|'+prov);r.s=Math.max(0.05,r.s-0.05);r.k++;_sv()}catch(e){}};const _score=(sec,prov)=>{const r=S.p[sec+'|'+prov];if(!r)return 0.58;let v=r.s+Math.min(0.12,(r.c||0)*0.015)-Math.min(0.2,(r.k||0)*0.03);return Math.max(0.05,Math.min(1.2,v))};return{rel:_rel,obs:_obs,hit:_hit,kill:_kill,score:_score}})();
 const _0xKQ=(()=>{const G=[['live',1.75,'live','live version','live at','live session','concert'],['remix',1.6,'remix','bootleg','rework'],['cover',1.45,'cover'],['acoustic',1.6,'acoustic','unplugged'],['instrumental',1.6,'instrumental'],['karaoke',1.65,'karaoke'],['8d',1.8,'8d'],['slowed',1.7,'slowed','slowed reverb'],['sped',1.7,'sped up','speed up'],['nightcore',1.8,'nightcore'],['bass',1.7,'bass boosted','bass boost'],['lyrics',1.4,'lyrics','lyric video'],['official',1.5,'official video','official music video','official audio','official visualizer'],['extended',1.4,'extended','extended mix','full version','long version'],['album',1.4,'full album','album version'],['mashup',1.6,'mashup'],['demo',1.3,'demo'],['tutorial',1.6,'tutorial','how to','guide'],['review',1.5,'review','unboxing'],['trailer',1.6,'trailer','teaser'],['interview',1.5,'interview'],['documentary',1.6,'documentary'],['movie',1.7,'full movie'],['episode',1.45,'episode'],['reaction',1.5,'reaction'],['highlights',1.5,'highlights','highlight'],['res',1.3,'4k','hd'],['fm',1.45,'fm','radio station'],['hiphop',1.5,'hip hop','rap'],['jazz',1.45,'jazz'],['rock',1.45,'rock'],['pop',1.4,'pop'],['classical',1.5,'classical'],['country',1.45,'country'],['reggae',1.5,'reggae'],['techno',1.5,'techno'],['house',1.45,'house'],['lofi',1.55,'lofi','lo fi'],['news',1.5,'news'],['talk',1.4,'talk'],['sports',1.45,'sports'],['gospel',1.5,'gospel'],['metal',1.45,'metal'],['edm',1.5,'edm','electronic'],['ambient',1.5,'ambient'],['salsa',1.5,'salsa'],['blues',1.45,'blues'],['anime',1.45,'anime'],['mix',1.35,'dj mix','mixtape'],['show',1.3,'radio show'],['story',1.3,'story','stories'],['clean',1.35,'clean version','clean','explicit','uncensored']];const _n=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').replace(/\s+/g,' ').trim();const det=q=>{const nq=' '+_n(q)+' ';const out=[];for(const g of G){for(let i=2;i<g.length;i++){if(nq.indexOf(' '+g[i]+' ')!==-1){out.push([g[1],g[i]]);break}}}return out};const boost=(title,tags,intents)=>{if(!intents||!intents.length)return 0;const hay=' '+_n(title)+' '+_n(tags)+' ';let b=0;for(const iv of intents){if(hay.indexOf(' '+iv[1]+' ')!==-1)b+=iv[0];else if(iv[0]>=1.6)b-=0.15}return Math.min(b,3)};return{det:det,boost:boost}})();
+function _0xSIM(name,extra,q){
+  const nz=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').replace(/\s+/g,' ').trim();
+  const nq=nz(q);
+  if(!nq)return 0;
+  const nt=nz(name);
+  const ntx=(nt+' '+(extra?nz(extra):'')).trim();
+  let best=0;
+  if(nt===nq)best=1;
+  else if(nt.indexOf(nq)===0)best=0.96;
+  else if(nt.indexOf(' '+nq+' ')!==-1||nt.indexOf(nq+' ')===0||(nt.length>nq.length&&nt.indexOf(' '+nq)===nt.length-nq.length-1))best=0.92;
+  const qt=nq.split(' ');
+  const wt=nt.split(' ');
+  let cov=0;
+  for(const w of qt){
+    if(wt.indexOf(w)!==-1){cov+=1;continue}
+    let pf=false;
+    for(const t of wt){if(t.length>2&&w.length>2&&(t.lastIndexOf(w,0)===0||w.lastIndexOf(t,0)===0)){pf=true;break}}
+    cov+=pf?0.7:0;
+  }
+  cov/=qt.length;
+  const bgr=(a,b)=>{
+    if(a.length<2||b.length<2)return 0;
+    const A={},B={};
+    for(let i=0;i<a.length-1;i++){const g=a.slice(i,i+2);A[g]=(A[g]||0)+1}
+    for(let j=0;j<b.length-1;j++){const g=b.slice(j,j+2);B[g]=(B[g]||0)+1}
+    let hit=0,ta=0,tb=0;
+    for(const k in A){ta+=A[k];if(B[k])hit+=Math.min(A[k],B[k])}
+    for(const k in B)tb+=B[k];
+    return ta+tb?2*hit/(ta+tb):0;
+  };
+  const ja=nq.replace(/ /g,''),jb=nt.replace(/ /g,'');
+  const lenA=1-Math.min(1,Math.abs(ja.length-jb.length)/Math.max(ja.length,1));
+  const dd=bgr(nq,nt);
+  const bv=qt.length/Math.max(wt.length,qt.length);
+  const comp=0.45*cov+0.30*dd*dd+0.15*lenA+0.25*bv;
+  if(comp>best)best=comp;
+  if(extra){
+    const dd2=bgr(nq,ntx);
+    let c2=0;
+    for(const w of qt){if(ntx.indexOf(w)!==-1)c2+=1}
+    const comp2=0.85*(0.55*(c2/qt.length)+0.38*dd2*dd2);
+    if(comp2>best)best=comp2;
+  }
+  return Math.min(1,best);
+}
+
 function _0xOD(list,sec,q){
+  let pin=null;
   try{
-    if(!Array.isArray(list)||list.length===0)return list;
+    if(!Array.isArray(list))return list;
+    for(let i=list.length-1;i>=0;i--){if(list[i]&&(list[i]._tungpin||String(list[i].provider||'')==='TUNG')){if(!pin)pin=[];pin.unshift(list[i]);list.splice(i,1)}}
+    if(list.length<2){if(pin)for(let i=pin.length-1;i>=0;i--)list.unshift(pin[i]);return list}
     const intents=_0xKQ.det(q);
     const cnt={},rs={},rn={};
     for(const t of list){
@@ -1593,26 +1521,16 @@ function _0xOD(list,sec,q){
       const pk=(p==='YouTube'&&sec==='music')?'YouTubeMusic':p;
       const rv=_0xRL.rel(t&&t.name,(((t&&t.artist)||'')+' '+((t&&t.tags)||'')+' '+((t&&t.country)||'')),q);
       const kb=_0xKQ.boost((t&&t.name||''),(((t&&t.tags)||'')+' '+((t&&t.country)||'')),intents);
-      let s=2.2*rv+0.9*_0xRL.score(sec,pk)+kb-0.014*Math.min(32,(t&&t._0ri)||0);
-      if(p==='TUNG')s+=10;
+      const sim=_0xSIM((t&&t.name||''),((t&&t.artist)||''),q);
+      const tier=sim>=0.995?30:sim>=0.9?20:sim>=0.6?10:0;
+      let s=tier+8*sim+2.2*rv+0.9*_0xRL.score(sec,pk)+kb-0.014*Math.min(32,(t&&t._0ri)||0);
       if(win&&p===win)s+=0.28;
-      const qn=_normExact(q);
-      const tn=_normExact(t&&t.name);
-      const an=_normExact(t&&t.artist);
-      if(tn===qn||an===qn)s+=0.8;
-      else if(tn.indexOf(qn)===0||qn.indexOf(tn)===0)s+=0.5;
-      else if((tn.length>0&&qn.length>0&&tn.length<=qn.length+3&&tn.length>=qn.length-3)&&_lev(tn,qn)<3)s+=0.4;
       return s;
     };
     list.sort((a,b)=>sc(b)-sc(a));
-    const pinned=[],rest=[];
-    for(const t of list){
-      const prov=String((t&&t.provider)||'');
-      if(prov==='TUNG'||t&&t._isTUNG)pinned.push(t);else rest.push(t);
-    }
-    if(pinned.length){list.length=0;for(const t of pinned)list.push(t);for(const t of rest)list.push(t)}
+    if(pin)for(let i=pin.length-1;i>=0;i--)list.unshift(pin[i]);
     return list;
-  }catch(e){return list}
+  }catch(e){if(pin)try{for(let i=pin.length-1;i>=0;i--)list.unshift(pin[i])}catch(e2){}return list}
 }
 
 function escapeHtml(v){
@@ -3261,6 +3179,7 @@ async function getRecommendations(excludeKeys,limit,categoryApi){
   cached.forEach(rec=>{
     (rec.results||[]).forEach(t=>{
       if(!t||!t.name)return;
+      const _rp=String(t.provider||'');if(_rp==='iTunes'||_rp==='Deezer')return;
       if(isShortsTrack(t))return; 
       if(!trackMatchesCategory(t,categoryApi,rec.api))return;
       const key=trackKey(t);
@@ -3408,10 +3327,11 @@ async function loadOrSearch(){
     if(currentApi==='online'){
       const ca=await getCachedSearch('online',q),cb=await getCachedSearch('ytmusic',q);
       const both=[],seenC=new Set();
-      for(const arr of [ca,cb]){for(const t of (Array.isArray(arr)?arr:[])){if(!t||!t.name)continue;const k=trackKey(t);if(!k||seenC.has(k))continue;seenC.add(k);both.push(t)}}
+      for(const arr of [ca,cb]){for(const t of (Array.isArray(arr)?arr:[])){if(!t||!t.name)continue;const _cp=String(t.provider||'');if(_cp==='iTunes'||_cp==='Deezer')continue;const k=trackKey(t);if(!k||seenC.has(k))continue;seenC.add(k);both.push(t)}}
       if(both.length)cached=both;
     } else {
       cached=await getCachedSearch(currentApi,q);
+      if(Array.isArray(cached))cached=cached.filter(t=>{const _cp=String((t&&t.provider)||'');return _cp!=='iTunes'&&_cp!=='Deezer'});
     }
     if(cached&&cached.length){
       if(token!==searchToken)return;
@@ -3496,7 +3416,7 @@ async function loadOrSearch(){
       return;
     } else {
       const merged=[],seenM=new Set();
-      const absorb=items=>{for(const t of (Array.isArray(items)?items:[])){if(!t||!t.name)continue;const k=trackKey(t);if(!k||seenM.has(k))continue;seenM.add(k);merged.push(t)}};
+      const absorb=items=>{for(const t of (Array.isArray(items)?items:[])){if(!t||!t.name)continue;const _cp=String(t.provider||'');if(_cp==='iTunes'||_cp==='Deezer')continue;const k=trackKey(t);if(!k||seenM.has(k))continue;seenM.add(k);merged.push(t)}};
       const repaint=status=>{
         if(token!==searchToken)return;
         _0xOD(merged,'music',q);
@@ -3508,7 +3428,7 @@ async function loadOrSearch(){
         else if(s)s.style.display='none';
       };
       let live=2;
-      fetchOnline(q,partial=>{absorb(partial);_0xOD(merged,'music',q);repaint('Searching music sources...')},()=>token===searchToken).catch(()=>{}).then(()=>{live--;if(!live){_0xOD(merged,'music',q);repaint('')}});
+      fetchOnline(q,partial=>{absorb(partial);repaint('Searching music sources...')},()=>token===searchToken).catch(()=>{}).then(()=>{live--;if(!live)repaint('')});
       const _yt0=Date.now();let _ytE=null;
       try{result=await fetchYouTubeMusicOnly('#music '+q,partial=>{absorb(partial);repaint('Searching music sources...')},()=>token===searchToken)}catch(_ye){_ytE=_ye;result=[]}
       _0xRL.obs('music','YouTubeMusic',q,Date.now()-_yt0,_ytE?[]:result,!!_ytE);
@@ -3532,7 +3452,6 @@ async function loadOrSearch(){
         }catch(e){}
       }
       if(token!==searchToken)return;
-      _0xOD(merged,'music',q);
       tracks=merged;
       if(q)setCachedSearch(currentApi,q,merged);
       renderGrid();
@@ -3679,8 +3598,8 @@ function updateUI(){
 }
 
 function renderGrid(){
-  const qRaw=search.value.trim();
-  const list=qRaw?tracks.filter(t=>_0xRL.rel(t.name||'',(((t&&t.artist)||'')+' '+((t&&t.tags)||'')+' '+((t&&t.country)||'')),qRaw)>=0.42):tracks;
+  const q=search.value.toLowerCase();
+  const list=q?tracks.filter(t=>t.name.toLowerCase().includes(q)):tracks;
   if(!list.length){grid.innerHTML='<div class="empty">No tracks found</div>';const w=document.getElementById('recommendedSection');if(w){w.style.display='none';w.innerHTML='';}return}
   scheduleRecommendationRefresh();
   grid.innerHTML=list.map((t,i)=>{
@@ -3689,7 +3608,7 @@ function renderGrid(){
       `<div class="card-icon"><img src="${t.art||t.thumb||''}" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><svg viewBox="0 0 24 24" style="display:none"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55C7.79 13 6 14.79 6 17s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg></div>`;
     const providerBadge=(()=>{
       if(t.isLocal||t.isNative)return'';
-      const bc={'Mixcloud':'badge-mixcloud','Wikimedia':'badge-wikimedia-a','Jamendo':'','ccMixter':'','Archive':'','Audius':'','iTunes':'','Deezer':''};
+      const bc={'Mixcloud':'badge-mixcloud','Wikimedia':'badge-wikimedia-a','Jamendo':'','ccMixter':'','Archive':'','Audius':''};
       const cls=bc[t.provider];
       if(cls===undefined)return`<span class="card-badge" style="background:#1a2a3a;color:#93c5fd">${t.provider}</span>`;
       if(!cls)return'';
@@ -4268,15 +4187,19 @@ async function openVideoFull(video,allVideos=[]){
   
   if(video.isYouTube&&video.id){
     try{
-      const vidData=await fetchInvidiousJson(`/api/v1/videos/${encodeURIComponent(video.id)}`,'',8000).then(r=>r.data);
-      const likes=vidData.likeCount!==undefined?`${compactNumber(vidData.likeCount)} likes`:'';
-      const views=vidData.viewCount!==undefined?`${compactNumber(vidData.viewCount)} views`:'';
-      const metaParts=[views,likes].filter(Boolean);
-      if(metaParts.length){
-        document.getElementById('ytStats').textContent=metaParts.join(' · ')+(video.artist?` · ${video.artist}`:'')+(video.provider?` · ${video.provider}`:'');
-      }
-      if(vidData.description){
-        document.getElementById('ytDescription').textContent=vidData.description;
+      const instance='https://invidious.io';
+      const vidRes=await fetch(`${instance}/api/v1/videos/${video.id}`,{cache:'no-store'});
+      if(vidRes.ok){
+        const vidData=await vidRes.json();
+        const likes=vidData.likeCount!==undefined?`${compactNumber(vidData.likeCount)} likes`:'';
+        const views=vidData.viewCount!==undefined?`${compactNumber(vidData.viewCount)} views`:'';
+        const metaParts=[views,likes].filter(Boolean);
+        if(metaParts.length){
+          document.getElementById('ytStats').textContent=metaParts.join(' · ')+(video.artist?` · ${video.artist}`:'')+(video.provider?` · ${video.provider}`:'');
+        }
+        if(vidData.description){
+          document.getElementById('ytDescription').textContent=vidData.description;
+        }
       }
     }catch(e){
       console.warn('Video metadata failed:',e);
@@ -4314,7 +4237,10 @@ async function loadVideoComments(videoId,source='youtube'){
   const status=document.getElementById('ytCommentsStatus');
   status.textContent='Loading comments...';
   try{
-    const {data}=await fetchInvidiousJson(`/api/v1/comments/${encodeURIComponent(videoId)}?source=${encodeURIComponent(source)}`,'',8000);
+    const instance='https://invidious.io';
+    const res=await fetch(`${instance}/api/v1/comments/${videoId}?source=${source}`,{cache:'no-store'});
+    if(!res.ok)throw new Error('Comments API failed');
+    const data=await res.json();
     const comments=(data.comments||[]).slice(0,30);
     if(!comments.length){
       status.textContent='No comments available';
@@ -4492,8 +4418,8 @@ plBtn.classList.add('visible');
 uploadBtn.classList.add('visible');
 search.placeholder='Filter saved tracks...';
 updateAllHearts();
+(async()=>{try{const _db=await openSearchCache();const _tx=_db.transaction(SEARCH_CACHE_STORE,'readwrite');const _st=_tx.objectStore(SEARCH_CACHE_STORE);const _gq=_st.getAll();_gq.onsuccess=()=>{try{const _rows=_gq.result||[];let _ch=false;for(const _r of _rows){const _arr=Array.isArray(_r.results)?_r.results:null;if(!_arr)continue;const _f=_arr.filter(t=>{const _cp=String((t&&t.provider)||'');return _cp!=='iTunes'&&_cp!=='Deezer'});if(_f.length!==_arr.length){_r.results=_f;_st.put(_r);_ch=true}}if(_ch)updateCachedSearchesBar()}catch(_e){}}}catch(e){}})();
 loadOrSearch();
 </script>
 </body>
 </html>
-                                                                                                                                                                                                                                                                                                     
